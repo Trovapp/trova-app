@@ -19,8 +19,8 @@ export function HomeScreen({ navigation }: Props) {
     setSubmitting(true);
     setError(null);
     try {
-      await createShare(url.trim());
-      navigation.navigate("PlacesList");
+      const { jobId } = await createShare(url.trim());
+      navigation.navigate("Processing", { jobId });
     } catch (err) {
       setError(err instanceof Error ? err.message : "요청에 실패했어요.");
     } finally {

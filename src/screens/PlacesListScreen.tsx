@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 import { FlatList, Platform, Pressable, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
-import { getPendingJobs, getPlaces } from "@/lib/api/places";
+import { ProgressBar } from "@/components/ProgressBar";
+import { getPendingJobs, getPlaces, type PendingJob } from "@/lib/api/places";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
 
@@ -12,6 +13,39 @@ const CARD_SHADOW = Platform.select({
   ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3 },
   android: { elevation: 2 },
 });
+
+function PendingJobCard({ job }: { job: PendingJob }) {
+  const isFailed = job.status === "FAILED";
+  // 백엔드가 진짜로 도달한 파이프라인 단계만 반영한다 — 아직 EXTRACTING도 시작 전(PENDING)이면
+  // 지어낸 퍼센트 없이 0%로 둔다.
+  const percent = isFailed ? 0 : job.progressPercent ?? 0;
+  const message = isFailed ? "처리에 실패했어요" : job.stageMessage ?? "처리 대기 중이에요";
+
+  return (
+    <View
+      style={{
+        padding: 16,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#DEDED8",
+        backgroundColor: "#fff",
+        ...CARD_SHADOW,
+      }}
+    >
+      <AppText weight="medium" numberOfLines={1}>
+        {job.title ?? job.sourceUrl}
+      </AppText>
+      <AppText style={{ marginTop: 4, fontSize: 12, color: isFailed ? "#C0392B" : "#8C8C86" }}>
+        {message}
+      </AppText>
+      {!isFailed && (
+        <View style={{ marginTop: 10 }}>
+          <ProgressBar percent={percent} />
+        </View>
+      )}
+    </View>
+  );
+}
 
 export function PlacesListScreen({ navigation }: Props) {
   const queryClient = useQueryClient();
@@ -41,7 +75,7 @@ export function PlacesListScreen({ navigation }: Props) {
   }
 
   const places = placesQuery.data ?? [];
-  const pendingCount = pendingQuery.data?.length ?? 0;
+  const pendingJobs = pendingQuery.data ?? [];
 
   return (
     <FlatList
@@ -49,10 +83,12 @@ export function PlacesListScreen({ navigation }: Props) {
       data={places}
       keyExtractor={(item) => String(item.id)}
       ListHeaderComponent={
-        pendingCount > 0 ? (
-          <AppText style={{ marginBottom: 12, color: "#8C8C86" }}>
-            처리 중인 링크 {pendingCount}개
-          </AppText>
+        pendingJobs.length > 0 ? (
+          <View style={{ gap: 12, marginBottom: 12 }}>
+            {pendingJobs.map((job) => (
+              <PendingJobCard key={job.jobId} job={job} />
+            ))}
+          </View>
         ) : null
       }
       ListEmptyComponent={<AppText style={{ textAlign: "center", marginTop: 32 }}>아직 저장한 장소가 없어요.</AppText>}

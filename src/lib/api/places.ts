@@ -22,6 +22,9 @@ export type PendingJob = {
   sourcePlatform: "INSTAGRAM" | "YOUTUBE";
   status: "PENDING" | "PROCESSING" | "FAILED";
   createdAt: string;
+  currentStage: "EXTRACTING" | "GEOCODING" | "SELECTING" | "VERIFYING" | "SAVING" | null;
+  progressPercent: number | null;
+  stageMessage: string | null;
 };
 
 export async function createShare(url: string): Promise<{ jobId: number }> {
