@@ -1,6 +1,5 @@
 import { clearToken, getToken } from "@/lib/tokenStorage";
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+import { API_BASE_URL } from "@/lib/api/config";
 
 // AuthProvider가 등록해두는 콜백 — 401을 받으면 토큰만 지우는 게 아니라
 // 인증 상태(user)도 즉시 null로 바꿔서 네비게이터가 로그인 화면으로

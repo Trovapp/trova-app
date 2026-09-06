@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
+import { API_BASE_URL } from "@/lib/api/config";
 
 export type CurrentUser = {
   id: number;
@@ -16,8 +17,6 @@ export async function getMe(): Promise<CurrentUser | null> {
   }
   return res.json();
 }
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 export function oauthUrl(provider: "kakao" | "google"): string {
   return `${API_BASE_URL}/oauth2/authorization/${provider}?mobile=true`;
