@@ -2,13 +2,14 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, TextInput } from "react-native";
 import { AppText } from "@/components/AppText";
 import { createShare } from "@/lib/api/places";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useAuth } from "@/lib/auth/AuthContext";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "@/navigation/types";
 
-type Props = {
-  navigation: NativeStackNavigationProp<Record<string, object | undefined>>;
-};
+type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
 export function HomeScreen({ navigation }: Props) {
+  const { logout } = useAuth();
   const [url, setUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +68,15 @@ export function HomeScreen({ navigation }: Props) {
         </AppText>
       </Pressable>
       {error && <AppText style={{ color: "#FF6B4A" }}>{error}</AppText>}
+      <Pressable
+        onPress={() => navigation.navigate("PlacesList")}
+        style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: "#DEDED8", justifyContent: "center", alignItems: "center" }}
+      >
+        <AppText weight="medium">저장한 장소 보기</AppText>
+      </Pressable>
+      <Pressable onPress={() => logout()} style={{ marginTop: 12, alignItems: "center" }}>
+        <AppText style={{ color: "#8C8C86" }}>로그아웃</AppText>
+      </Pressable>
     </KeyboardAvoidingView>
   );
 }
