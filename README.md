@@ -2,7 +2,7 @@
 
 인스타/유튜브 여행 영상 링크를 공유하면 AI가 장소 정보를 추출해 지도에
 정리해주는 Trova 서비스의 모바일 앱(Expo/React Native, phase 1)입니다.
-백엔드([trova-backend](https://github.com/taehyeooo/trova-backend))와 통신합니다.
+백엔드([trova-backend](https://github.com/Trovapp/trova-backend))와 통신합니다.
 
 ## 시작하기
 
@@ -24,7 +24,7 @@ cp .env.example .env
 
 ### 카카오맵 JS 키
 
-같은 키를 [trova-frontend](https://github.com/taehyeooo/trova-frontend) 웹 레포에서도
+같은 키를 [trova-frontend](https://github.com/Trovapp/trova-frontend) 웹 레포에서도
 `NEXT_PUBLIC_KAKAO_MAP_JS_KEY`로 사용하고 있습니다. 카카오 디벨로퍼스 콘솔에서 발급받은
 JS 키를 그대로 재사용하면 됩니다.
 
