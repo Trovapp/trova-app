@@ -7,14 +7,9 @@ import { PlaceDetailScreen } from "@/screens/PlaceDetailScreen";
 import { MapScreen } from "@/screens/MapScreen";
 import { AppText } from "@/components/AppText";
 import { View } from "react-native";
+import type { RootStackParamList } from "@/navigation/types";
 
-type RootStackParamList = {
-  Login: undefined;
-  Home: undefined;
-  PlacesList: undefined;
-  PlaceDetail: { id: number };
-  Map: { id: number };
-};
+export type { RootStackParamList };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
