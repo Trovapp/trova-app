@@ -59,10 +59,10 @@ export async function getPlaces(): Promise<Place[]> {
   return res.json();
 }
 
-export async function getPlace(id: number): Promise<Place | undefined> {
+export async function getPlace(id: number): Promise<Place | null> {
   const res = await apiFetch(`/api/places/${id}`);
   if (res.status === 404) {
-    return undefined;
+    return null;
   }
   if (!res.ok) {
     throw new Error(`GET /api/places/${id} failed: ${res.status}`);
