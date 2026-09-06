@@ -8,7 +8,10 @@ export function buildKakaoMapHtml(appKey: string): string {
 </head>
 <body>
   <div id="map"></div>
-  <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false"></script>
+  <script
+    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false"
+    onerror="window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'sdk-load-error' }))"
+  ></script>
   <script>
     function renderPins(pins) {
       kakao.maps.load(function () {
@@ -30,11 +33,19 @@ export function buildKakaoMapHtml(appKey: string): string {
     }
 
     function handleMessage(event) {
+      var pins;
       try {
-        var pins = JSON.parse(event.data);
-        renderPins(pins);
+        pins = JSON.parse(event.data);
       } catch (e) {
         // 무시 — 핀 데이터가 아닌 다른 메시지일 수 있음
+        return;
+      }
+      try {
+        renderPins(pins);
+      } catch (e) {
+        window.ReactNativeWebView && window.ReactNativeWebView.postMessage(
+          JSON.stringify({ type: 'render-error', message: String(e && e.message) })
+        );
       }
     }
 
