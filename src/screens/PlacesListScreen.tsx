@@ -1,12 +1,12 @@
+import { useEffect, useRef } from "react";
 import { FlatList, Platform, Pressable, View } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { getPendingJobs, getPlaces } from "@/lib/api/places";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "@/navigation/types";
 
-type Props = {
-  navigation: NativeStackNavigationProp<Record<string, object | undefined>>;
-};
+type Props = NativeStackScreenProps<RootStackParamList, "PlacesList">;
 
 const CARD_SHADOW = Platform.select({
   ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3 },
@@ -14,8 +14,23 @@ const CARD_SHADOW = Platform.select({
 });
 
 export function PlacesListScreen({ navigation }: Props) {
+  const queryClient = useQueryClient();
   const placesQuery = useQuery({ queryKey: ["places"], queryFn: getPlaces });
-  const pendingQuery = useQuery({ queryKey: ["pendingJobs"], queryFn: getPendingJobs });
+  const pendingQuery = useQuery({
+    queryKey: ["pendingJobs"],
+    queryFn: getPendingJobs,
+    refetchInterval: (query) => ((query.state.data?.length ?? 0) > 0 ? 5000 : false),
+  });
+
+  const previousPendingCountRef = useRef<number | null>(null);
+  useEffect(() => {
+    const currentCount = pendingQuery.data?.length ?? 0;
+    const previousCount = previousPendingCountRef.current;
+    if (previousCount !== null && previousCount > 0 && currentCount === 0) {
+      queryClient.invalidateQueries({ queryKey: ["places"] });
+    }
+    previousPendingCountRef.current = currentCount;
+  }, [pendingQuery.data, queryClient]);
 
   if (placesQuery.isLoading || pendingQuery.isLoading) {
     return (
