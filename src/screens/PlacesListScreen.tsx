@@ -95,7 +95,7 @@ export function PlacesListScreen({ navigation }: Props) {
       ListEmptyComponent={<AppText style={{ textAlign: "center", marginTop: 32 }}>아직 저장한 장소가 없어요.</AppText>}
       renderItem={({ item }) => (
         <Pressable
-          onPress={() => navigation.navigate("PlaceDetail", { id: item.id })}
+          onPress={() => navigation.navigate("VideoGroup", { jobId: item.jobId })}
           style={{
             padding: 16,
             borderRadius: 12,

@@ -3,6 +3,5 @@ export type RootStackParamList = {
   Home: undefined;
   Processing: { jobId: number };
   PlacesList: undefined;
-  PlaceDetail: { id: number };
-  Map: { id: number };
+  VideoGroup: { jobId: number };
 };

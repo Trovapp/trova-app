@@ -67,11 +67,13 @@ export function ProcessingScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     // FAILED 작업도 /api/places/pending 목록에 남아있으므로, 목록에서 사라졌다는
-    // 것은 처리가 끝나 저장까지 완료됐다는 뜻이다.
+    // 것은 처리가 끝나 저장까지 완료됐다는 뜻이다. 완료 후에는 항상 이 영상의
+    // 그룹 화면으로 이동한다 — 최초 추출과 일정 생성 재요청 둘 다 같은 화면을
+    // 거치므로 분기 없이 이 한 줄이면 충분하다.
     if (pendingQuery.isSuccess && !job) {
-      navigation.replace("PlacesList");
+      navigation.replace("VideoGroup", { jobId });
     }
-  }, [pendingQuery.isSuccess, job, navigation]);
+  }, [pendingQuery.isSuccess, job, jobId, navigation]);
 
   if (pendingQuery.isLoading || !job) {
     return (
