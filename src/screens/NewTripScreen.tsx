@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Platform, Pressable, TextInput, View } from "react-native";
+import { Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { AppText } from "@/components/AppText";
 import { createTrip } from "@/lib/api/trips";
@@ -33,7 +33,11 @@ export function NewTripScreen({ navigation }: Props) {
   }
 
   return (
-    <View style={{ flex: 1, padding: 24, gap: 16 }}>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ padding: 24, gap: 16 }}
+      keyboardShouldPersistTaps="handled"
+    >
       <AppText weight="medium" style={{ fontSize: 20 }}>
         새 여행 만들기
       </AppText>
@@ -56,7 +60,10 @@ export function NewTripScreen({ navigation }: Props) {
         <View style={{ flex: 1, gap: 4 }}>
           <AppText style={{ fontSize: 12, color: colors.inkMuted }}>출발일</AppText>
           <Pressable
-            onPress={() => setShowStartPicker(true)}
+            onPress={() => {
+              setShowEndPicker(false);
+              setShowStartPicker(true);
+            }}
             style={{ height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 12, justifyContent: "center", paddingHorizontal: 12 }}
           >
             <AppText>{toDateString(startDate)}</AppText>
@@ -65,7 +72,10 @@ export function NewTripScreen({ navigation }: Props) {
         <View style={{ flex: 1, gap: 4 }}>
           <AppText style={{ fontSize: 12, color: colors.inkMuted }}>도착일</AppText>
           <Pressable
-            onPress={() => setShowEndPicker(true)}
+            onPress={() => {
+              setShowStartPicker(false);
+              setShowEndPicker(true);
+            }}
             style={{ height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 12, justifyContent: "center", paddingHorizontal: 12 }}
           >
             <AppText>{toDateString(endDate)}</AppText>
@@ -74,31 +84,50 @@ export function NewTripScreen({ navigation }: Props) {
       </View>
 
       {showStartPicker && (
-        <DateTimePicker
-          value={startDate}
-          mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(_event, selected) => {
-            setShowStartPicker(Platform.OS === "ios");
-            if (selected) {
+        <View style={{ gap: 4 }}>
+          <DateTimePicker
+            value={startDate}
+            mode="date"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(event, selected) => {
+              // iOS 인라인 스피너는 스스로 닫히지 않는다 — 아래 "확인"으로만 닫는다.
+              if (Platform.OS !== "ios") setShowStartPicker(false);
+              if (event.type !== "set" || !selected) return;
               setStartDate(selected);
               // 출발일이 도착일보다 늦어지면 도착일도 함께 밀어준다(웹과 동일한 보정).
               if (selected > endDate) setEndDate(selected);
-            }
-          }}
-        />
+            }}
+          />
+          {Platform.OS === "ios" && (
+            <Pressable onPress={() => setShowStartPicker(false)} style={{ alignSelf: "flex-end" }}>
+              <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
+                확인
+              </AppText>
+            </Pressable>
+          )}
+        </View>
       )}
       {showEndPicker && (
-        <DateTimePicker
-          value={endDate}
-          mode="date"
-          minimumDate={startDate}
-          display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(_event, selected) => {
-            setShowEndPicker(Platform.OS === "ios");
-            if (selected) setEndDate(selected);
-          }}
-        />
+        <View style={{ gap: 4 }}>
+          <DateTimePicker
+            value={endDate}
+            mode="date"
+            minimumDate={startDate}
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(event, selected) => {
+              if (Platform.OS !== "ios") setShowEndPicker(false);
+              if (event.type !== "set" || !selected) return;
+              setEndDate(selected);
+            }}
+          />
+          {Platform.OS === "ios" && (
+            <Pressable onPress={() => setShowEndPicker(false)} style={{ alignSelf: "flex-end" }}>
+              <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
+                확인
+              </AppText>
+            </Pressable>
+          )}
+        </View>
       )}
 
       {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
@@ -119,6 +148,6 @@ export function NewTripScreen({ navigation }: Props) {
           {submitting ? "만드는 중..." : "여행 만들기"}
         </AppText>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
