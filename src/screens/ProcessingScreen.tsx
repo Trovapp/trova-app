@@ -3,6 +3,7 @@ import { Pressable, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { ProgressBar } from "@/components/ProgressBar";
+import { colors } from "@/lib/theme";
 import { getPendingJobs, type PendingJob } from "@/lib/api/places";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
@@ -87,7 +88,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
         <AppText weight="medium" style={{ fontSize: 20 }}>
           처리에 실패했어요
         </AppText>
-        <AppText style={{ color: "#8C8C86", textAlign: "center" }}>
+        <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>
           {job.title ?? job.sourceUrl}
         </AppText>
         <Pressable
@@ -97,7 +98,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
             height: 48,
             paddingHorizontal: 24,
             borderRadius: 12,
-            backgroundColor: "#FF6B4A",
+            backgroundColor: colors.accent,
             justifyContent: "center",
             alignItems: "center",
           }}
@@ -116,10 +117,10 @@ export function ProcessingScreen({ route, navigation }: Props) {
   const analysis = STAGE_ANALYSIS[stage];
 
   return (
-    <View style={{ flex: 1, padding: 24, paddingTop: 72, backgroundColor: "#fff" }}>
+    <View style={{ flex: 1, padding: 24, paddingTop: 72, backgroundColor: colors.bg }}>
       <View style={{ gap: 8 }}>
         <ProgressBar percent={percent} height={8} />
-        <AppText weight="medium" style={{ color: "#FF6B4A", textAlign: "right" }}>
+        <AppText mono weight="medium" style={{ color: colors.accent, textAlign: "right" }}>
           {percent}%
         </AppText>
       </View>
@@ -130,7 +131,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
             width: 120,
             height: 120,
             borderRadius: 60,
-            backgroundColor: "#FFF1EC",
+            backgroundColor: colors.accentBg,
             justifyContent: "center",
             alignItems: "center",
           }}
@@ -145,10 +146,10 @@ export function ProcessingScreen({ route, navigation }: Props) {
             paddingVertical: 8,
             paddingHorizontal: 16,
             borderRadius: 20,
-            backgroundColor: "#F5F5F0",
+            backgroundColor: colors.bgMuted,
           }}
         >
-          <AppText style={{ fontSize: 13, color: "#8C8C86" }}>{STAGE_TIP[stage]}</AppText>
+          <AppText style={{ fontSize: 13, color: colors.inkMuted }}>{STAGE_TIP[stage]}</AppText>
         </View>
       </View>
 
@@ -157,16 +158,16 @@ export function ProcessingScreen({ route, navigation }: Props) {
           padding: 20,
           borderRadius: 16,
           borderWidth: 1,
-          borderColor: "#DEDED8",
-          backgroundColor: "#FAFAF7",
+          borderColor: colors.border,
+          backgroundColor: colors.bgMuted,
           gap: 6,
         }}
       >
-        <AppText style={{ fontSize: 11, color: "#8C8C86", letterSpacing: 1 }}>AI ANALYSIS</AppText>
+        <AppText mono style={{ fontSize: 11, color: colors.inkMuted, letterSpacing: 1 }}>AI ANALYSIS</AppText>
         <AppText weight="medium" style={{ fontSize: 15 }}>
           {analysis.title}
         </AppText>
-        <AppText style={{ fontSize: 13, color: "#8C8C86", lineHeight: 19 }}>{analysis.description}</AppText>
+        <AppText style={{ fontSize: 13, color: colors.inkMuted, lineHeight: 19 }}>{analysis.description}</AppText>
       </View>
     </View>
   );

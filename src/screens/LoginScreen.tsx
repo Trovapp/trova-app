@@ -4,6 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 import { AppText } from "@/components/AppText";
 import { oauthUrl } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { colors } from "@/lib/theme";
 
 export function LoginScreen() {
   const { handleAuthCallback } = useAuth();
@@ -40,7 +41,7 @@ export function LoginScreen() {
         style={{
           height: 48,
           borderRadius: 12,
-          backgroundColor: "#FEE500",
+          backgroundColor: colors.kakao,
           justifyContent: "center",
           alignItems: "center",
           opacity: isLoggingIn ? 0.6 : 1,
@@ -55,7 +56,7 @@ export function LoginScreen() {
           height: 48,
           borderRadius: 12,
           borderWidth: 1,
-          borderColor: "#DEDED8",
+          borderColor: colors.border,
           justifyContent: "center",
           alignItems: "center",
           opacity: isLoggingIn ? 0.6 : 1,

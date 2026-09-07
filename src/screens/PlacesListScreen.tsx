@@ -3,6 +3,7 @@ import { FlatList, Platform, Pressable, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { ProgressBar } from "@/components/ProgressBar";
+import { colors } from "@/lib/theme";
 import { getPendingJobs, getPlaces, type PendingJob } from "@/lib/api/places";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
@@ -27,15 +28,15 @@ function PendingJobCard({ job }: { job: PendingJob }) {
         padding: 16,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#DEDED8",
-        backgroundColor: "#fff",
+        borderColor: colors.border,
+        backgroundColor: colors.bg,
         ...CARD_SHADOW,
       }}
     >
       <AppText weight="medium" numberOfLines={1}>
         {job.title ?? job.sourceUrl}
       </AppText>
-      <AppText style={{ marginTop: 4, fontSize: 12, color: isFailed ? "#C0392B" : "#8C8C86" }}>
+      <AppText style={{ marginTop: 4, fontSize: 12, color: isFailed ? colors.accent : colors.inkMuted }}>
         {message}
       </AppText>
       {!isFailed && (
@@ -99,13 +100,17 @@ export function PlacesListScreen({ navigation }: Props) {
             padding: 16,
             borderRadius: 12,
             borderWidth: 1,
-            borderColor: "#DEDED8",
-            backgroundColor: "#fff",
+            borderColor: colors.border,
+            backgroundColor: colors.bg,
             ...CARD_SHADOW,
           }}
         >
           <AppText weight="medium">{item.placeName}</AppText>
-          {item.address && <AppText style={{ marginTop: 4, fontSize: 12, color: "#8C8C86" }}>{item.address}</AppText>}
+          {item.address && (
+            <AppText mono style={{ marginTop: 4, fontSize: 12, color: colors.inkMuted }}>
+              {item.address}
+            </AppText>
+          )}
         </Pressable>
       )}
     />

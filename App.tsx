@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { useFonts, IBMPlexMono_400Regular, IBMPlexMono_500Medium } from "@expo-google-fonts/ibm-plex-mono";
+import { useFonts as useMonoFonts, IBMPlexMono_400Regular, IBMPlexMono_500Medium } from "@expo-google-fonts/ibm-plex-mono";
+import { useFonts as useSansFonts, NotoSansKR_400Regular, NotoSansKR_500Medium } from "@expo-google-fonts/noto-sans-kr";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -13,10 +14,15 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 const queryClient = new QueryClient();
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [monoFontsLoaded] = useMonoFonts({
     IBMPlexMono_400Regular,
     IBMPlexMono_500Medium,
   });
+  const [sansFontsLoaded] = useSansFonts({
+    NotoSansKR_400Regular,
+    NotoSansKR_500Medium,
+  });
+  const fontsLoaded = monoFontsLoaded && sansFontsLoaded;
 
   useEffect(() => {
     if (fontsLoaded) {

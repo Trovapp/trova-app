@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, TextInput } from "react-nati
 import { AppText } from "@/components/AppText";
 import { createShare } from "@/lib/api/places";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { colors } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
 
@@ -45,10 +46,11 @@ export function HomeScreen({ navigation }: Props) {
         style={{
           height: 48,
           borderWidth: 1,
-          borderColor: "#DEDED8",
+          borderColor: colors.border,
           borderRadius: 12,
           paddingHorizontal: 16,
-          fontFamily: "IBMPlexMono_400Regular",
+          fontFamily: "NotoSansKR_400Regular",
+          color: colors.ink,
         }}
       />
       <Pressable
@@ -57,7 +59,7 @@ export function HomeScreen({ navigation }: Props) {
         style={{
           height: 48,
           borderRadius: 12,
-          backgroundColor: "#FF6B4A",
+          backgroundColor: colors.accent,
           justifyContent: "center",
           alignItems: "center",
           opacity: submitting ? 0.6 : 1,
@@ -67,15 +69,15 @@ export function HomeScreen({ navigation }: Props) {
           {submitting ? "추출 중..." : "장소 추출하기"}
         </AppText>
       </Pressable>
-      {error && <AppText style={{ color: "#FF6B4A" }}>{error}</AppText>}
+      {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
       <Pressable
         onPress={() => navigation.navigate("PlacesList")}
-        style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: "#DEDED8", justifyContent: "center", alignItems: "center" }}
+        style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: colors.border, justifyContent: "center", alignItems: "center" }}
       >
         <AppText weight="medium">저장한 장소 보기</AppText>
       </Pressable>
       <Pressable onPress={() => logout()} style={{ marginTop: 12, alignItems: "center" }}>
-        <AppText style={{ color: "#8C8C86" }}>로그아웃</AppText>
+        <AppText style={{ color: colors.inkMuted }}>로그아웃</AppText>
       </Pressable>
     </KeyboardAvoidingView>
   );
