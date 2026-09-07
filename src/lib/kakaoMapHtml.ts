@@ -18,8 +18,28 @@ export function buildKakaoMapHtml(appKey: string): string {
     // (매번 new kakao.maps.Map을 만들면 인스턴스와 오버레이가 계속 쌓여 WebView가 무거워진다).
     var mapInstance = null;
     var overlays = [];
+    var polyline = null;
+    var positions = {};
+    var highlightOverlay = null;
 
-    function renderPins(pins) {
+    // 웹(KakaoMap.tsx)의 선택 하이라이트를 그대로 이식 — 반투명 배경 + 테두리 링.
+    function buildHighlightHtml() {
+      return '<div style="width:28px;height:28px;border-radius:9999px;background:#FF6B4A48;border:2px solid #FF6B4A;"></div>';
+    }
+
+    function applySelection(selectedId) {
+      if (!highlightOverlay || !mapInstance) return;
+      var position = selectedId ? positions[selectedId] : null;
+      if (!position) {
+        highlightOverlay.setMap(null);
+        return;
+      }
+      mapInstance.panTo(position);
+      highlightOverlay.setPosition(position);
+      highlightOverlay.setMap(mapInstance);
+    }
+
+    function renderPins(pins, selectedId, showPath) {
       if (!pins || pins.length === 0) return;
       kakao.maps.load(function () {
         var container = document.getElementById('map');
@@ -33,31 +53,62 @@ export function buildKakaoMapHtml(appKey: string): string {
 
         overlays.forEach(function (overlay) { overlay.setMap(null); });
         overlays = [];
+        if (polyline) {
+          polyline.setMap(null);
+          polyline = null;
+        }
 
+        var path = pins.map(function (pin) {
+          return new kakao.maps.LatLng(pin.latitude, pin.longitude);
+        });
+
+        positions = {};
         pins.forEach(function (pin, index) {
-          var position = new kakao.maps.LatLng(pin.latitude, pin.longitude);
+          var position = path[index];
+          var pinColor = pin.color || '#FF6B4A';
+          positions[pin.id] = position;
           var el = document.createElement('div');
           el.textContent = String(index + 1);
-          el.style.cssText = 'width:26px;height:26px;border-radius:9999px;background:#FF6B4A;' +
+          el.style.cssText = 'width:26px;height:26px;border-radius:9999px;background:' + pinColor + ';' +
             'color:#fff;display:flex;align-items:center;justify-content:center;' +
             'font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.35);';
           var overlay = new kakao.maps.CustomOverlay({ position: position, content: el, zIndex: 2 });
           overlay.setMap(mapInstance);
           overlays.push(overlay);
         });
+
+        // 웹(KakaoMap.tsx)의 동선 선 스타일을 그대로 이식 — strokeWeight/strokeColor/strokeOpacity 동일.
+        if (showPath && path.length > 1) {
+          polyline = new kakao.maps.Polyline({
+            path: path,
+            strokeWeight: 3,
+            strokeColor: '#FF6B4A',
+            strokeOpacity: 0.8,
+          });
+          polyline.setMap(mapInstance);
+        }
+
+        if (highlightOverlay === null) {
+          highlightOverlay = new kakao.maps.CustomOverlay({
+            position: center,
+            content: buildHighlightHtml(),
+            zIndex: 1,
+          });
+        }
+        applySelection(selectedId);
       });
     }
 
     function handleMessage(event) {
-      var pins;
+      var payload;
       try {
-        pins = JSON.parse(event.data);
+        payload = JSON.parse(event.data);
       } catch (e) {
         // 무시 — 핀 데이터가 아닌 다른 메시지일 수 있음
         return;
       }
       try {
-        renderPins(pins);
+        renderPins(payload.pins, payload.selectedId, payload.showPath !== false);
       } catch (e) {
         window.ReactNativeWebView && window.ReactNativeWebView.postMessage(
           JSON.stringify({ type: 'render-error', message: String(e && e.message) })
