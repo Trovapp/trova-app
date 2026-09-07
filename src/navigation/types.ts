@@ -4,4 +4,7 @@ export type RootStackParamList = {
   Processing: { jobId: number };
   PlacesList: undefined;
   VideoGroup: { jobId: number };
+  TripsList: undefined;
+  NewTrip: undefined;
+  TripDetail: { id: number };
 };
