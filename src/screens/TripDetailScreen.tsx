@@ -5,10 +5,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
+import { PlaceReviewModal } from "@/components/PlaceReviewModal";
 import { getDayColor } from "@/lib/itinerary";
 import { parseTimeToDate, toTimeString } from "@/lib/date";
 import { colors } from "@/lib/theme";
+import { addBookmark, listBookmarks, removeBookmark } from "@/lib/api/bookmarks";
+import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
 import {
+  addTripPlace,
   checkWeather,
   getTrip,
   removeTripPlace,
@@ -42,6 +46,13 @@ export function TripDetailScreen({ route }: Props) {
   const [editingField, setEditingField] = useState<EditingField>(null);
   const [showTimePicker, setShowTimePicker] = useState<"start" | "end" | null>(null);
   const [memoDraft, setMemoDraft] = useState("");
+  const [query, setQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<RecommendedPlace[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [reviewModalPlaceId, setReviewModalPlaceId] = useState<number | null>(null);
+
+  const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
+  const bookmarkedPlaceIds = new Set((bookmarksQuery.data ?? []).map((b) => b.placeId));
 
   const trip = tripQuery.data;
 
@@ -58,6 +69,52 @@ export function TripDetailScreen({ route }: Props) {
   const places = activeDayData?.places ?? [];
   const dayColor = getDayColor(currentActiveDay);
   const tripId = trip.id;
+
+  async function handleSearch() {
+    if (!query.trim() || searching) return;
+    setSearching(true);
+    setError(null);
+    try {
+      setSearchResults(await searchPlaces(query.trim()));
+    } catch {
+      setError("장소를 찾지 못했어요. 다른 검색어로 시도해보세요.");
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  async function handleAddPlace(googlePlaceId: string) {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await addTripPlace(tripId, currentActiveDay, googlePlaceId);
+      await reload();
+    } catch {
+      setError("장소를 추가하지 못했어요.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleToggleBookmark(placeId: number) {
+    if (bookmarkedPlaceIds.has(placeId)) return;
+    try {
+      await addBookmark(placeId);
+      await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+    } catch {
+      setError("찜하기에 실패했어요.");
+    }
+  }
+
+  async function handleRemoveBookmark(bookmarkId: number) {
+    try {
+      await removeBookmark(bookmarkId);
+      await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+    } catch {
+      setError("찜을 해제하지 못했어요.");
+    }
+  }
 
   async function reload() {
     await queryClient.invalidateQueries({ queryKey: ["trip", id] });
@@ -306,7 +363,123 @@ export function TripDetailScreen({ route }: Props) {
           </AppText>
         </Pressable>
       </View>
-      {/* 검색/찜 탭 내용은 Task 17에서 여기에 추가된다. */}
+      {activeTab === "search" ? (
+        <View style={{ gap: 12 }}>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="장소 이름으로 검색 (예: 경복궁)"
+              style={{
+                flex: 1,
+                height: 44,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 10,
+                paddingHorizontal: 12,
+                fontFamily: "IBMPlexMono_400Regular",
+              }}
+            />
+            <Pressable
+              onPress={handleSearch}
+              disabled={searching || !query.trim()}
+              style={{
+                height: 44,
+                paddingHorizontal: 16,
+                borderRadius: 10,
+                backgroundColor: colors.accent,
+                justifyContent: "center",
+                alignItems: "center",
+                opacity: searching || !query.trim() ? 0.6 : 1,
+              }}
+            >
+              <AppText weight="medium" style={{ color: "#fff" }}>
+                {searching ? "검색 중..." : "검색"}
+              </AppText>
+            </Pressable>
+          </View>
+
+          {searchResults.map((place) => (
+            <View key={place.id} style={{ padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 12, gap: 6 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <AppText weight="medium" numberOfLines={1}>
+                    {place.name}
+                  </AppText>
+                  {place.address && (
+                    <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+                      {place.address}
+                    </AppText>
+                  )}
+                  {place.rating !== null && (
+                    <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                      ⭐ {place.rating.toFixed(1)}
+                      {place.userRatingCount !== null ? ` (리뷰 ${place.userRatingCount}개)` : ""}
+                    </AppText>
+                  )}
+                </View>
+                <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+                  <Pressable onPress={() => handleToggleBookmark(place.id)}>
+                    <AppText style={{ fontSize: 18 }}>{bookmarkedPlaceIds.has(place.id) ? "❤️" : "🤍"}</AppText>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleAddPlace(place.googlePlaceId)}
+                    disabled={busy}
+                    style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
+                  >
+                    <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
+                  </Pressable>
+                </View>
+              </View>
+              <Pressable onPress={() => setReviewModalPlaceId(place.id)}>
+                <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
+              </Pressable>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View style={{ gap: 12 }}>
+          {(bookmarksQuery.data ?? []).length === 0 && (
+            <AppText style={{ color: colors.inkMuted }}>아직 찜한 장소가 없어요.</AppText>
+          )}
+          {(bookmarksQuery.data ?? []).map((bookmark) => (
+            <View
+              key={bookmark.id}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: 12,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 12,
+              }}
+            >
+              <AppText weight="medium" numberOfLines={1} style={{ flex: 1 }}>
+                {bookmark.placeName}
+              </AppText>
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <Pressable
+                  onPress={() => handleAddPlace(bookmark.googlePlaceId)}
+                  disabled={busy}
+                  style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
+                >
+                  <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
+                </Pressable>
+                <Pressable onPress={() => handleRemoveBookmark(bookmark.id)}>
+                  <AppText style={{ fontSize: 12, color: colors.inkMuted }}>제거</AppText>
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
+      <PlaceReviewModal
+        visible={reviewModalPlaceId !== null}
+        placeId={reviewModalPlaceId}
+        onClose={() => setReviewModalPlaceId(null)}
+      />
     </ScrollView>
   );
 }
