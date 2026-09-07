@@ -55,6 +55,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     setActionPending(true);
     const previous = itineraryPlaces;
     const previousEmptyDays = emptyDayNumbers;
+    const previousActiveDay = currentActiveDay;
     const sourceDay = place.dayNumber;
     setItineraryError(null);
     setLocalPlaces(previous.map((p) => (p.id === place.id ? { ...p, dayNumber } : p)));
@@ -74,6 +75,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     } catch {
       setLocalPlaces(previous);
       setEmptyDayNumbers(previousEmptyDays);
+      if (sourceDayNowEmpty) {
+        setActiveDay(previousActiveDay);
+      }
       setItineraryError("장소를 옮기지 못했어요. 다시 시도해주세요.");
     } finally {
       setActionPending(false);
