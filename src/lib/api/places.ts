@@ -13,6 +13,12 @@ export type Place = {
   sourcePlatform: "INSTAGRAM" | "YOUTUBE";
   createdAt: string;
   address: string | null;
+  dayNumber: number | null;
+  orderInDay: number | null;
+  phone: string | null;
+  roadAddress: string | null;
+  kakaoCategoryName: string | null;
+  kakaoPlaceUrl: string | null;
 };
 
 export type PendingJob = {
@@ -69,6 +75,45 @@ export async function getPlace(id: number): Promise<Place | null> {
   }
   if (!res.ok) {
     throw new Error(`GET /api/places/${id} failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function generateItinerary(jobId: number): Promise<void> {
+  const res = await apiFetch(`/api/places/videos/${jobId}/itinerary`, { method: "POST" });
+  if (!res.ok) {
+    throw new Error(`POST /api/places/videos/${jobId}/itinerary failed: ${res.status}`);
+  }
+}
+
+export async function moveToDay(placeId: number, dayNumber: number): Promise<Place> {
+  const res = await apiFetch(`/api/places/${placeId}/day`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dayNumber }),
+  });
+  if (!res.ok) {
+    throw new Error(`PATCH /api/places/${placeId}/day failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function reorderPlace(placeId: number, direction: "UP" | "DOWN"): Promise<Place> {
+  const res = await apiFetch(`/api/places/${placeId}/order`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ direction }),
+  });
+  if (!res.ok) {
+    throw new Error(`PATCH /api/places/${placeId}/order failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function optimizeRoute(jobId: number, day: number): Promise<Place[]> {
+  const res = await apiFetch(`/api/places/videos/${jobId}/days/${day}/optimize-route`, { method: "POST" });
+  if (!res.ok) {
+    throw new Error(`POST /api/places/videos/${jobId}/days/${day}/optimize-route failed: ${res.status}`);
   }
   return res.json();
 }
