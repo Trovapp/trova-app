@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Modal, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { QueryErrorView } from "@/components/QueryErrorView";
 import { DISTINCT_COLORS } from "@/lib/colorPresets";
 import { createFolder, listFolders } from "@/lib/api/bookmarks";
 import { colors } from "@/lib/theme";
@@ -23,21 +24,26 @@ export function FolderPickerModal({
   const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState<string>(DISTINCT_COLORS[0]);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function reset() {
     setCreating(false);
     setNewName("");
     setNewColor(DISTINCT_COLORS[0]);
+    setError(null);
   }
 
   async function handleCreateAndPick() {
     if (!newName.trim() || busy) return;
     setBusy(true);
+    setError(null);
     try {
       const folder = await createFolder(newName.trim(), newColor);
       await queryClient.invalidateQueries({ queryKey: ["bookmarkFolders"] });
       reset();
       onPick(folder.id);
+    } catch {
+      setError("폴더를 만들지 못했어요.");
     } finally {
       setBusy(false);
     }
@@ -68,25 +74,37 @@ export function FolderPickerModal({
               <AppText>미분류로 저장</AppText>
             </Pressable>
 
-            {(foldersQuery.data ?? []).map((folder) => (
-              <Pressable
-                key={folder.id}
-                onPress={() => onPick(folder.id)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: 12,
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-              >
-                <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: folder.color }} />
-                <AppText style={{ flex: 1 }}>{folder.name}</AppText>
-                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{folder.placeCount}개</AppText>
-              </Pressable>
-            ))}
+            {foldersQuery.isLoading && (
+              <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>불러오는 중...</AppText>
+            )}
+
+            {foldersQuery.isError && (
+              <QueryErrorView message="폴더 목록을 불러오지 못했어요." onRetry={() => foldersQuery.refetch()} />
+            )}
+
+            {!foldersQuery.isLoading &&
+              !foldersQuery.isError &&
+              (foldersQuery.data ?? []).map((folder) => (
+                <Pressable
+                  key={folder.id}
+                  onPress={() => onPick(folder.id)}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: 12,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: folder.color }} />
+                  <AppText style={{ flex: 1 }}>{folder.name}</AppText>
+                  <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{folder.placeCount}개</AppText>
+                </Pressable>
+              ))}
+
+            {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
 
             {creating ? (
               <View style={{ gap: 10, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}>

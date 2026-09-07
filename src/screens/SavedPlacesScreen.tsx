@@ -4,6 +4,7 @@ import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
+import { QueryErrorView } from "@/components/QueryErrorView";
 import { listBookmarks, listFolders, removeBookmark, type Bookmark, type BookmarkFolder } from "@/lib/api/bookmarks";
 import { colors } from "@/lib/theme";
 
@@ -14,7 +15,30 @@ export function SavedPlacesScreen() {
   const foldersQuery = useQuery({ queryKey: ["bookmarkFolders"], queryFn: listFolders });
   const queryClient = useQueryClient();
   const [activeFolderId, setActiveFolderId] = useState<number | null>(null); // null = 폴더 목록 보기
+  const [removeError, setRemoveError] = useState<string | null>(null);
   const snapPoints = useMemo(() => ["18%", "55%", "90%"], []);
+
+  if (bookmarksQuery.isLoading || foldersQuery.isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <AppText>불러오는 중...</AppText>
+      </View>
+    );
+  }
+
+  // 조회 실패를 "장소 없음"(빈 지도 + 미분류 0개)으로 보여주지 않는다.
+  if (bookmarksQuery.isError || foldersQuery.isError) {
+    return (
+      <QueryErrorView
+        fullScreen
+        message="저장 장소를 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요."
+        onRetry={() => {
+          if (bookmarksQuery.isError) bookmarksQuery.refetch();
+          if (foldersQuery.isError) foldersQuery.refetch();
+        }}
+      />
+    );
+  }
 
   const bookmarks = bookmarksQuery.data ?? [];
   const folders = foldersQuery.data ?? [];
@@ -39,15 +63,20 @@ export function SavedPlacesScreen() {
   const unsortedCount = bookmarks.filter((b) => b.folderId === null).length;
 
   async function handleRemove(id: number) {
-    await removeBookmark(id);
-    await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+    setRemoveError(null);
+    try {
+      await removeBookmark(id);
+      await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+    } catch {
+      setRemoveError("장소를 제거하지 못했어요.");
+    }
   }
 
   return (
     <View style={{ flex: 1 }}>
       <InlineMap pins={pins} fill showPath={false} />
 
-      <BottomSheet index={1} snapPoints={snapPoints}>
+      <BottomSheet index={1} snapPoints={snapPoints} enableDynamicSizing={false}>
         {activeFolderId === null ? (
           <BottomSheetFlatList
             data={[{ id: UNSORTED_ID, name: "미분류", color: colors.inkMuted, placeCount: unsortedCount }, ...folders]}
@@ -83,9 +112,12 @@ export function SavedPlacesScreen() {
             keyExtractor={(item: Bookmark) => String(item.id)}
             contentContainerStyle={{ padding: 16, gap: 12 }}
             ListHeaderComponent={
-              <Pressable onPress={() => setActiveFolderId(null)} style={{ marginBottom: 4 }}>
-                <AppText style={{ color: colors.accent }}>← 폴더 목록</AppText>
-              </Pressable>
+              <View style={{ gap: 8, marginBottom: 4 }}>
+                <Pressable onPress={() => setActiveFolderId(null)}>
+                  <AppText style={{ color: colors.accent }}>← 폴더 목록</AppText>
+                </Pressable>
+                {removeError && <AppText style={{ color: colors.accent }}>{removeError}</AppText>}
+              </View>
             }
             ListEmptyComponent={
               <AppText style={{ color: colors.inkMuted, textAlign: "center", padding: 16 }}>

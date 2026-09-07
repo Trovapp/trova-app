@@ -39,6 +39,16 @@ export function InlineMap({
   );
   const payload = JSON.stringify({ pins: pins.length > 0 ? JSON.parse(pinsKey) : [], selectedId, showPath });
 
+  // pins가 []이 되면 아래 early return으로 WebView가 언마운트된다. 이 컴포넌트
+  // 자체(그리고 isMapLoaded state)는 살아있으니, 이후 pins가 다시 채워지면
+  // *완전히 새로운* WebView 인스턴스가 처음부터 다시 로드를 시작한다 — 하지만
+  // isMapLoaded는 이미 true라서 이 effect의 의존성이 안 바뀌면 재발화하지 않고,
+  // 새 WebView는 문서 로드가 끝나기 전에 이 effect가 보낸 메시지를 놓친다.
+  // payloadRef로 "최신 페이로드"를 항상 들고 있다가 onLoadEnd에서 무조건
+  // 다시 보내는 것으로 이 레이스를 근본적으로 막는다(아래 onLoadEnd 참고).
+  const payloadRef = useRef(payload);
+  payloadRef.current = payload;
+
   useEffect(() => {
     if (!isMapLoaded || mapError || pinsKey === "[]") return;
     webviewRef.current?.postMessage(payload);
@@ -81,7 +91,16 @@ export function InlineMap({
       ref={webviewRef}
       source={{ html: buildKakaoMapHtml(KAKAO_MAP_JS_KEY), baseUrl: "https://localhost" }}
       style={containerStyle}
-      onLoadEnd={() => setIsMapLoaded(true)}
+      onLoadEnd={() => {
+        setIsMapLoaded(true);
+        // isMapLoaded가 (컴포넌트 인스턴스가 살아있는 채로) 이미 true였다면
+        // 위 setIsMapLoaded(true)는 상태 변화가 없어 리렌더/effect 재발화가
+        // 일어나지 않는다. 새로 로드된 이 WebView가 확실히 최신 pins를
+        // 받도록 여기서 직접 한 번 더 보낸다(문서 로드가 끝난 뒤라 드롭되지 않음).
+        if (pins.length > 0) {
+          webviewRef.current?.postMessage(payloadRef.current);
+        }
+      }}
       onMessage={handleMessage}
       onError={() => {
         setIsMapLoaded(false);
