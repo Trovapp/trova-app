@@ -14,10 +14,19 @@ export function InlineMap({ pins, height = 200 }: { pins: Pin[]; height?: number
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
 
+  // 호출부는 매 렌더마다 pins 배열을 새로 만든다(메모이제이션 없음). 배열 참조를
+  // 의존성으로 쓰면 부모가 리렌더될 때마다(예: 검색어 한 글자 입력) WebView에
+  // postMessage가 다시 나가 카카오 지도가 통째로 다시 만들어진다.
+  // 그래서 참조가 아니라 "핀 내용"을 직렬화한 문자열을 의존성으로 쓴다 —
+  // 내용이 실제로 바뀔 때만 새 메시지가 나간다.
+  const pinsPayload = JSON.stringify(
+    pins.map((pin) => ({ id: pin.id, latitude: pin.latitude, longitude: pin.longitude }))
+  );
+
   useEffect(() => {
-    if (!isMapLoaded || mapError || pins.length === 0) return;
-    webviewRef.current?.postMessage(JSON.stringify(pins));
-  }, [isMapLoaded, mapError, pins]);
+    if (!isMapLoaded || mapError || pinsPayload === "[]") return;
+    webviewRef.current?.postMessage(pinsPayload);
+  }, [isMapLoaded, mapError, pinsPayload]);
 
   function handleMessage(event: WebViewMessageEvent) {
     try {
