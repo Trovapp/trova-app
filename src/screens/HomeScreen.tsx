@@ -76,6 +76,12 @@ export function HomeScreen({ navigation }: Props) {
       >
         <AppText weight="medium">저장한 장소 보기</AppText>
       </Pressable>
+      <Pressable
+        onPress={() => navigation.navigate("TripsList")}
+        style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: colors.border, justifyContent: "center", alignItems: "center" }}
+      >
+        <AppText weight="medium">내 여행 보기</AppText>
+      </Pressable>
       <Pressable onPress={() => logout()} style={{ marginTop: 12, alignItems: "center" }}>
         <AppText style={{ color: colors.inkMuted }}>로그아웃</AppText>
       </Pressable>
