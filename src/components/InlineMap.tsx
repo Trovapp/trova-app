@@ -7,17 +7,23 @@ import { colors } from "@/lib/theme";
 
 const KAKAO_MAP_JS_KEY = process.env.EXPO_PUBLIC_KAKAO_MAP_JS_KEY ?? "";
 
-type Pin = { id: string; latitude: number; longitude: number };
+type Pin = { id: string; latitude: number; longitude: number; color?: string };
 
 export function InlineMap({
   pins,
   height = 200,
   selectedId = null,
+  showPath = true,
+  fill = false,
 }: {
   pins: Pin[];
   height?: number;
   // 있으면 해당 핀으로 지도를 이동시키고 하이라이트 링을 보여준다(웹 KakaoMap.tsx와 동일).
   selectedId?: string | null;
+  // 방문 순서 동선을 표시할 필요가 없는 화면(예: 찜 폴더 지도)에서 false로 끈다.
+  showPath?: boolean;
+  // true면 고정 높이 대신 부모를 꽉 채운다(풀스크린 지도 화면용).
+  fill?: boolean;
 }) {
   const webviewRef = useRef<WebView>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -29,15 +35,15 @@ export function InlineMap({
   // 그래서 참조가 아니라 "핀 내용"을 직렬화한 문자열을 의존성으로 쓴다 —
   // 내용이 실제로 바뀔 때만 새 메시지가 나간다.
   const pinsKey = JSON.stringify(
-    pins.map((pin) => ({ id: pin.id, latitude: pin.latitude, longitude: pin.longitude }))
+    pins.map((pin) => ({ id: pin.id, latitude: pin.latitude, longitude: pin.longitude, color: pin.color ?? null }))
   );
-  const payload = JSON.stringify({ pins: JSON.parse(pinsKey), selectedId });
+  const payload = JSON.stringify({ pins: pins.length > 0 ? JSON.parse(pinsKey) : [], selectedId, showPath });
 
   useEffect(() => {
     if (!isMapLoaded || mapError || pinsKey === "[]") return;
     webviewRef.current?.postMessage(payload);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMapLoaded, mapError, pinsKey, selectedId]);
+  }, [isMapLoaded, mapError, pinsKey, selectedId, showPath]);
 
   function handleMessage(event: WebViewMessageEvent) {
     try {
@@ -52,9 +58,11 @@ export function InlineMap({
 
   if (pins.length === 0) return null;
 
+  const containerStyle = fill ? { flex: 1 as const } : { height, borderRadius: 12, overflow: "hidden" as const };
+
   if (!KAKAO_MAP_JS_KEY) {
     return (
-      <View style={{ height, justifyContent: "center", alignItems: "center", backgroundColor: colors.bgMuted }}>
+      <View style={[containerStyle, { justifyContent: "center", alignItems: "center", backgroundColor: colors.bgMuted }]}>
         <AppText style={{ color: colors.inkMuted }}>지도 키가 설정되지 않았어요.</AppText>
       </View>
     );
@@ -62,7 +70,7 @@ export function InlineMap({
 
   if (mapError) {
     return (
-      <View style={{ height, justifyContent: "center", alignItems: "center", backgroundColor: colors.bgMuted }}>
+      <View style={[containerStyle, { justifyContent: "center", alignItems: "center", backgroundColor: colors.bgMuted }]}>
         <AppText style={{ color: colors.inkMuted }}>{mapError}</AppText>
       </View>
     );
@@ -72,7 +80,7 @@ export function InlineMap({
     <WebView
       ref={webviewRef}
       source={{ html: buildKakaoMapHtml(KAKAO_MAP_JS_KEY), baseUrl: "https://localhost" }}
-      style={{ height, borderRadius: 12, overflow: "hidden" }}
+      style={containerStyle}
       onLoadEnd={() => setIsMapLoaded(true)}
       onMessage={handleMessage}
       onError={() => {

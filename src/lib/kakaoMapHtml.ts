@@ -39,7 +39,7 @@ export function buildKakaoMapHtml(appKey: string): string {
       highlightOverlay.setMap(mapInstance);
     }
 
-    function renderPins(pins, selectedId) {
+    function renderPins(pins, selectedId, showPath) {
       if (!pins || pins.length === 0) return;
       kakao.maps.load(function () {
         var container = document.getElementById('map');
@@ -65,10 +65,11 @@ export function buildKakaoMapHtml(appKey: string): string {
         positions = {};
         pins.forEach(function (pin, index) {
           var position = path[index];
+          var pinColor = pin.color || '#FF6B4A';
           positions[pin.id] = position;
           var el = document.createElement('div');
           el.textContent = String(index + 1);
-          el.style.cssText = 'width:26px;height:26px;border-radius:9999px;background:#FF6B4A;' +
+          el.style.cssText = 'width:26px;height:26px;border-radius:9999px;background:' + pinColor + ';' +
             'color:#fff;display:flex;align-items:center;justify-content:center;' +
             'font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.35);';
           var overlay = new kakao.maps.CustomOverlay({ position: position, content: el, zIndex: 2 });
@@ -77,7 +78,7 @@ export function buildKakaoMapHtml(appKey: string): string {
         });
 
         // 웹(KakaoMap.tsx)의 동선 선 스타일을 그대로 이식 — strokeWeight/strokeColor/strokeOpacity 동일.
-        if (path.length > 1) {
+        if (showPath && path.length > 1) {
           polyline = new kakao.maps.Polyline({
             path: path,
             strokeWeight: 3,
@@ -107,7 +108,7 @@ export function buildKakaoMapHtml(appKey: string): string {
         return;
       }
       try {
-        renderPins(payload.pins, payload.selectedId);
+        renderPins(payload.pins, payload.selectedId, payload.showPath !== false);
       } catch (e) {
         window.ReactNativeWebView && window.ReactNativeWebView.postMessage(
           JSON.stringify({ type: 'render-error', message: String(e && e.message) })
