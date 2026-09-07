@@ -39,7 +39,7 @@ export function DayPickerSheet({ visible, dayNumbers, currentDay, onSelect, onCl
                 backgroundColor: day === currentDay ? colors.bgMuted : "transparent",
               }}
             >
-              <AppText style={{ color: day === currentDay ? colors.inkMuted : "#000" }}>
+              <AppText style={day === currentDay ? { color: colors.inkMuted } : undefined}>
                 {day}일차{day === currentDay ? " (현재)" : ""}
               </AppText>
             </Pressable>
