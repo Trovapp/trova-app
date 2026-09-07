@@ -6,6 +6,7 @@ import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
 import { PlaceReviewModal } from "@/components/PlaceReviewModal";
+import { QueryErrorView } from "@/components/QueryErrorView";
 import { getDayColor } from "@/lib/itinerary";
 import { parseTimeToDate, toTimeString } from "@/lib/date";
 import { colors } from "@/lib/theme";
@@ -59,11 +60,22 @@ export function TripDetailScreen({ route }: Props) {
 
   const trip = tripQuery.data;
 
-  if (tripQuery.isLoading || !trip) {
+  if (tripQuery.isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <AppText>불러오는 중...</AppText>
       </View>
+    );
+  }
+
+  // 조회 실패와 "아직 데이터 없음"을 같은 화면으로 보여주지 않는다.
+  if (tripQuery.isError || !trip) {
+    return (
+      <QueryErrorView
+        fullScreen
+        message="여행 정보를 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요."
+        onRetry={() => tripQuery.refetch()}
+      />
     );
   }
 
@@ -503,7 +515,10 @@ export function TripDetailScreen({ route }: Props) {
         </View>
       ) : (
         <View style={{ gap: 12 }}>
-          {(bookmarksQuery.data ?? []).length === 0 && (
+          {bookmarksQuery.isError && (
+            <QueryErrorView message="찜한 장소를 불러오지 못했어요." onRetry={() => bookmarksQuery.refetch()} />
+          )}
+          {!bookmarksQuery.isError && (bookmarksQuery.data ?? []).length === 0 && (
             <AppText style={{ color: colors.inkMuted }}>아직 찜한 장소가 없어요.</AppText>
           )}
           {(bookmarksQuery.data ?? []).map((bookmark) => (

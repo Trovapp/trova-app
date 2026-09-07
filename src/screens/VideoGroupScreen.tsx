@@ -5,6 +5,7 @@ import { AppText } from "@/components/AppText";
 import { DayPickerSheet } from "@/components/DayPickerSheet";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
+import { QueryErrorView } from "@/components/QueryErrorView";
 import { haversineDistanceKm } from "@/lib/geo";
 import { generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
 import { confirmTrip } from "@/lib/api/trips";
@@ -175,6 +176,17 @@ export function VideoGroupScreen({ route, navigation }: Props) {
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <AppText>불러오는 중...</AppText>
       </View>
+    );
+  }
+
+  // 조회 실패를 "영상 없음"으로 보여주면 사용자가 다시 시도할 방법이 없다.
+  if (placesQuery.isError) {
+    return (
+      <QueryErrorView
+        fullScreen
+        message="장소를 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요."
+        onRetry={() => placesQuery.refetch()}
+      />
     );
   }
 

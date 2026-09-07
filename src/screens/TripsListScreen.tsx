@@ -1,6 +1,7 @@
 import { FlatList, Platform, Pressable, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { QueryErrorView } from "@/components/QueryErrorView";
 import { listTrips } from "@/lib/api/trips";
 import { colors } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -21,6 +22,17 @@ export function TripsListScreen({ navigation }: Props) {
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <AppText>불러오는 중...</AppText>
       </View>
+    );
+  }
+
+  // 조회 실패를 빈 목록("아직 만든 여행이 없어요")으로 보여주지 않는다.
+  if (tripsQuery.isError) {
+    return (
+      <QueryErrorView
+        fullScreen
+        message="여행 목록을 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요."
+        onRetry={() => tripsQuery.refetch()}
+      />
     );
   }
 
