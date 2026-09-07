@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { DayPickerSheet } from "@/components/DayPickerSheet";
@@ -7,6 +7,8 @@ import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
 import { haversineDistanceKm } from "@/lib/geo";
 import { generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
+import { confirmTrip } from "@/lib/api/trips";
+import { toDateString } from "@/lib/date";
 import { groupByDay, isItineraryGroup } from "@/lib/itinerary";
 import { colors } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -26,6 +28,10 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const [itineraryError, setItineraryError] = useState<string | null>(null);
   const [dayPickerFor, setDayPickerFor] = useState<Place | null>(null);
   const [activeDay, setActiveDay] = useState<number | null>(null);
+  const [showTripForm, setShowTripForm] = useState(false);
+  const [tripTitle, setTripTitle] = useState("");
+  const [confirmingTrip, setConfirmingTrip] = useState(false);
+  const [tripError, setTripError] = useState<string | null>(null);
 
   const group = (placesQuery.data ?? []).filter((p) => p.jobId === jobId);
 
@@ -113,6 +119,19 @@ export function VideoGroupScreen({ route, navigation }: Props) {
       setItineraryError("순서를 바꾸지 못했어요. 다시 시도해주세요.");
     } finally {
       setActionPending(false);
+    }
+  }
+
+  async function handleConfirmTrip() {
+    if (group.length === 0 || confirmingTrip) return;
+    setConfirmingTrip(true);
+    setTripError(null);
+    try {
+      const trip = await confirmTrip(group[0].jobId, tripTitle.trim() || title, toDateString(new Date()));
+      navigation.replace("TripDetail", { id: trip.id });
+    } catch {
+      setTripError("여행 확정에 실패했어요. 다시 시도해주세요.");
+      setConfirmingTrip(false);
     }
   }
 
@@ -235,6 +254,53 @@ export function VideoGroupScreen({ route, navigation }: Props) {
               <AppText style={{ fontSize: 13, color: colors.inkMuted }}>+ 날짜 추가</AppText>
             </Pressable>
           </View>
+
+          {!showTripForm ? (
+            <Pressable
+              onPress={() => {
+                setTripTitle(title);
+                setShowTripForm(true);
+              }}
+              style={{ height: 44, borderRadius: 12, borderWidth: 1, borderColor: colors.accent, justifyContent: "center", alignItems: "center" }}
+            >
+              <AppText weight="medium" style={{ color: colors.accent }}>
+                여행으로 만들기
+              </AppText>
+            </Pressable>
+          ) : (
+            <View style={{ gap: 8, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 12 }}>
+              <TextInput
+                value={tripTitle}
+                onChangeText={setTripTitle}
+                placeholder="여행 이름"
+                style={{
+                  height: 40,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 8,
+                  paddingHorizontal: 10,
+                  fontFamily: "NotoSansKR_400Regular",
+                }}
+              />
+              <Pressable
+                onPress={handleConfirmTrip}
+                disabled={confirmingTrip}
+                style={{
+                  height: 40,
+                  borderRadius: 8,
+                  backgroundColor: colors.accent,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  opacity: confirmingTrip ? 0.6 : 1,
+                }}
+              >
+                <AppText weight="medium" style={{ color: "#fff" }}>
+                  {confirmingTrip ? "확정 중..." : "확정"}
+                </AppText>
+              </Pressable>
+              {tripError && <AppText style={{ color: colors.accent }}>{tripError}</AppText>}
+            </View>
+          )}
 
           {currentActiveDay !== null && emptyDayNumbers.includes(currentActiveDay) && activePlaces.length === 0 && (
             <Pressable onPress={() => handleDeleteDay(currentActiveDay)}>
