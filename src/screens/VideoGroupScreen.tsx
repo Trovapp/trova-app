@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable, ScrollView, TextInput, View } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { DayPickerSheet } from "@/components/DayPickerSheet";
 import { InlineMap } from "@/components/InlineMap";
@@ -18,6 +18,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "VideoGroup">;
 
 export function VideoGroupScreen({ route, navigation }: Props) {
   const { jobId } = route.params;
+  const queryClient = useQueryClient();
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -128,6 +129,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     setTripError(null);
     try {
       const trip = await confirmTrip(group[0].jobId, tripTitle.trim() || title, toDateString(new Date()));
+      // replace는 아래에 깔린 여행 목록 화면을 unmount하지 않는다 — 무효화해두지 않으면
+      // 뒤로 가기로 돌아왔을 때 방금 확정한 여행이 목록에 없다.
+      await queryClient.invalidateQueries({ queryKey: ["trips"] });
       navigation.replace("TripDetail", { id: trip.id });
     } catch {
       setTripError("여행 확정에 실패했어요. 다시 시도해주세요.");

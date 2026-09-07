@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { createTrip } from "@/lib/api/trips";
 import { toDateString } from "@/lib/date";
@@ -11,6 +12,7 @@ import type { RootStackParamList } from "@/navigation/types";
 type Props = NativeStackScreenProps<RootStackParamList, "NewTrip">;
 
 export function NewTripScreen({ navigation }: Props) {
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
@@ -25,6 +27,9 @@ export function NewTripScreen({ navigation }: Props) {
     setError(null);
     try {
       const trip = await createTrip(title.trim(), toDateString(startDate), toDateString(endDate));
+      // replace는 아래에 깔린 여행 목록 화면을 unmount하지 않는다 — 무효화해두지 않으면
+      // 뒤로 가기로 돌아왔을 때 방금 만든 여행이 목록에 없다.
+      await queryClient.invalidateQueries({ queryKey: ["trips"] });
       navigation.replace("TripDetail", { id: trip.id });
     } catch {
       setError("여행을 만들지 못했어요. 날짜를 확인하고 다시 시도해주세요.");
