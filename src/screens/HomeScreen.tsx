@@ -74,7 +74,7 @@ export function HomeScreen({ navigation }: Props) {
         onPress={() => navigation.navigate("PlacesList")}
         style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: colors.border, justifyContent: "center", alignItems: "center" }}
       >
-        <AppText weight="medium">저장한 장소 보기</AppText>
+        <AppText weight="medium">영상 기록 보기</AppText>
       </Pressable>
       <Pressable
         onPress={() => navigation.navigate("TripsList")}

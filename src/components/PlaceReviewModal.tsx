@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { ProgressBar } from "@/components/ProgressBar";
 import { getPlaceDetails } from "@/lib/api/recommendations";
+import { getTripPlaceDetails } from "@/lib/api/trips";
 import { colors } from "@/lib/theme";
+
+// 리뷰 요약 생성은 단일 요청(검색 매칭 + Gemini 생성)이라 백엔드가 실제 단계별
+// 진행률을 알려주지 않는다. 그래서 "체감 진행률"만 흉내낸다 — 예상 소요시간(6초)
+// 동안 92%까지 서서히 채우고, 실제 응답이 오면(로딩 종료) 그 즉시 콘텐츠로 바뀐다.
+const EXPECTED_LOAD_MS = 6000;
+const SIMULATED_CAP_PERCENT = 92;
 
 function HighlightedText({ text }: { text: string }) {
   const parts = text.split(/\*\*(.+?)\*\*/g);
@@ -24,20 +32,39 @@ function HighlightedText({ text }: { text: string }) {
 
 export function PlaceReviewModal({
   visible,
-  placeId,
+  placeId = null,
+  tripPlaceId = null,
   onClose,
 }: {
   visible: boolean;
-  placeId: number | null;
+  // 검색결과("장소 카탈로그")에서 상세보기 할 때는 placeId, 여행 상세의 장소 카드에서
+  // 볼 때는 tripPlaceId — 둘은 서로 다른 id 공간이라 백엔드 엔드포인트도 다르다.
+  placeId?: number | null;
+  tripPlaceId?: number | null;
   onClose: () => void;
 }) {
   const [showRawReviews, setShowRawReviews] = useState(false);
   const detailQuery = useQuery({
-    queryKey: ["placeDetails", placeId],
-    queryFn: () => getPlaceDetails(placeId as number),
-    enabled: placeId !== null,
+    queryKey: tripPlaceId !== null ? ["tripPlaceDetails", tripPlaceId] : ["placeDetails", placeId],
+    queryFn: () =>
+      tripPlaceId !== null ? getTripPlaceDetails(tripPlaceId) : getPlaceDetails(placeId as number),
+    enabled: placeId !== null || tripPlaceId !== null,
   });
   const detail = detailQuery.data;
+
+  const [loadingPercent, setLoadingPercent] = useState(0);
+  useEffect(() => {
+    if (!detailQuery.isLoading) {
+      setLoadingPercent(0);
+      return;
+    }
+    const start = Date.now();
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - start;
+      setLoadingPercent(Math.min(SIMULATED_CAP_PERCENT, Math.round((elapsed / EXPECTED_LOAD_MS) * SIMULATED_CAP_PERCENT)));
+    }, 150);
+    return () => clearInterval(timer);
+  }, [detailQuery.isLoading, placeId, tripPlaceId]);
 
   return (
     <Modal
@@ -54,11 +81,35 @@ export function PlaceReviewModal({
         >
           <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
             {detailQuery.isLoading || !detail ? (
-              <AppText style={{ color: colors.inkMuted }}>리뷰 요약을 불러오는 중...</AppText>
+              <View style={{ gap: 8, paddingVertical: 12 }}>
+                <AppText style={{ color: colors.inkMuted, fontSize: 13 }}>
+                  리뷰 요약을 만들고 있어요... {loadingPercent}%
+                </AppText>
+                <ProgressBar percent={loadingPercent} />
+              </View>
             ) : (
               <>
-                <AppText weight="medium" style={{ fontSize: 17 }}>
-                  {detail.name}
+                <View style={{ gap: 4 }}>
+                  <AppText weight="medium" style={{ fontSize: 17 }}>
+                    {detail.name}
+                  </AppText>
+                  <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                    {[
+                      detail.category,
+                      detail.rating !== null
+                        ? `⭐ ${detail.rating.toFixed(1)}${detail.userRatingCount !== null ? ` (리뷰 ${detail.userRatingCount}개)` : ""}`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </AppText>
+                  {detail.address && (
+                    <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{detail.address}</AppText>
+                  )}
+                </View>
+                <View style={{ borderTopWidth: 1, borderTopColor: colors.border }} />
+                <AppText weight="medium" style={{ fontSize: 13, color: colors.inkMuted }}>
+                  리뷰 요약
                 </AppText>
                 <HighlightedText text={detail.highlights} />
 

@@ -23,6 +23,35 @@ export type TripPlace = {
 export type TripDay = { id: number; day: number; date: string | null; places: TripPlace[] };
 export type TripDetail = Trip & { days: TripDay[] };
 
+export type TripPlaceReviewSummary = {
+  id: number;
+  googlePlaceId: string | null;
+  name: string;
+  category: string | null;
+  rating: number | null;
+  userRatingCount: number | null;
+  priceLevel: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  address: string | null;
+  highlights: string;
+  pros: string[];
+  cons: string[];
+  hours: string | null;
+  fee: string | null;
+  tips: string[];
+  checklist: string[];
+  reviewSnippets: string[];
+};
+
+export async function getTripPlaceDetails(id: number): Promise<TripPlaceReviewSummary> {
+  const res = await apiFetch(`/api/trip-places/${id}/details`);
+  if (!res.ok) {
+    throw new Error(`GET /api/trip-places/${id}/details failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function confirmTrip(jobId: number, title: string, startDate: string | null): Promise<Trip> {
   const res = await apiFetch(`/api/places/videos/${jobId}/confirm-trip`, {
     method: "POST",

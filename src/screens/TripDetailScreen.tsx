@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Platform, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Platform, Pressable, TextInput, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
@@ -19,6 +20,7 @@ import {
   removeTripPlace,
   reorderTripPlace,
   updateTripPlaceDetails,
+  type TripDetail,
   type TripPlace,
 } from "@/lib/api/trips";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -45,7 +47,7 @@ export function TripDetailScreen({ route }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [weatherMessage, setWeatherMessage] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<EditingField>(null);
-  const [showTimePicker, setShowTimePicker] = useState<"start" | "end" | null>(null);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   // iOS 스피너는 드래그하는 내내 onChange가 계속 발생한다 — 저장하지 않고 여기에만 담아두고
   // "확인"을 눌렀을 때 한 번만 저장한다.
   const [timeDraft, setTimeDraft] = useState<Date | null>(null);
@@ -53,7 +55,9 @@ export function TripDetailScreen({ route }: Props) {
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<RecommendedPlace[]>([]);
   const [searching, setSearching] = useState(false);
-  const [reviewModalPlaceId, setReviewModalPlaceId] = useState<number | null>(null);
+  // 검색결과 카드("장소 카탈로그")는 placeId로, 여행에 이미 담긴 장소 카드는
+  // tripPlaceId로 리뷰 요약을 연다 — 서로 다른 id 공간이라 구분해서 들고 있는다.
+  const [reviewTarget, setReviewTarget] = useState<{ kind: "place" | "tripPlace"; id: number } | null>(null);
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const bookmarkedPlaceIds = new Set((bookmarksQuery.data ?? []).map((b) => b.placeId));
@@ -149,6 +153,39 @@ export function TripDetailScreen({ route }: Props) {
     }
   }
 
+  // 드래그가 끝나면 화면은 바로 새 순서를 반영하고(체감상 즉시 반응해야 하니까),
+  // 실제 저장은 기존 한 칸씩 이동하는 API를 옮긴 칸 수만큼 순차 호출해서 처리한다.
+  // 새 "한번에 재배치" API를 따로 만들지 않기 위한 선택 — 하루 일정은 보통 몇 개
+  // 안 되니 여러 번 호출해도 체감 지연이 없다. 성공/실패 여부와 무관하게 끝나면
+  // 서버 상태로 다시 맞춘다(reload).
+  async function handleDragEnd({ data, from, to }: { data: TripPlace[]; from: number; to: number }) {
+    if (from === to || !activeDayData) return;
+
+    queryClient.setQueryData<TripDetail>(["trip", id], (current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        days: current.days.map((d) => (d.day === currentActiveDay ? { ...d, places: data } : d)),
+      };
+    });
+
+    const movedPlace = data[to];
+    const direction = to > from ? "DOWN" : "UP";
+    const steps = Math.abs(to - from);
+    setBusy(true);
+    setError(null);
+    try {
+      for (let i = 0; i < steps; i++) {
+        await reorderTripPlace(movedPlace.id, direction);
+      }
+    } catch {
+      setError("순서를 바꾸지 못했어요.");
+    } finally {
+      setBusy(false);
+      await reload();
+    }
+  }
+
   async function handleRemove(placeId: number) {
     if (busy) return;
     setBusy(true);
@@ -192,24 +229,14 @@ export function TripDetailScreen({ route }: Props) {
 
   function closeTimePicker() {
     setTimeDraft(null);
-    setShowTimePicker(null);
+    setShowTimePicker(false);
     setEditingField(null);
   }
 
-  // 시작 시간이 저장에 성공했을 때에만 종료 시간 단계로 넘어간다.
+  // 도착 시간 하나만 받는다 — 종료 시간은 이 화면 어디에도 쓰이지 않아서(캘린더형
+  // 블록 뷰가 아니라 리스트) 입력만 두 번 시키고 버려지는 값이었다.
   async function commitTime(place: TripPlace, selected: Date) {
-    const isStart = showTimePicker === "start";
-    const timeStr = toTimeString(selected);
-    const saved = await handleUpdateDetails(
-      place.id,
-      isStart ? { visitStartTime: timeStr } : { visitEndTime: timeStr },
-      { keepEditingField: true }
-    );
-    if (saved && isStart) {
-      setTimeDraft(parseTimeToDate(place.visitEndTime));
-      setShowTimePicker("end");
-      return;
-    }
+    await handleUpdateDetails(place.id, { visitStartTime: toTimeString(selected) });
     closeTimePicker();
   }
 
@@ -227,338 +254,340 @@ export function TripDetailScreen({ route }: Props) {
     }
   }
 
-  return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, flex: 1 }}>
-          {trip.days.map((d) => (
+  function renderPlaceItem({ item: place, getIndex, drag, isActive }: RenderItemParams<TripPlace>) {
+    const index = getIndex() ?? 0;
+    return (
+      <View style={{ opacity: isActive ? 0.9 : 1 }}>
+        <PlaceRow
+          place={place}
+          index={index}
+          isLast={index === places.length - 1}
+          distanceKm={null}
+          editable
+          disabled={busy}
+          color={dayColor}
+          dragHandle={{ onPressIn: drag }}
+          onPressInfo={() => setReviewTarget({ kind: "tripPlace", id: place.id })}
+        >
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: 4 }}>
             <Pressable
-              key={d.day}
-              onPress={() => setActiveDay(d.day)}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 20,
-                backgroundColor: d.day === currentActiveDay ? colors.accent : colors.bgMuted,
+              onPress={() => {
+                setEditingField({ placeId: place.id, field: "time" });
+                setTimeDraft(parseTimeToDate(place.visitStartTime));
+                setShowTimePicker(true);
               }}
             >
-              <AppText weight="medium" style={{ color: d.day === currentActiveDay ? "#fff" : colors.inkMuted, fontSize: 13 }}>
-                {d.day}일차{d.date ? ` (${d.date.slice(5)})` : ""}
+              <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                {place.visitStartTime ? `${place.visitStartTime.slice(0, 5)} 도착` : "시간 추가"}
               </AppText>
             </Pressable>
-          ))}
-        </View>
-        <Pressable onPress={handleCheckWeather} disabled={busy || !activeDayData?.date}>
-          <AppText style={{ fontSize: 13, color: colors.accent, opacity: !activeDayData?.date ? 0.4 : 1 }}>날씨 확인</AppText>
-        </Pressable>
-      </View>
 
-      {weatherMessage && (
-        <View style={{ padding: 10, borderRadius: 8, backgroundColor: colors.accentBg }}>
-          <AppText style={{ fontSize: 13 }}>{weatherMessage}</AppText>
-        </View>
-      )}
-      {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
-
-      <InlineMap
-        pins={places
-          .filter((p) => p.latitude !== null && p.longitude !== null)
-          .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
-      />
-
-      <View style={{ gap: 12 }}>
-        {places.length === 0 && (
-          <AppText style={{ textAlign: "center", color: colors.inkMuted, padding: 16 }}>
-            아직 장소가 없어요. 아래에서 검색해서 추가해보세요.
-          </AppText>
-        )}
-        {places.map((place, index) => (
-          <PlaceRow
-            key={place.id}
-            place={place}
-            index={index}
-            isLast={index === places.length - 1}
-            distanceKm={null}
-            editable
-            disabled={busy}
-            color={dayColor}
-            onMoveUp={() => handleReorder(place.id, "UP")}
-            onMoveDown={() => handleReorder(place.id, "DOWN")}
-          >
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: 4 }}>
-              <Pressable
-                onPress={() => {
-                  setEditingField({ placeId: place.id, field: "time" });
-                  setTimeDraft(parseTimeToDate(place.visitStartTime));
-                  setShowTimePicker("start");
-                }}
-              >
-                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                  {place.visitStartTime && place.visitEndTime
-                    ? `${place.visitStartTime.slice(0, 5)}~${place.visitEndTime.slice(0, 5)}`
-                    : "시간 추가"}
-                </AppText>
-              </Pressable>
-
-              <Pressable
-                onPress={() =>
-                  setEditingField(
-                    editingField?.placeId === place.id && editingField.field === "transport"
-                      ? null
-                      : { placeId: place.id, field: "transport" }
-                  )
-                }
-              >
-                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                  {place.arrivalTransportMode ? TRANSPORT_LABEL[place.arrivalTransportMode] : "이동수단 추가"}
-                </AppText>
-              </Pressable>
-
-              <Pressable
-                onPress={() => {
-                  setMemoDraft(place.memo ?? "");
-                  setEditingField({ placeId: place.id, field: "memo" });
-                }}
-              >
-                <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
-                  {place.memo || "메모 추가"}
-                </AppText>
-              </Pressable>
-
-              <Pressable onPress={() => handleRemove(place.id)} disabled={busy} style={{ marginLeft: "auto" }}>
-                <AppText style={{ fontSize: 13, color: colors.inkMuted }}>삭제</AppText>
-              </Pressable>
-            </View>
-
-            {editingField?.placeId === place.id && editingField.field === "transport" && (
-              <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
-                {(["WALK", "TRANSIT", "CAR"] as const).map((mode) => (
-                  <Pressable
-                    key={mode}
-                    onPress={() => handleUpdateDetails(place.id, { arrivalTransportMode: mode })}
-                    style={{
-                      paddingVertical: 4,
-                      paddingHorizontal: 10,
-                      borderRadius: 14,
-                      backgroundColor: place.arrivalTransportMode === mode ? colors.accent : colors.bgMuted,
-                    }}
-                  >
-                    <AppText style={{ fontSize: 11, color: place.arrivalTransportMode === mode ? "#fff" : colors.inkMuted }}>
-                      {TRANSPORT_LABEL[mode]}
-                    </AppText>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-
-            {editingField?.placeId === place.id && editingField.field === "memo" && (
-              <TextInput
-                autoFocus
-                defaultValue={memoDraft}
-                onChangeText={setMemoDraft}
-                onBlur={() => handleUpdateDetails(place.id, { memo: memoDraft })}
-                onSubmitEditing={() => handleUpdateDetails(place.id, { memo: memoDraft })}
-                style={{
-                  marginTop: 6,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  borderRadius: 8,
-                  paddingHorizontal: 10,
-                  paddingVertical: 6,
-                  fontSize: 12,
-                }}
-              />
-            )}
-
-            {editingField?.placeId === place.id && editingField.field === "time" && showTimePicker && (
-              <View style={{ marginTop: 6, gap: 4 }}>
-                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                  {showTimePicker === "start" ? "방문 시작 시간" : "방문 종료 시간"}
-                </AppText>
-                <DateTimePicker
-                  // Android는 마운트될 때 다이얼로그가 뜬다 — 시작→종료로 넘어갈 때
-                  // key를 바꿔 다시 마운트해야 종료 시간 다이얼로그가 실제로 열린다.
-                  key={showTimePicker}
-                  value={
-                    timeDraft ??
-                    parseTimeToDate(showTimePicker === "start" ? place.visitStartTime : place.visitEndTime)
-                  }
-                  mode="time"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  onChange={(event, selected) => {
-                    if (Platform.OS === "ios") {
-                      // 드래그 중간값 — 저장하지 않고 담아만 둔다.
-                      if (selected) setTimeDraft(selected);
-                      return;
-                    }
-                    // Android는 모달이라 확인/취소 시 한 번만 발생한다.
-                    if (event.type !== "set" || !selected) {
-                      closeTimePicker();
-                      return;
-                    }
-                    commitTime(place, selected);
-                  }}
-                />
-                {Platform.OS === "ios" && (
-                  <View style={{ flexDirection: "row", gap: 16, justifyContent: "flex-end" }}>
-                    <Pressable onPress={closeTimePicker} disabled={busy}>
-                      <AppText style={{ fontSize: 13, color: colors.inkMuted }}>취소</AppText>
-                    </Pressable>
-                    <Pressable
-                      onPress={() =>
-                        commitTime(
-                          place,
-                          timeDraft ??
-                            parseTimeToDate(showTimePicker === "start" ? place.visitStartTime : place.visitEndTime)
-                        )
-                      }
-                      disabled={busy}
-                      style={{ opacity: busy ? 0.4 : 1 }}
-                    >
-                      <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
-                        확인
-                      </AppText>
-                    </Pressable>
-                  </View>
-                )}
-              </View>
-            )}
-          </PlaceRow>
-        ))}
-      </View>
-
-      <View style={{ flexDirection: "row", gap: 16, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16 }}>
-        <Pressable onPress={() => setActiveTab("search")}>
-          <AppText weight="medium" style={{ color: activeTab === "search" ? colors.accent : colors.inkMuted }}>
-            검색
-          </AppText>
-        </Pressable>
-        <Pressable onPress={() => setActiveTab("bookmarks")}>
-          <AppText weight="medium" style={{ color: activeTab === "bookmarks" ? colors.accent : colors.inkMuted }}>
-            찜한 장소
-          </AppText>
-        </Pressable>
-      </View>
-      {activeTab === "search" ? (
-        <View style={{ gap: 12 }}>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="장소 이름으로 검색 (예: 경복궁)"
-              style={{
-                flex: 1,
-                height: 44,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 10,
-                paddingHorizontal: 12,
-                fontFamily: "NotoSansKR_400Regular",
-              }}
-            />
             <Pressable
-              onPress={handleSearch}
-              disabled={searching || !query.trim()}
-              style={{
-                height: 44,
-                paddingHorizontal: 16,
-                borderRadius: 10,
-                backgroundColor: colors.accent,
-                justifyContent: "center",
-                alignItems: "center",
-                opacity: searching || !query.trim() ? 0.6 : 1,
+              onPress={() =>
+                setEditingField(
+                  editingField?.placeId === place.id && editingField.field === "transport"
+                    ? null
+                    : { placeId: place.id, field: "transport" }
+                )
+              }
+            >
+              <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                {place.arrivalTransportMode ? TRANSPORT_LABEL[place.arrivalTransportMode] : "이동수단 추가"}
+              </AppText>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                setMemoDraft(place.memo ?? "");
+                setEditingField({ placeId: place.id, field: "memo" });
               }}
             >
-              <AppText weight="medium" style={{ color: "#fff" }}>
-                {searching ? "검색 중..." : "검색"}
+              <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+                {place.memo || "메모 추가"}
               </AppText>
+            </Pressable>
+
+            <Pressable onPress={() => handleRemove(place.id)} disabled={busy} style={{ marginLeft: "auto" }}>
+              <AppText style={{ fontSize: 13, color: colors.inkMuted }}>삭제</AppText>
             </Pressable>
           </View>
 
-          {searchResults.map((place) => (
-            <View key={place.id} style={{ padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 12, gap: 6 }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
-                <View style={{ flex: 1 }}>
-                  <AppText weight="medium" numberOfLines={1}>
-                    {place.name}
+          {editingField?.placeId === place.id && editingField.field === "transport" && (
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
+              {(["WALK", "TRANSIT", "CAR"] as const).map((mode) => (
+                <Pressable
+                  key={mode}
+                  onPress={() => handleUpdateDetails(place.id, { arrivalTransportMode: mode })}
+                  style={{
+                    paddingVertical: 4,
+                    paddingHorizontal: 10,
+                    borderRadius: 14,
+                    backgroundColor: place.arrivalTransportMode === mode ? colors.accent : colors.bgMuted,
+                  }}
+                >
+                  <AppText style={{ fontSize: 11, color: place.arrivalTransportMode === mode ? "#fff" : colors.inkMuted }}>
+                    {TRANSPORT_LABEL[mode]}
                   </AppText>
-                  {place.address && (
-                    <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
-                      {place.address}
-                    </AppText>
-                  )}
-                  {place.rating !== null && (
-                    <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                      ⭐ {place.rating.toFixed(1)}
-                      {place.userRatingCount !== null ? ` (리뷰 ${place.userRatingCount}개)` : ""}
-                    </AppText>
-                  )}
-                </View>
-                <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
-                  <Pressable onPress={() => handleToggleBookmark(place.id)}>
-                    <AppText style={{ fontSize: 18 }}>{bookmarkedPlaceIds.has(place.id) ? "❤️" : "🤍"}</AppText>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => handleAddPlace(place.googlePlaceId)}
-                    disabled={busy}
-                    style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
-                  >
-                    <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
-                  </Pressable>
-                </View>
-              </View>
-              <Pressable onPress={() => setReviewModalPlaceId(place.id)}>
-                <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
-              </Pressable>
+                </Pressable>
+              ))}
             </View>
-          ))}
-        </View>
-      ) : (
-        <View style={{ gap: 12 }}>
-          {bookmarksQuery.isError && (
-            <QueryErrorView message="찜한 장소를 불러오지 못했어요." onRetry={() => bookmarksQuery.refetch()} />
           )}
-          {!bookmarksQuery.isError && (bookmarksQuery.data ?? []).length === 0 && (
-            <AppText style={{ color: colors.inkMuted }}>아직 찜한 장소가 없어요.</AppText>
-          )}
-          {(bookmarksQuery.data ?? []).map((bookmark) => (
-            <View
-              key={bookmark.id}
+
+          {editingField?.placeId === place.id && editingField.field === "memo" && (
+            <TextInput
+              autoFocus
+              defaultValue={memoDraft}
+              onChangeText={setMemoDraft}
+              onBlur={() => handleUpdateDetails(place.id, { memo: memoDraft })}
+              onSubmitEditing={() => handleUpdateDetails(place.id, { memo: memoDraft })}
               style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: 12,
+                marginTop: 6,
                 borderWidth: 1,
                 borderColor: colors.border,
-                borderRadius: 12,
+                borderRadius: 8,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                fontSize: 12,
               }}
-            >
-              <AppText weight="medium" numberOfLines={1} style={{ flex: 1 }}>
-                {bookmark.placeName}
-              </AppText>
-              <View style={{ flexDirection: "row", gap: 10 }}>
+            />
+          )}
+
+          {editingField?.placeId === place.id && editingField.field === "time" && showTimePicker && (
+            <View style={{ marginTop: 6, gap: 4 }}>
+              <AppText style={{ fontSize: 12, color: colors.inkMuted }}>도착 시간</AppText>
+              <DateTimePicker
+                value={timeDraft ?? parseTimeToDate(place.visitStartTime)}
+                mode="time"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={(event, selected) => {
+                  if (Platform.OS === "ios") {
+                    // 드래그 중간값 — 저장하지 않고 담아만 둔다.
+                    if (selected) setTimeDraft(selected);
+                    return;
+                  }
+                  // Android는 모달이라 확인/취소 시 한 번만 발생한다.
+                  if (event.type !== "set" || !selected) {
+                    closeTimePicker();
+                    return;
+                  }
+                  commitTime(place, selected);
+                }}
+              />
+              {Platform.OS === "ios" && (
+                <View style={{ flexDirection: "row", gap: 16, justifyContent: "flex-end" }}>
+                  <Pressable onPress={closeTimePicker} disabled={busy}>
+                    <AppText style={{ fontSize: 13, color: colors.inkMuted }}>취소</AppText>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => commitTime(place, timeDraft ?? parseTimeToDate(place.visitStartTime))}
+                    disabled={busy}
+                    style={{ opacity: busy ? 0.4 : 1 }}
+                  >
+                    <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
+                      확인
+                    </AppText>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          )}
+        </PlaceRow>
+      </View>
+    );
+  }
+
+  return (
+    <DraggableFlatList
+      data={places}
+      keyExtractor={(item) => String(item.id)}
+      onDragEnd={handleDragEnd}
+      renderItem={renderPlaceItem}
+      activationDistance={0}
+      ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+      contentContainerStyle={{ padding: 16 }}
+      ListHeaderComponent={
+        <View style={{ gap: 16, marginBottom: 16 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, flex: 1 }}>
+              {trip.days.map((d) => (
                 <Pressable
-                  onPress={() => handleAddPlace(bookmark.googlePlaceId)}
-                  disabled={busy}
-                  style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
+                  key={d.day}
+                  onPress={() => setActiveDay(d.day)}
+                  style={{
+                    paddingVertical: 8,
+                    paddingHorizontal: 14,
+                    borderRadius: 20,
+                    backgroundColor: d.day === currentActiveDay ? colors.accent : colors.bgMuted,
+                  }}
                 >
-                  <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
+                  <AppText weight="medium" style={{ color: d.day === currentActiveDay ? "#fff" : colors.inkMuted, fontSize: 13 }}>
+                    {d.day}일차{d.date ? ` (${d.date.slice(5)})` : ""}
+                  </AppText>
                 </Pressable>
-                <Pressable onPress={() => handleRemoveBookmark(bookmark.id)}>
-                  <AppText style={{ fontSize: 12, color: colors.inkMuted }}>제거</AppText>
+              ))}
+            </View>
+            <Pressable onPress={handleCheckWeather} disabled={busy || !activeDayData?.date}>
+              <AppText style={{ fontSize: 13, color: colors.accent, opacity: !activeDayData?.date ? 0.4 : 1 }}>날씨 확인</AppText>
+            </Pressable>
+          </View>
+
+          {weatherMessage && (
+            <View style={{ padding: 10, borderRadius: 8, backgroundColor: colors.accentBg }}>
+              <AppText style={{ fontSize: 13 }}>{weatherMessage}</AppText>
+            </View>
+          )}
+          {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
+
+          <InlineMap
+            pins={places
+              .filter((p) => p.latitude !== null && p.longitude !== null)
+              .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
+            selectedId={reviewTarget?.kind === "tripPlace" ? String(reviewTarget.id) : null}
+          />
+        </View>
+      }
+      ListEmptyComponent={
+        <AppText style={{ textAlign: "center", color: colors.inkMuted, padding: 16 }}>
+          아직 장소가 없어요. 아래에서 검색해서 추가해보세요.
+        </AppText>
+      }
+      ListFooterComponent={
+        <View style={{ gap: 16, marginTop: 16 }}>
+          <View style={{ flexDirection: "row", gap: 16, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16 }}>
+            <Pressable onPress={() => setActiveTab("search")}>
+              <AppText weight="medium" style={{ color: activeTab === "search" ? colors.accent : colors.inkMuted }}>
+                검색
+              </AppText>
+            </Pressable>
+            <Pressable onPress={() => setActiveTab("bookmarks")}>
+              <AppText weight="medium" style={{ color: activeTab === "bookmarks" ? colors.accent : colors.inkMuted }}>
+                찜한 장소
+              </AppText>
+            </Pressable>
+          </View>
+          {activeTab === "search" ? (
+            <View style={{ gap: 12 }}>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <TextInput
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder="장소 이름으로 검색 (예: 경복궁)"
+                  style={{
+                    flex: 1,
+                    height: 44,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: 10,
+                    paddingHorizontal: 12,
+                    fontFamily: "NotoSansKR_400Regular",
+                  }}
+                />
+                <Pressable
+                  onPress={handleSearch}
+                  disabled={searching || !query.trim()}
+                  style={{
+                    height: 44,
+                    paddingHorizontal: 16,
+                    borderRadius: 10,
+                    backgroundColor: colors.accent,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    opacity: searching || !query.trim() ? 0.6 : 1,
+                  }}
+                >
+                  <AppText weight="medium" style={{ color: "#fff" }}>
+                    {searching ? "검색 중..." : "검색"}
+                  </AppText>
                 </Pressable>
               </View>
-            </View>
-          ))}
-        </View>
-      )}
 
-      <PlaceReviewModal
-        visible={reviewModalPlaceId !== null}
-        placeId={reviewModalPlaceId}
-        onClose={() => setReviewModalPlaceId(null)}
-      />
-    </ScrollView>
+              {searchResults.map((place) => (
+                <View key={place.id} style={{ padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 12, gap: 6 }}>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <AppText weight="medium" numberOfLines={1}>
+                        {place.name}
+                      </AppText>
+                      {place.address && (
+                        <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+                          {place.address}
+                        </AppText>
+                      )}
+                      {place.rating !== null && (
+                        <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                          ⭐ {place.rating.toFixed(1)}
+                          {place.userRatingCount !== null ? ` (리뷰 ${place.userRatingCount}개)` : ""}
+                        </AppText>
+                      )}
+                    </View>
+                    <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+                      <Pressable onPress={() => handleToggleBookmark(place.id)}>
+                        <AppText style={{ fontSize: 18 }}>{bookmarkedPlaceIds.has(place.id) ? "⭐" : "☆"}</AppText>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => handleAddPlace(place.googlePlaceId)}
+                        disabled={busy}
+                        style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
+                      >
+                        <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
+                      </Pressable>
+                    </View>
+                  </View>
+                  <Pressable onPress={() => setReviewTarget({ kind: "place", id: place.id })}>
+                    <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={{ gap: 12 }}>
+              {bookmarksQuery.isError && (
+                <QueryErrorView message="찜한 장소를 불러오지 못했어요." onRetry={() => bookmarksQuery.refetch()} />
+              )}
+              {!bookmarksQuery.isError && (bookmarksQuery.data ?? []).length === 0 && (
+                <AppText style={{ color: colors.inkMuted }}>아직 찜한 장소가 없어요.</AppText>
+              )}
+              {(bookmarksQuery.data ?? []).map((bookmark) => (
+                <View
+                  key={bookmark.id}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: 12,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: 12,
+                  }}
+                >
+                  <AppText weight="medium" numberOfLines={1} style={{ flex: 1 }}>
+                    {bookmark.placeName}
+                  </AppText>
+                  <View style={{ flexDirection: "row", gap: 10 }}>
+                    <Pressable
+                      onPress={() => handleAddPlace(bookmark.googlePlaceId)}
+                      disabled={busy}
+                      style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
+                    >
+                      <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
+                    </Pressable>
+                    <Pressable onPress={() => handleRemoveBookmark(bookmark.id)}>
+                      <AppText style={{ fontSize: 12, color: colors.inkMuted }}>제거</AppText>
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <PlaceReviewModal
+            visible={reviewTarget !== null}
+            placeId={reviewTarget?.kind === "place" ? reviewTarget.id : null}
+            tripPlaceId={reviewTarget?.kind === "tripPlace" ? reviewTarget.id : null}
+            onClose={() => setReviewTarget(null)}
+          />
+        </View>
+      }
+    />
   );
 }

@@ -9,7 +9,16 @@ const KAKAO_MAP_JS_KEY = process.env.EXPO_PUBLIC_KAKAO_MAP_JS_KEY ?? "";
 
 type Pin = { id: string; latitude: number; longitude: number };
 
-export function InlineMap({ pins, height = 200 }: { pins: Pin[]; height?: number }) {
+export function InlineMap({
+  pins,
+  height = 200,
+  selectedId = null,
+}: {
+  pins: Pin[];
+  height?: number;
+  // 있으면 해당 핀으로 지도를 이동시키고 하이라이트 링을 보여준다(웹 KakaoMap.tsx와 동일).
+  selectedId?: string | null;
+}) {
   const webviewRef = useRef<WebView>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -19,14 +28,16 @@ export function InlineMap({ pins, height = 200 }: { pins: Pin[]; height?: number
   // postMessage가 다시 나가 카카오 지도가 통째로 다시 만들어진다.
   // 그래서 참조가 아니라 "핀 내용"을 직렬화한 문자열을 의존성으로 쓴다 —
   // 내용이 실제로 바뀔 때만 새 메시지가 나간다.
-  const pinsPayload = JSON.stringify(
+  const pinsKey = JSON.stringify(
     pins.map((pin) => ({ id: pin.id, latitude: pin.latitude, longitude: pin.longitude }))
   );
+  const payload = JSON.stringify({ pins: JSON.parse(pinsKey), selectedId });
 
   useEffect(() => {
-    if (!isMapLoaded || mapError || pinsPayload === "[]") return;
-    webviewRef.current?.postMessage(pinsPayload);
-  }, [isMapLoaded, mapError, pinsPayload]);
+    if (!isMapLoaded || mapError || pinsKey === "[]") return;
+    webviewRef.current?.postMessage(payload);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMapLoaded, mapError, pinsKey, selectedId]);
 
   function handleMessage(event: WebViewMessageEvent) {
     try {

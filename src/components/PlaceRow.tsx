@@ -19,6 +19,11 @@ type PlaceRowProps = {
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onOpenDayPicker?: () => void;
+  // 위/아래 버튼 대신 드래그로 순서를 바꾸는 화면(여행 상세)에서 전달한다 —
+  // 있으면 화살표 대신 드래그 핸들을 렌더링한다.
+  dragHandle?: { onPressIn: () => void };
+  // 있으면 이름/주소 영역을 탭해서 장소 상세(리뷰 요약)를 열 수 있게 한다.
+  onPressInfo?: () => void;
   color?: string;
   children?: ReactNode;
 };
@@ -33,6 +38,8 @@ export function PlaceRow({
   onMoveUp,
   onMoveDown,
   onOpenDayPicker,
+  dragHandle,
+  onPressInfo,
   color = colors.accent,
   children,
 }: PlaceRowProps) {
@@ -64,7 +71,7 @@ export function PlaceRow({
           </AppText>
         </View>
         <View style={{ flex: 1, gap: 6 }}>
-          <View>
+          <Pressable onPress={onPressInfo} disabled={!onPressInfo}>
             <AppText weight="medium" numberOfLines={1}>
               {place.placeName}
             </AppText>
@@ -73,10 +80,10 @@ export function PlaceRow({
                 {place.address}
               </AppText>
             )}
-          </View>
+          </Pressable>
           {editable && (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              {(onMoveUp || onMoveDown) && (
+              {!dragHandle && (onMoveUp || onMoveDown) && (
                 <View style={{ flexDirection: "row", gap: 6 }}>
                   <Pressable
                     onPress={onMoveUp}
@@ -103,6 +110,16 @@ export function PlaceRow({
           )}
           {children}
         </View>
+        {dragHandle && (
+          <Pressable
+            onPressIn={dragHandle.onPressIn}
+            disabled={disabled}
+            hitSlop={12}
+            style={{ justifyContent: "center", paddingHorizontal: 4, opacity: disabled ? 0.3 : 1 }}
+          >
+            <AppText style={{ fontSize: 18, color: colors.inkMuted }}>⠿</AppText>
+          </Pressable>
+        )}
       </View>
       {!isLast && distanceKm !== null && (
         <AppText style={{ fontSize: 11, color: colors.inkMuted, marginLeft: 38 }}>
