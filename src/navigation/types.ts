@@ -7,4 +7,5 @@ export type RootStackParamList = {
   TripsList: undefined;
   NewTrip: undefined;
   TripDetail: { id: number };
+  SavedPlaces: undefined;
 };
