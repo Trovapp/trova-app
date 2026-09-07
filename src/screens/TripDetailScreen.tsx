@@ -45,6 +45,9 @@ export function TripDetailScreen({ route }: Props) {
   const [weatherMessage, setWeatherMessage] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<EditingField>(null);
   const [showTimePicker, setShowTimePicker] = useState<"start" | "end" | null>(null);
+  // iOS 스피너는 드래그하는 내내 onChange가 계속 발생한다 — 저장하지 않고 여기에만 담아두고
+  // "확인"을 눌렀을 때 한 번만 저장한다.
+  const [timeDraft, setTimeDraft] = useState<Date | null>(null);
   const [memoDraft, setMemoDraft] = useState("");
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<RecommendedPlace[]>([]);
@@ -148,17 +151,22 @@ export function TripDetailScreen({ route }: Props) {
     }
   }
 
+  // 저장이 실제로 끝났는지를 호출부가 알 수 있어야 한다. busy 가드로 그냥 return하면
+  // async 함수는 다음 마이크로태스크에 곧바로 resolve되므로, .then()으로 다음 단계를
+  // 이어붙이면 저장이 끝나기도 전에 진행돼버린다.
   async function handleUpdateDetails(
     placeId: number,
     patch: Parameters<typeof updateTripPlaceDetails>[1],
     options?: { keepEditingField?: boolean }
-  ) {
-    if (busy) return;
+  ): Promise<boolean> {
+    if (busy) return false;
     setBusy(true);
     setError(null);
+    let saved = false;
     try {
       await updateTripPlaceDetails(placeId, patch);
       await reload();
+      saved = true;
     } catch {
       setError("저장하지 못했어요.");
     } finally {
@@ -167,6 +175,30 @@ export function TripDetailScreen({ route }: Props) {
         setEditingField(null);
       }
     }
+    return saved;
+  }
+
+  function closeTimePicker() {
+    setTimeDraft(null);
+    setShowTimePicker(null);
+    setEditingField(null);
+  }
+
+  // 시작 시간이 저장에 성공했을 때에만 종료 시간 단계로 넘어간다.
+  async function commitTime(place: TripPlace, selected: Date) {
+    const isStart = showTimePicker === "start";
+    const timeStr = toTimeString(selected);
+    const saved = await handleUpdateDetails(
+      place.id,
+      isStart ? { visitStartTime: timeStr } : { visitEndTime: timeStr },
+      { keepEditingField: true }
+    );
+    if (saved && isStart) {
+      setTimeDraft(parseTimeToDate(place.visitEndTime));
+      setShowTimePicker("end");
+      return;
+    }
+    closeTimePicker();
   }
 
   async function handleCheckWeather() {
@@ -245,6 +277,7 @@ export function TripDetailScreen({ route }: Props) {
               <Pressable
                 onPress={() => {
                   setEditingField({ placeId: place.id, field: "time" });
+                  setTimeDraft(parseTimeToDate(place.visitStartTime));
                   setShowTimePicker("start");
                 }}
               >
@@ -326,26 +359,57 @@ export function TripDetailScreen({ route }: Props) {
             )}
 
             {editingField?.placeId === place.id && editingField.field === "time" && showTimePicker && (
-              <DateTimePicker
-                value={parseTimeToDate(showTimePicker === "start" ? place.visitStartTime : place.visitEndTime)}
-                mode="time"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={(_event, selected) => {
-                  if (!selected) {
-                    setShowTimePicker(null);
-                    setEditingField(null);
-                    return;
+              <View style={{ marginTop: 6, gap: 4 }}>
+                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                  {showTimePicker === "start" ? "방문 시작 시간" : "방문 종료 시간"}
+                </AppText>
+                <DateTimePicker
+                  // Android는 마운트될 때 다이얼로그가 뜬다 — 시작→종료로 넘어갈 때
+                  // key를 바꿔 다시 마운트해야 종료 시간 다이얼로그가 실제로 열린다.
+                  key={showTimePicker}
+                  value={
+                    timeDraft ??
+                    parseTimeToDate(showTimePicker === "start" ? place.visitStartTime : place.visitEndTime)
                   }
-                  const timeStr = toTimeString(selected);
-                  if (showTimePicker === "start") {
-                    handleUpdateDetails(place.id, { visitStartTime: timeStr }, { keepEditingField: true }).then(() =>
-                      setShowTimePicker("end")
-                    );
-                  } else {
-                    handleUpdateDetails(place.id, { visitEndTime: timeStr }).then(() => setShowTimePicker(null));
-                  }
-                }}
-              />
+                  mode="time"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={(event, selected) => {
+                    if (Platform.OS === "ios") {
+                      // 드래그 중간값 — 저장하지 않고 담아만 둔다.
+                      if (selected) setTimeDraft(selected);
+                      return;
+                    }
+                    // Android는 모달이라 확인/취소 시 한 번만 발생한다.
+                    if (event.type !== "set" || !selected) {
+                      closeTimePicker();
+                      return;
+                    }
+                    commitTime(place, selected);
+                  }}
+                />
+                {Platform.OS === "ios" && (
+                  <View style={{ flexDirection: "row", gap: 16, justifyContent: "flex-end" }}>
+                    <Pressable onPress={closeTimePicker} disabled={busy}>
+                      <AppText style={{ fontSize: 13, color: colors.inkMuted }}>취소</AppText>
+                    </Pressable>
+                    <Pressable
+                      onPress={() =>
+                        commitTime(
+                          place,
+                          timeDraft ??
+                            parseTimeToDate(showTimePicker === "start" ? place.visitStartTime : place.visitEndTime)
+                        )
+                      }
+                      disabled={busy}
+                      style={{ opacity: busy ? 0.4 : 1 }}
+                    >
+                      <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
+                        확인
+                      </AppText>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
             )}
           </PlaceRow>
         ))}
