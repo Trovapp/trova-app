@@ -441,7 +441,7 @@ export function TripDetailScreen({ route }: Props) {
                 borderColor: colors.border,
                 borderRadius: 10,
                 paddingHorizontal: 12,
-                fontFamily: "IBMPlexMono_400Regular",
+                fontFamily: "NotoSansKR_400Regular",
               }}
             />
             <Pressable
