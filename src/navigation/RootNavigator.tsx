@@ -7,6 +7,7 @@ import { PlacesListScreen } from "@/screens/PlacesListScreen";
 import { VideoGroupScreen } from "@/screens/VideoGroupScreen";
 import { TripsListScreen } from "@/screens/TripsListScreen";
 import { NewTripScreen } from "@/screens/NewTripScreen";
+import { TripDetailScreen } from "@/screens/TripDetailScreen";
 import { AppText } from "@/components/AppText";
 import { View } from "react-native";
 import type { RootStackParamList } from "@/navigation/types";
@@ -38,6 +39,7 @@ export function RootNavigator() {
           <Stack.Screen name="VideoGroup" component={VideoGroupScreen} options={{ title: "영상 속 장소" }} />
           <Stack.Screen name="TripsList" component={TripsListScreen} options={{ title: "내 여행" }} />
           <Stack.Screen name="NewTrip" component={NewTripScreen} options={{ title: "새 여행" }} />
+          <Stack.Screen name="TripDetail" component={TripDetailScreen} options={{ title: "여행 상세" }} />
         </>
       )}
     </Stack.Navigator>
