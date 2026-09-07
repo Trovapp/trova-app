@@ -4,6 +4,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { FolderPickerModal } from "@/components/FolderPickerModal";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
 import { PlaceReviewModal } from "@/components/PlaceReviewModal";
@@ -58,6 +59,7 @@ export function TripDetailScreen({ route }: Props) {
   // 검색결과 카드("장소 카탈로그")는 placeId로, 여행에 이미 담긴 장소 카드는
   // tripPlaceId로 리뷰 요약을 연다 — 서로 다른 id 공간이라 구분해서 들고 있는다.
   const [reviewTarget, setReviewTarget] = useState<{ kind: "place" | "tripPlace"; id: number } | null>(null);
+  const [folderPickerPlaceId, setFolderPickerPlaceId] = useState<number | null>(null);
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const bookmarkedPlaceIds = new Set((bookmarksQuery.data ?? []).map((b) => b.placeId));
@@ -118,8 +120,15 @@ export function TripDetailScreen({ route }: Props) {
 
   async function handleToggleBookmark(placeId: number) {
     if (bookmarkedPlaceIds.has(placeId)) return;
+    setFolderPickerPlaceId(placeId);
+  }
+
+  async function handlePickFolder(folderId: number | null) {
+    if (folderPickerPlaceId === null) return;
+    const placeId = folderPickerPlaceId;
+    setFolderPickerPlaceId(null);
     try {
-      await addBookmark(placeId);
+      await addBookmark(placeId, folderId);
       await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
     } catch {
       setError("찜하기에 실패했어요.");
@@ -585,6 +594,12 @@ export function TripDetailScreen({ route }: Props) {
             placeId={reviewTarget?.kind === "place" ? reviewTarget.id : null}
             tripPlaceId={reviewTarget?.kind === "tripPlace" ? reviewTarget.id : null}
             onClose={() => setReviewTarget(null)}
+          />
+
+          <FolderPickerModal
+            visible={folderPickerPlaceId !== null}
+            onClose={() => setFolderPickerPlaceId(null)}
+            onPick={handlePickFolder}
           />
         </View>
       }
