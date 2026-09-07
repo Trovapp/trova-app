@@ -91,7 +91,11 @@ export function TripDetailScreen({ route }: Props) {
     }
   }
 
-  async function handleUpdateDetails(placeId: number, patch: Parameters<typeof updateTripPlaceDetails>[1]) {
+  async function handleUpdateDetails(
+    placeId: number,
+    patch: Parameters<typeof updateTripPlaceDetails>[1],
+    options?: { keepEditingField?: boolean }
+  ) {
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -102,7 +106,9 @@ export function TripDetailScreen({ route }: Props) {
       setError("저장하지 못했어요.");
     } finally {
       setBusy(false);
-      setEditingField(null);
+      if (!options?.keepEditingField) {
+        setEditingField(null);
+      }
     }
   }
 
@@ -270,11 +276,14 @@ export function TripDetailScreen({ route }: Props) {
                 onChange={(_event, selected) => {
                   if (!selected) {
                     setShowTimePicker(null);
+                    setEditingField(null);
                     return;
                   }
                   const timeStr = toTimeString(selected);
                   if (showTimePicker === "start") {
-                    handleUpdateDetails(place.id, { visitStartTime: timeStr }).then(() => setShowTimePicker("end"));
+                    handleUpdateDetails(place.id, { visitStartTime: timeStr }, { keepEditingField: true }).then(() =>
+                      setShowTimePicker("end")
+                    );
                   } else {
                     handleUpdateDetails(place.id, { visitEndTime: timeStr }).then(() => setShowTimePicker(null));
                   }
