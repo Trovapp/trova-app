@@ -11,6 +11,8 @@ export type Bookmark = {
   longitude: number | null;
   createdAt: string;
   folderId: number | null;
+  category: string | null;
+  address: string | null;
 };
 
 export type BookmarkFolder = {
