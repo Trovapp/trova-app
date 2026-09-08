@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Pressable, ScrollView, TextInput, View } from "react-native";
+import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { DayPickerSheet } from "@/components/DayPickerSheet";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
+import { PlaceReviewSheet } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { haversineDistanceKm } from "@/lib/geo";
 import { generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
@@ -34,6 +36,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const [tripTitle, setTripTitle] = useState("");
   const [confirmingTrip, setConfirmingTrip] = useState(false);
   const [tripError, setTripError] = useState<string | null>(null);
+  const [reviewPlaceId, setReviewPlaceId] = useState<number | null>(null);
 
   const group = (placesQuery.data ?? []).filter((p) => p.jobId === jobId);
 
@@ -92,30 +95,29 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     }
   }
 
-  async function handleReorder(place: Place, direction: "UP" | "DOWN") {
-    if (actionPending || place.dayNumber === null) return;
-    const dayPlaces = days.get(place.dayNumber) ?? [];
-    const index = dayPlaces.findIndex((p) => p.id === place.id);
-    const swapIndex = direction === "UP" ? index - 1 : index + 1;
-    if (index < 0 || swapIndex < 0 || swapIndex >= dayPlaces.length) return;
-    const neighbor = dayPlaces[swapIndex];
-
-    setActionPending(true);
+  // 드래그가 끝나면 화면은 바로 새 순서를 반영하고, 실제 저장은 기존 한 칸씩
+  // 이동하는 API(reorderPlace)를 옮긴 칸 수만큼 순차 호출해서 처리한다 — 여행
+  // 상세 화면(TripDetailScreen)의 드래그 저장 방식과 동일하다.
+  async function handleDragEnd({ data, from, to }: { data: Place[]; from: number; to: number }) {
+    if (from === to || actionPending) return;
     const previous = itineraryPlaces;
     setItineraryError(null);
-    const placeOrder = place.orderInDay;
-    const neighborOrder = neighbor.orderInDay;
-    setLocalPlaces(
-      previous.map((p) => {
-        if (p.id === place.id) return { ...p, orderInDay: neighborOrder };
-        if (p.id === neighbor.id) return { ...p, orderInDay: placeOrder };
-        return p;
-      })
-    );
+    const orderById = new Map(data.map((p, i) => [p.id, i]));
+    setLocalPlaces(previous.map((p) => (orderById.has(p.id) ? { ...p, orderInDay: orderById.get(p.id)! } : p)));
 
+    const movedPlace = data[to];
+    const direction = to > from ? "DOWN" : "UP";
+    const steps = Math.abs(to - from);
+    setActionPending(true);
     try {
-      const updated = await reorderPlace(place.id, direction);
-      setLocalPlaces((current) => (current ?? previous).map((p) => (p.id === updated.id ? updated : p)));
+      let updated: Place | null = null;
+      for (let i = 0; i < steps; i++) {
+        updated = await reorderPlace(movedPlace.id, direction);
+      }
+      if (updated) {
+        const finalUpdated = updated;
+        setLocalPlaces((current) => (current ?? previous).map((p) => (p.id === finalUpdated.id ? finalUpdated : p)));
+      }
     } catch {
       setLocalPlaces(previous);
       setItineraryError("순서를 바꾸지 못했어요. 다시 시도해주세요.");
@@ -200,52 +202,101 @@ export function VideoGroupScreen({ route, navigation }: Props) {
 
   const title = group.find((p) => p.title)?.title ?? "제목 없음";
 
+  function renderActivePlaceItem({ item: place, getIndex, drag, isActive }: RenderItemParams<Place>) {
+    const index = getIndex() ?? 0;
+    const isLast = index === activePlaces.length - 1;
+    const next = activePlaces[index + 1];
+    const distanceKm =
+      !isLast && place.latitude !== null && place.longitude !== null && next?.latitude !== null && next?.longitude !== null
+        ? haversineDistanceKm(place.latitude, place.longitude, next!.latitude!, next!.longitude!)
+        : null;
+    return (
+      <View style={{ opacity: isActive ? 0.9 : 1 }}>
+        <PlaceRow
+          place={place}
+          index={index}
+          isLast={isLast}
+          distanceKm={distanceKm}
+          editable
+          disabled={actionPending}
+          dragHandle={{ onPressIn: drag }}
+          onPressInfo={() => setReviewPlaceId(place.id)}
+          onOpenDayPicker={() => setDayPickerFor(place)}
+        />
+      </View>
+    );
+  }
+
+  if (!hasItinerary) {
+    return (
+      <View style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+        <AppText weight="medium" style={{ fontSize: 18 }} numberOfLines={2}>
+          {title}
+        </AppText>
+        <InlineMap
+          pins={group
+            .filter((p) => p.latitude !== null && p.longitude !== null)
+            .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
+        />
+        <Pressable
+          onPress={handleGenerateItinerary}
+          disabled={generating}
+          style={{
+            height: 48,
+            borderRadius: 12,
+            backgroundColor: colors.accent,
+            justifyContent: "center",
+            alignItems: "center",
+            opacity: generating ? 0.6 : 1,
+          }}
+        >
+          <AppText weight="medium" style={{ color: "#fff" }}>
+            {generating ? "일정 생성 중..." : "일정 짜기"}
+          </AppText>
+        </Pressable>
+        {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
+        <View style={{ gap: 12 }}>
+          {group.map((place, index) => {
+            const isLast = index === group.length - 1;
+            const next = group[index + 1];
+            const distanceKm =
+              !isLast && place.latitude !== null && place.longitude !== null && next?.latitude !== null && next?.longitude !== null
+                ? haversineDistanceKm(place.latitude, place.longitude, next!.latitude!, next!.longitude!)
+                : null;
+            return (
+              <PlaceRow
+                key={place.id}
+                place={place}
+                index={index}
+                isLast={isLast}
+                distanceKm={distanceKm}
+                onPressInfo={() => setReviewPlaceId(place.id)}
+              />
+            );
+          })}
+        </View>
+      </ScrollView>
+      <PlaceReviewSheet placeId={reviewPlaceId} onClose={() => setReviewPlaceId(null)} />
+      </View>
+    );
+  }
+
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-      <AppText weight="medium" style={{ fontSize: 18 }} numberOfLines={2}>
-        {title}
-      </AppText>
-
-      {!hasItinerary && (
-        <>
-          <InlineMap
-            pins={group
-              .filter((p) => p.latitude !== null && p.longitude !== null)
-              .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
-          />
-          <Pressable
-            onPress={handleGenerateItinerary}
-            disabled={generating}
-            style={{
-              height: 48,
-              borderRadius: 12,
-              backgroundColor: colors.accent,
-              justifyContent: "center",
-              alignItems: "center",
-              opacity: generating ? 0.6 : 1,
-            }}
-          >
-            <AppText weight="medium" style={{ color: "#fff" }}>
-              {generating ? "일정 생성 중..." : "일정 짜기"}
-            </AppText>
-          </Pressable>
-          {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
-          <View style={{ gap: 12 }}>
-            {group.map((place, index) => {
-              const isLast = index === group.length - 1;
-              const next = group[index + 1];
-              const distanceKm =
-                !isLast && place.latitude !== null && place.longitude !== null && next?.latitude !== null && next?.longitude !== null
-                  ? haversineDistanceKm(place.latitude, place.longitude, next!.latitude!, next!.longitude!)
-                  : null;
-              return <PlaceRow key={place.id} place={place} index={index} isLast={isLast} distanceKm={distanceKm} />;
-            })}
-          </View>
-        </>
-      )}
-
-      {hasItinerary && (
-        <>
+    <View style={{ flex: 1 }}>
+    <DraggableFlatList
+      data={activePlaces}
+      keyExtractor={(item) => String(item.id)}
+      onDragEnd={handleDragEnd}
+      renderItem={renderActivePlaceItem}
+      activationDistance={0}
+      ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+      contentContainerStyle={{ padding: 16 }}
+      ListHeaderComponent={
+        <View style={{ gap: 12, marginBottom: 12 }}>
+          <AppText weight="medium" style={{ fontSize: 18 }} numberOfLines={2}>
+            {title}
+          </AppText>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {dayNumbers.map((day) => (
               <Pressable
@@ -339,32 +390,15 @@ export function VideoGroupScreen({ route, navigation }: Props) {
               .filter((p) => p.latitude !== null && p.longitude !== null)
               .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
           />
-
-          <View style={{ gap: 12 }}>
-            {activePlaces.map((place, index) => {
-              const isLast = index === activePlaces.length - 1;
-              const next = activePlaces[index + 1];
-              const distanceKm =
-                !isLast && place.latitude !== null && place.longitude !== null && next?.latitude !== null && next?.longitude !== null
-                  ? haversineDistanceKm(place.latitude, place.longitude, next!.latitude!, next!.longitude!)
-                  : null;
-              return (
-                <PlaceRow
-                  key={place.id}
-                  place={place}
-                  index={index}
-                  isLast={isLast}
-                  distanceKm={distanceKm}
-                  editable
-                  disabled={actionPending}
-                  onMoveUp={() => handleReorder(place, "UP")}
-                  onMoveDown={() => handleReorder(place, "DOWN")}
-                  onOpenDayPicker={() => setDayPickerFor(place)}
-                />
-              );
-            })}
-          </View>
-
+        </View>
+      }
+      ListEmptyComponent={
+        <AppText style={{ textAlign: "center", color: colors.inkMuted, padding: 16 }}>
+          이 날짜엔 아직 장소가 없어요.
+        </AppText>
+      }
+      ListFooterComponent={
+        <View style={{ gap: 12, marginTop: 12 }}>
           {unassignedPlaces.length > 0 && (
             <View style={{ gap: 12 }}>
               <AppText weight="medium" style={{ fontSize: 13, color: colors.inkMuted }}>
@@ -380,6 +414,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                   editable
                   disabled={actionPending}
                   onOpenDayPicker={() => setDayPickerFor(place)}
+                  onPressInfo={() => setReviewPlaceId(place.id)}
                 />
               ))}
             </View>
@@ -394,8 +429,10 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             }}
             onClose={() => setDayPickerFor(null)}
           />
-        </>
-      )}
-    </ScrollView>
+        </View>
+      }
+    />
+    <PlaceReviewSheet placeId={reviewPlaceId} onClose={() => setReviewPlaceId(null)} />
+    </View>
   );
 }
