@@ -165,3 +165,81 @@ export async function updateTripPlaceDetails(
   }
   return res.json();
 }
+
+export type AlternativeFilter = {
+  category?: string;
+  indoor?: boolean;
+  maxDistanceKm?: number;
+  maxTravelMinutes?: number;
+  transportMode?: "WALK" | "TRANSIT" | "CAR";
+};
+
+export type AlternativeCandidate = {
+  placeId: number;
+  googlePlaceId: string;
+  name: string;
+  category: string | null;
+  rating: number | null;
+  userRatingCount: number | null;
+  latitude: number;
+  longitude: number;
+  address: string | null;
+  distanceToNextKm: number | null;
+  estimatedTravelMinutes: number | null;
+  isCongestionAvailable: boolean;
+  congestionLevel: string | null;
+};
+
+export type Gap = {
+  beforePlaceId: number;
+  afterPlaceId: number;
+  gapMinutes: number;
+  recommendations: AlternativeCandidate[];
+};
+
+export async function getAlternatives(tripPlaceId: number, filter: AlternativeFilter): Promise<AlternativeCandidate[]> {
+  const params = new URLSearchParams();
+  if (filter.category) params.set("category", filter.category);
+  if (filter.indoor !== undefined) params.set("indoor", String(filter.indoor));
+  if (filter.maxDistanceKm !== undefined) params.set("maxDistanceKm", String(filter.maxDistanceKm));
+  if (filter.maxTravelMinutes !== undefined) params.set("maxTravelMinutes", String(filter.maxTravelMinutes));
+  if (filter.transportMode) params.set("transportMode", filter.transportMode);
+
+  const res = await apiFetch(`/api/trip-places/${tripPlaceId}/alternatives?${params.toString()}`);
+  if (!res.ok) {
+    throw new Error(`GET /api/trip-places/${tripPlaceId}/alternatives failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function replacePlace(tripPlaceId: number, googlePlaceId: string): Promise<TripPlace> {
+  const res = await apiFetch(`/api/trip-places/${tripPlaceId}/replace`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ googlePlaceId }),
+  });
+  if (!res.ok) {
+    throw new Error(`POST /api/trip-places/${tripPlaceId}/replace failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getGapRecommendations(tripId: number, day: number): Promise<Gap[]> {
+  const res = await apiFetch(`/api/trips/${tripId}/days/${day}/gap-recommendations`);
+  if (!res.ok) {
+    throw new Error(`GET /api/trips/${tripId}/days/${day}/gap-recommendations failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function insertPlaceAfter(afterTripPlaceId: number, googlePlaceId: string): Promise<TripPlace> {
+  const res = await apiFetch(`/api/trip-places/insert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ afterTripPlaceId, googlePlaceId }),
+  });
+  if (!res.ok) {
+    throw new Error(`POST /api/trip-places/insert failed: ${res.status}`);
+  }
+  return res.json();
+}
