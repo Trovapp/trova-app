@@ -3,7 +3,7 @@ export function buildKakaoMapHtml(appKey: string): string {
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <style>html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; }</style>
 </head>
 <body>
