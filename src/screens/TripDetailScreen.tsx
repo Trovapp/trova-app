@@ -7,17 +7,18 @@ import { AppText } from "@/components/AppText";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
-import { PlaceReviewModal } from "@/components/PlaceReviewModal";
+import { PlaceReviewSheet } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { getDayColor } from "@/lib/itinerary";
 import { parseTimeToDate, toTimeString } from "@/lib/date";
 import { colors } from "@/lib/theme";
-import { addBookmark, listBookmarks, removeBookmark } from "@/lib/api/bookmarks";
+import { addBookmark, listBookmarks, listFolders, removeBookmark } from "@/lib/api/bookmarks";
 import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
 import {
   addTripPlace,
   checkWeather,
   getTrip,
+  optimizeTripRoute,
   removeTripPlace,
   reorderTripPlace,
   updateTripPlaceDetails,
@@ -34,6 +35,8 @@ const TRANSPORT_LABEL: Record<"WALK" | "TRANSIT" | "CAR", string> = {
   TRANSIT: "대중교통",
   CAR: "차량",
 };
+
+const UNSORTED_ID = -1; // "미분류" 가상 폴더 id — 저장 장소 화면(SavedPlacesScreen)과 동일한 규칙.
 
 type EditingField = { placeId: number; field: "time" | "transport" | "memo" } | null;
 
@@ -62,6 +65,7 @@ export function TripDetailScreen({ route }: Props) {
   const [folderPickerPlaceId, setFolderPickerPlaceId] = useState<number | null>(null);
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
+  const foldersQuery = useQuery({ queryKey: ["bookmarkFolders"], queryFn: listFolders });
   const bookmarkedPlaceIds = new Set((bookmarksQuery.data ?? []).map((b) => b.placeId));
 
   const trip = tripQuery.data;
@@ -90,6 +94,20 @@ export function TripDetailScreen({ route }: Props) {
   const places = activeDayData?.places ?? [];
   const dayColor = getDayColor(currentActiveDay);
   const tripId = trip.id;
+
+  const folders = foldersQuery.data ?? [];
+  const bookmarks = bookmarksQuery.data ?? [];
+  // 저장 장소 화면과 같은 규칙으로 찜한 장소를 폴더별로 묶는다 — "미분류"를 먼저,
+  // 그 다음 폴더들을, 각각 안에 장소가 하나도 없는 섹션은 숨긴다.
+  const bookmarkFolderSections = [
+    { id: UNSORTED_ID, name: "미분류", color: colors.inkMuted, bookmarks: bookmarks.filter((b) => b.folderId === null) },
+    ...folders.map((folder) => ({
+      id: folder.id,
+      name: folder.name,
+      color: folder.color,
+      bookmarks: bookmarks.filter((b) => b.folderId === folder.id),
+    })),
+  ].filter((section) => section.bookmarks.length > 0);
 
   async function handleSearch() {
     if (!query.trim() || searching) return;
@@ -263,6 +281,20 @@ export function TripDetailScreen({ route }: Props) {
     }
   }
 
+  async function handleOptimizeRoute() {
+    if (busy || places.length < 2) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await optimizeTripRoute(tripId, currentActiveDay);
+      await reload();
+    } catch {
+      setError("동선을 최적화하지 못했어요.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function renderPlaceItem({ item: place, getIndex, drag, isActive }: RenderItemParams<TripPlace>) {
     const index = getIndex() ?? 0;
     return (
@@ -406,6 +438,7 @@ export function TripDetailScreen({ route }: Props) {
   }
 
   return (
+    <View style={{ flex: 1 }}>
     <DraggableFlatList
       data={places}
       keyExtractor={(item) => String(item.id)}
@@ -445,6 +478,13 @@ export function TripDetailScreen({ route }: Props) {
               <AppText style={{ fontSize: 13 }}>{weatherMessage}</AppText>
             </View>
           )}
+
+          <Pressable onPress={handleOptimizeRoute} disabled={busy || places.length < 2}>
+            <AppText style={{ fontSize: 13, color: colors.accent, opacity: places.length < 2 ? 0.4 : 1 }}>
+              동선 최적화
+            </AppText>
+          </Pressable>
+
           {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
 
           <InlineMap
@@ -553,48 +593,56 @@ export function TripDetailScreen({ route }: Props) {
               {bookmarksQuery.isError && (
                 <QueryErrorView message="찜한 장소를 불러오지 못했어요." onRetry={() => bookmarksQuery.refetch()} />
               )}
-              {!bookmarksQuery.isError && (bookmarksQuery.data ?? []).length === 0 && (
+              {!bookmarksQuery.isError && bookmarkFolderSections.length === 0 && (
                 <AppText style={{ color: colors.inkMuted }}>아직 찜한 장소가 없어요.</AppText>
               )}
-              {(bookmarksQuery.data ?? []).map((bookmark) => (
-                <View
-                  key={bookmark.id}
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: 12,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: 12,
-                  }}
-                >
-                  <AppText weight="medium" numberOfLines={1} style={{ flex: 1 }}>
-                    {bookmark.placeName}
-                  </AppText>
-                  <View style={{ flexDirection: "row", gap: 10 }}>
-                    <Pressable
-                      onPress={() => handleAddPlace(bookmark.googlePlaceId)}
-                      disabled={busy}
-                      style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
-                    >
-                      <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
-                    </Pressable>
-                    <Pressable onPress={() => handleRemoveBookmark(bookmark.id)}>
-                      <AppText style={{ fontSize: 12, color: colors.inkMuted }}>제거</AppText>
-                    </Pressable>
+              {bookmarkFolderSections.map((section) => (
+                <View key={section.id} style={{ gap: 8 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: section.color }} />
+                    <AppText weight="medium" style={{ fontSize: 13, color: colors.inkMuted }}>
+                      {section.name}
+                    </AppText>
                   </View>
+                  {section.bookmarks.map((bookmark) => (
+                    <View
+                      key={bookmark.id}
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: 12,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        borderRadius: 12,
+                      }}
+                    >
+                      <Pressable
+                        style={{ flex: 1 }}
+                        onPress={() => setReviewTarget({ kind: "place", id: bookmark.placeId })}
+                      >
+                        <AppText weight="medium" numberOfLines={1}>
+                          {bookmark.placeName}
+                        </AppText>
+                      </Pressable>
+                      <View style={{ flexDirection: "row", gap: 10 }}>
+                        <Pressable
+                          onPress={() => handleAddPlace(bookmark.googlePlaceId)}
+                          disabled={busy}
+                          style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
+                        >
+                          <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
+                        </Pressable>
+                        <Pressable onPress={() => handleRemoveBookmark(bookmark.id)}>
+                          <AppText style={{ fontSize: 12, color: colors.inkMuted }}>제거</AppText>
+                        </Pressable>
+                      </View>
+                    </View>
+                  ))}
                 </View>
               ))}
             </View>
           )}
-
-          <PlaceReviewModal
-            visible={reviewTarget !== null}
-            placeId={reviewTarget?.kind === "place" ? reviewTarget.id : null}
-            tripPlaceId={reviewTarget?.kind === "tripPlace" ? reviewTarget.id : null}
-            onClose={() => setReviewTarget(null)}
-          />
 
           <FolderPickerModal
             visible={folderPickerPlaceId !== null}
@@ -604,5 +652,11 @@ export function TripDetailScreen({ route }: Props) {
         </View>
       }
     />
+    <PlaceReviewSheet
+      placeId={reviewTarget?.kind === "place" ? reviewTarget.id : null}
+      tripPlaceId={reviewTarget?.kind === "tripPlace" ? reviewTarget.id : null}
+      onClose={() => setReviewTarget(null)}
+    />
+    </View>
   );
 }

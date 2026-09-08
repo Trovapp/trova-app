@@ -130,6 +130,14 @@ export async function reorderTripPlace(id: number, direction: "UP" | "DOWN"): Pr
   return res.json();
 }
 
+export async function optimizeTripRoute(tripId: number, day: number): Promise<TripPlace[]> {
+  const res = await apiFetch(`/api/trips/${tripId}/days/${day}/optimize-route`, { method: "POST" });
+  if (!res.ok) {
+    throw new Error(`POST /api/trips/${tripId}/days/${day}/optimize-route failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function checkWeather(tripId: number, day: number): Promise<{ notified: boolean; message: string }> {
   const res = await apiFetch(`/api/trips/${tripId}/days/${day}/weather-check`, { method: "POST" });
   if (!res.ok) {
