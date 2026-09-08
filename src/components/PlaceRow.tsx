@@ -7,6 +7,11 @@ type PlaceRowItem = {
   id: number;
   placeName: string;
   address: string | null;
+  // 없으면(undefined) 위치 확인 뱃지를 판단할 근거가 없다고 보고 표시하지 않는다 —
+  // 이 필드를 안 넘기는 호출부(예: 찜한 장소)까지 전부 "위치 확인 안됨"으로 잘못
+  // 보이게 되는 걸 막는다. 실제로 지오코딩이 실패한 장소만(값이 null) 뱃지가 뜬다.
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type PlaceRowProps = {
@@ -79,6 +84,9 @@ export function PlaceRow({
               <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
                 {place.address}
               </AppText>
+            )}
+            {place.latitude === null && place.longitude === null && (
+              <AppText style={{ fontSize: 11, color: colors.accent }}>⚠ 위치 확인 안됨 · 지도에 안 뜰 수 있어요</AppText>
             )}
           </Pressable>
           {editable && (
