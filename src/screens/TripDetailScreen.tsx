@@ -10,6 +10,7 @@ import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
 import { PlaceReviewSheet } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
 import { getDayColor } from "@/lib/itinerary";
 import { parseTimeToDate, toTimeString } from "@/lib/date";
 import { colors } from "@/lib/theme";
@@ -507,6 +508,11 @@ export function TripDetailScreen({ route }: Props) {
               <AppText style={{ fontSize: 13, color: colors.accent, opacity: !activeDayData?.date ? 0.4 : 1 }}>날씨 확인</AppText>
             </Pressable>
           </View>
+
+          <WeatherAlertBanner
+            tripId={tripId}
+            onOpenAlternative={(_tripId, tripPlaceId) => setAlternativeTargetId(tripPlaceId)}
+          />
 
           {weatherMessage && (
             <View style={{ padding: 10, borderRadius: 8, backgroundColor: colors.accentBg }}>
