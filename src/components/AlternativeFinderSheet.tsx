@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
@@ -93,7 +93,7 @@ export function AlternativeFinderSheet({
   }
 
   return (
-    <BottomSheet ref={sheetRef} index={-1} snapPoints={SNAP_POINTS} enableDynamicSizing={false} onClose={onClose}>
+    <BottomSheet ref={sheetRef} index={-1} snapPoints={SNAP_POINTS} enableDynamicSizing={false} enablePanDownToClose onClose={onClose}>
       <BottomSheetScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
         <AppText weight="medium" style={{ fontSize: 16 }}>
           대안 찾기
