@@ -29,6 +29,8 @@ type PlaceRowProps = {
   dragHandle?: { onPressIn: () => void };
   // 있으면 이름/주소 영역을 탭해서 장소 상세(리뷰 요약)를 열 수 있게 한다.
   onPressInfo?: () => void;
+  // 있으면 이름/주소 영역 옆에 "⋮" 대안 찾기 진입점을 렌더링한다.
+  onFindAlternative?: () => void;
   color?: string;
   children?: ReactNode;
 };
@@ -45,6 +47,7 @@ export function PlaceRow({
   onOpenDayPicker,
   dragHandle,
   onPressInfo,
+  onFindAlternative,
   color = colors.accent,
   children,
 }: PlaceRowProps) {
@@ -118,6 +121,11 @@ export function PlaceRow({
           )}
           {children}
         </View>
+        {onFindAlternative && (
+          <Pressable onPress={onFindAlternative} hitSlop={10} style={{ justifyContent: "center", paddingHorizontal: 4 }}>
+            <AppText style={{ fontSize: 16, color: colors.inkMuted }}>⋮</AppText>
+          </Pressable>
+        )}
         {dragHandle && (
           <Pressable
             onPressIn={dragHandle.onPressIn}
