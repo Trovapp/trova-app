@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
@@ -16,14 +17,19 @@ export function WeatherAlertBanner({
 }) {
   const queryClient = useQueryClient();
   const notificationsQuery = useQuery({ queryKey: ["notifications"], queryFn: listNotifications });
+  const [dismissError, setDismissError] = useState<string | null>(null);
 
   const notifications = (notificationsQuery.data ?? []).filter((n) => tripId === undefined || n.tripId === tripId);
   const target = notifications[0];
   if (!target) return null;
 
   async function handleDismiss() {
-    await dismissNotification(target.id);
-    await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    try {
+      await dismissNotification(target.id);
+      await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    } catch {
+      setDismissError("닫지 못했어요. 다시 시도해주세요.");
+    }
   }
 
   return (
@@ -46,6 +52,9 @@ export function WeatherAlertBanner({
         <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={2}>
           {target.body}
         </AppText>
+        {dismissError && (
+          <AppText style={{ fontSize: 12, color: colors.accent }}>{dismissError}</AppText>
+        )}
       </View>
       <Pressable onPress={handleDismiss} hitSlop={10}>
         <AppText style={{ fontSize: 16, color: colors.inkMuted }}>✕</AppText>

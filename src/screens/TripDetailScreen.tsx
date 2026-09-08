@@ -69,6 +69,7 @@ export function TripDetailScreen({ route }: Props) {
   const [reviewTarget, setReviewTarget] = useState<{ kind: "place" | "tripPlace"; id: number } | null>(null);
   const [folderPickerPlaceId, setFolderPickerPlaceId] = useState<number | null>(null);
   const [alternativeTargetId, setAlternativeTargetId] = useState<number | null>(null);
+  const [alternativeInitialIndoor, setAlternativeInitialIndoor] = useState(false);
   const [gapCardFor, setGapCardFor] = useState<Gap | null>(null);
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
@@ -326,8 +327,15 @@ export function TripDetailScreen({ route }: Props) {
           disabled={busy}
           color={dayColor}
           dragHandle={{ onPressIn: drag }}
-          onPressInfo={() => setReviewTarget({ kind: "tripPlace", id: place.id })}
-          onFindAlternative={() => setAlternativeTargetId(place.id)}
+          onPressInfo={() => {
+            setAlternativeTargetId(null);
+            setReviewTarget({ kind: "tripPlace", id: place.id });
+          }}
+          onFindAlternative={() => {
+            setReviewTarget(null);
+            setAlternativeInitialIndoor(false);
+            setAlternativeTargetId(place.id);
+          }}
         >
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: 4 }}>
             <Pressable
@@ -511,7 +519,11 @@ export function TripDetailScreen({ route }: Props) {
 
           <WeatherAlertBanner
             tripId={tripId}
-            onOpenAlternative={(_tripId, tripPlaceId) => setAlternativeTargetId(tripPlaceId)}
+            onOpenAlternative={(_tripId, tripPlaceId) => {
+              setReviewTarget(null);
+              setAlternativeInitialIndoor(true);
+              setAlternativeTargetId(tripPlaceId);
+            }}
           />
 
           {weatherMessage && (
@@ -623,7 +635,12 @@ export function TripDetailScreen({ route }: Props) {
                       </Pressable>
                     </View>
                   </View>
-                  <Pressable onPress={() => setReviewTarget({ kind: "place", id: place.id })}>
+                  <Pressable
+                    onPress={() => {
+                      setAlternativeTargetId(null);
+                      setReviewTarget({ kind: "place", id: place.id });
+                    }}
+                  >
                     <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
                   </Pressable>
                 </View>
@@ -660,7 +677,10 @@ export function TripDetailScreen({ route }: Props) {
                     >
                       <Pressable
                         style={{ flex: 1 }}
-                        onPress={() => setReviewTarget({ kind: "place", id: bookmark.placeId })}
+                        onPress={() => {
+                          setAlternativeTargetId(null);
+                          setReviewTarget({ kind: "place", id: bookmark.placeId });
+                        }}
                       >
                         <AppText weight="medium" numberOfLines={1}>
                           {bookmark.placeName}
@@ -700,6 +720,7 @@ export function TripDetailScreen({ route }: Props) {
     />
     <AlternativeFinderSheet
       tripPlaceId={alternativeTargetId}
+      initialIndoor={alternativeInitialIndoor}
       onReplaced={() => {
         setAlternativeTargetId(null);
         reload();
@@ -713,17 +734,27 @@ export function TripDetailScreen({ route }: Props) {
           onPress={(e) => e.stopPropagation()}
         >
           <AppText weight="medium">이 사이 갈 만한 곳</AppText>
+          {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
           {gapCardFor?.recommendations.map((r) => (
             <Pressable
               key={r.placeId}
+              disabled={busy}
               onPress={async () => {
-                if (!gapCardFor) return;
-                await insertPlaceAfter(gapCardFor.beforePlaceId, r.googlePlaceId);
-                setGapCardFor(null);
-                await reload();
-                await queryClient.invalidateQueries({ queryKey: ["gapRecommendations", tripId, currentActiveDay] });
+                if (!gapCardFor || busy) return;
+                setBusy(true);
+                setError(null);
+                try {
+                  await insertPlaceAfter(gapCardFor.beforePlaceId, r.googlePlaceId);
+                  setGapCardFor(null);
+                  await reload();
+                  await queryClient.invalidateQueries({ queryKey: ["gapRecommendations", tripId, currentActiveDay] });
+                } catch {
+                  setError("장소를 추가하지 못했어요.");
+                } finally {
+                  setBusy(false);
+                }
               }}
-              style={{ padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}
+              style={{ padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, opacity: busy ? 0.6 : 1 }}
             >
               <AppText weight="medium" numberOfLines={1}>{r.name}</AppText>
               {r.address && <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{r.address}</AppText>}

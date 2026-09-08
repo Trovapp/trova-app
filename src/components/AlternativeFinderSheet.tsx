@@ -37,6 +37,7 @@ export function AlternativeFinderSheet({
   const [indoor, setIndoor] = useState(initialIndoor);
   const [transportMode, setTransportMode] = useState<"WALK" | "TRANSIT" | "CAR" | null>(null);
   const [maxDistanceKm, setMaxDistanceKm] = useState("");
+  const [maxTravelMinutes, setMaxTravelMinutes] = useState("");
   const [candidates, setCandidates] = useState<AlternativeCandidate[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -64,10 +65,13 @@ export function AlternativeFinderSheet({
     setSearchError(null);
     setSelected(null);
     try {
+      const parsedMaxDistanceKm = maxDistanceKm ? Number(maxDistanceKm) : undefined;
+      const parsedMaxTravelMinutes = maxTravelMinutes ? Number(maxTravelMinutes) : undefined;
       const filter: AlternativeFilter = {
         category: category.trim() || undefined,
         indoor: indoor || undefined,
-        maxDistanceKm: maxDistanceKm ? Number(maxDistanceKm) : undefined,
+        maxDistanceKm: Number.isFinite(parsedMaxDistanceKm) ? parsedMaxDistanceKm : undefined,
+        maxTravelMinutes: Number.isFinite(parsedMaxTravelMinutes) ? parsedMaxTravelMinutes : undefined,
         transportMode: transportMode ?? undefined,
       };
       setCandidates(await getAlternatives(tripPlaceId, filter));
@@ -84,6 +88,7 @@ export function AlternativeFinderSheet({
     try {
       await replacePlace(tripPlaceId, selected.googlePlaceId);
       await queryClient.invalidateQueries({ queryKey: ["trip"] });
+      await queryClient.invalidateQueries({ queryKey: ["gapRecommendations"] });
       onReplaced();
     } catch {
       setSearchError("교체하지 못했어요. 다시 시도해주세요.");
@@ -149,6 +154,22 @@ export function AlternativeFinderSheet({
             value={maxDistanceKm}
             onChangeText={setMaxDistanceKm}
             placeholder="다음 장소까지 최대 거리(km)"
+            keyboardType="numeric"
+            style={{
+              flex: 1,
+              height: 32,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: 8,
+              paddingHorizontal: 10,
+              fontSize: 12,
+              fontFamily: "NotoSansKR_400Regular",
+            }}
+          />
+          <TextInput
+            value={maxTravelMinutes}
+            onChangeText={setMaxTravelMinutes}
+            placeholder="이동 시간(분)"
             keyboardType="numeric"
             style={{
               flex: 1,
@@ -231,6 +252,7 @@ export function AlternativeFinderSheet({
               height={140}
               showPath={false}
             />
+            {searchError && <AppText style={{ color: colors.accent }}>{searchError}</AppText>}
             <Pressable
               onPress={handleReplace}
               disabled={replacing}
