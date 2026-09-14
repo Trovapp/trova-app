@@ -188,6 +188,7 @@ export type AlternativeCandidate = {
   estimatedTravelMinutes: number | null;
   isCongestionAvailable: boolean;
   congestionLevel: string | null;
+  recommendationReason: string | null;
 };
 
 export type Gap = {

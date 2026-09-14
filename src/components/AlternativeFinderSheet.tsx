@@ -356,6 +356,11 @@ export function AlternativeFinderSheet({
                             .join(" · ")}
                         </AppText>
                       </Pressable>
+                      {candidate.recommendationReason && (
+                        <AppText style={{ fontSize: 12, color: colors.accent }}>
+                          ✨ {candidate.recommendationReason}
+                        </AppText>
+                      )}
                       <Pressable
                         onPress={() => setReviewCandidateId(candidate.placeId)}
                         hitSlop={6}
