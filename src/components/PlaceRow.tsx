@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Pressable, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { colors } from "@/lib/theme";
 
@@ -122,8 +123,13 @@ export function PlaceRow({
           {children}
         </View>
         {onFindAlternative && (
-          <Pressable onPress={onFindAlternative} hitSlop={10} style={{ justifyContent: "center", paddingHorizontal: 4 }}>
-            <AppText style={{ fontSize: 16, color: colors.inkMuted }}>⋮</AppText>
+          <Pressable
+            onPress={onFindAlternative}
+            hitSlop={10}
+            style={{ justifyContent: "center", alignItems: "center", gap: 1, paddingHorizontal: 4 }}
+          >
+            <Feather name="repeat" size={16} color={colors.accent} />
+            <AppText style={{ fontSize: 9, color: colors.accent }}>대안</AppText>
           </Pressable>
         )}
         {dragHandle && (
