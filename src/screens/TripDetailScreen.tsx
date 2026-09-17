@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Modal, Platform, Pressable, TextInput, View } from "react-native";
+import { Alert, Modal, Platform, Pressable, TextInput, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlternativeFinderSheet } from "@/components/AlternativeFinderSheet";
 import { AppText } from "@/components/AppText";
+import { ConversationSheet } from "@/components/ConversationSheet";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
@@ -25,6 +26,7 @@ import {
   optimizeTripRoute,
   removeTripPlace,
   reorderTripPlace,
+  startTripReplan,
   updateTripPlaceDetails,
   type Gap,
   type TripDetail,
@@ -45,7 +47,7 @@ const UNSORTED_ID = -1; // "미분류" 가상 폴더 id — 저장 장소 화면
 
 type EditingField = { placeId: number; field: "time" | "transport" | "memo" } | null;
 
-export function TripDetailScreen({ route }: Props) {
+export function TripDetailScreen({ route, navigation }: Props) {
   const { id } = route.params;
   const queryClient = useQueryClient();
   const tripQuery = useQuery({ queryKey: ["trip", id], queryFn: () => getTrip(id) });
@@ -70,7 +72,9 @@ export function TripDetailScreen({ route }: Props) {
   const [folderPickerPlaceId, setFolderPickerPlaceId] = useState<number | null>(null);
   const [alternativeTargetId, setAlternativeTargetId] = useState<number | null>(null);
   const [alternativeInitialIndoor, setAlternativeInitialIndoor] = useState(false);
+  const [assistantTargetId, setAssistantTargetId] = useState<number | null>(null);
   const [gapCardFor, setGapCardFor] = useState<Gap | null>(null);
+  const [replanStarting, setReplanStarting] = useState(false);
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const foldersQuery = useQuery({ queryKey: ["bookmarkFolders"], queryFn: listFolders });
@@ -112,6 +116,7 @@ export function TripDetailScreen({ route }: Props) {
   const places = activeDayData?.places ?? [];
   const dayColor = getDayColor(currentActiveDay);
   const tripId = trip.id;
+  const totalPlaceCount = trip.days.reduce((sum, d) => sum + d.places.length, 0);
 
   const folders = foldersQuery.data ?? [];
   const bookmarks = bookmarksQuery.data ?? [];
@@ -313,6 +318,31 @@ export function TripDetailScreen({ route }: Props) {
     }
   }
 
+  function handleStartReplan() {
+    if (replanStarting) return;
+    Alert.alert(
+      "전체 일정 재구성",
+      "이 여행의 실외 장소들을 찾아서 실내 대안으로 바꿔드려요. 완료되면 장소마다 교체하거나 건너뛸 수 있어요.",
+      [
+        { text: "취소", style: "cancel" },
+        { text: "시작", onPress: () => startReplan() },
+      ]
+    );
+  }
+
+  async function startReplan() {
+    setReplanStarting(true);
+    setError(null);
+    try {
+      const { jobId } = await startTripReplan(tripId);
+      navigation.navigate("TripReplan", { tripId, jobId });
+    } catch {
+      setError("일정 재구성을 시작하지 못했어요.");
+    } finally {
+      setReplanStarting(false);
+    }
+  }
+
   function renderPlaceItem({ item: place, getIndex, drag, isActive }: RenderItemParams<TripPlace>) {
     const index = getIndex() ?? 0;
     const gap = (gapRecommendationsQuery.data ?? []).find((g) => g.beforePlaceId === place.id);
@@ -335,6 +365,11 @@ export function TripDetailScreen({ route }: Props) {
             setReviewTarget(null);
             setAlternativeInitialIndoor(false);
             setAlternativeTargetId(place.id);
+          }}
+          onOpenAssistant={() => {
+            setReviewTarget(null);
+            setAlternativeTargetId(null);
+            setAssistantTargetId(place.id);
           }}
         >
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: 4 }}>
@@ -375,7 +410,16 @@ export function TripDetailScreen({ route }: Props) {
               </AppText>
             </Pressable>
 
-            <Pressable onPress={() => handleRemove(place.id)} disabled={busy} style={{ marginLeft: "auto" }}>
+            <Pressable
+              onPress={() =>
+                Alert.alert("장소를 삭제할까요?", `"${place.placeName}"을(를) 일정에서 삭제합니다.`, [
+                  { text: "취소", style: "cancel" },
+                  { text: "삭제", style: "destructive", onPress: () => handleRemove(place.id) },
+                ])
+              }
+              disabled={busy}
+              style={{ marginLeft: "auto" }}
+            >
               <AppText style={{ fontSize: 13, color: colors.inkMuted }}>삭제</AppText>
             </Pressable>
           </View>
@@ -516,6 +560,23 @@ export function TripDetailScreen({ route }: Props) {
               <AppText style={{ fontSize: 13, color: colors.accent, opacity: !activeDayData?.date ? 0.4 : 1 }}>날씨 확인</AppText>
             </Pressable>
           </View>
+
+          <Pressable
+            onPress={handleStartReplan}
+            disabled={replanStarting || totalPlaceCount === 0}
+            style={{
+              height: 46,
+              borderRadius: 10,
+              backgroundColor: colors.accent,
+              justifyContent: "center",
+              alignItems: "center",
+              opacity: replanStarting || totalPlaceCount === 0 ? 0.5 : 1,
+            }}
+          >
+            <AppText weight="medium" style={{ color: "#fff" }}>
+              {replanStarting ? "시작하는 중..." : "🔄 전체 일정 재구성"}
+            </AppText>
+          </Pressable>
 
           <WeatherAlertBanner
             tripId={tripId}
@@ -726,6 +787,15 @@ export function TripDetailScreen({ route }: Props) {
         reload();
       }}
       onClose={() => setAlternativeTargetId(null)}
+    />
+    <ConversationSheet
+      tripId={tripId}
+      tripPlaceId={assistantTargetId}
+      onReplaced={() => {
+        setAssistantTargetId(null);
+        reload();
+      }}
+      onClose={() => setAssistantTargetId(null)}
     />
     <Modal visible={gapCardFor !== null} transparent animationType="slide" onRequestClose={() => setGapCardFor(null)}>
       <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-end" }} onPress={() => setGapCardFor(null)}>

@@ -244,3 +244,38 @@ export async function insertPlaceAfter(afterTripPlaceId: number, googlePlaceId: 
   }
   return res.json();
 }
+
+export type TripReplanResult = {
+  replaced: { tripPlaceId: number; originalName: string; candidate: AlternativeCandidate }[];
+  failedTripPlaceIds: number[];
+};
+
+export type TripReplanJob = {
+  status: "PENDING" | "PROCESSING" | "DONE" | "FAILED";
+  completedTargets: number;
+  totalTargets: number | null;
+  result: TripReplanResult | null;
+  errorMessage: string | null;
+};
+
+// v1은 "실내 위주로 바꾸기" 한 방향만 지원해서(백엔드가 indoorOnly=true 외엔 400) 옵션을
+// 받지 않는다 — 대안 찾기 시트처럼 필터 UI가 필요 없다.
+export async function startTripReplan(tripId: number): Promise<{ jobId: number }> {
+  const res = await apiFetch(`/api/trips/${tripId}/replan`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ indoorOnly: true }),
+  });
+  if (!res.ok) {
+    throw new Error(`POST /api/trips/${tripId}/replan failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getTripReplanJob(tripId: number, jobId: number): Promise<TripReplanJob> {
+  const res = await apiFetch(`/api/trips/${tripId}/replan/${jobId}`);
+  if (!res.ok) {
+    throw new Error(`GET /api/trips/${tripId}/replan/${jobId} failed: ${res.status}`);
+  }
+  return res.json();
+}
