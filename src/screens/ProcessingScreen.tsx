@@ -94,7 +94,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
           {job.title ?? job.sourceUrl}
         </AppText>
         <Pressable
-          onPress={() => navigation.replace("Home")}
+          onPress={() => navigation.replace("MainTabs")}
           style={{
             marginTop: 12,
             height: 48,

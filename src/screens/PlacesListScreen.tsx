@@ -5,10 +5,9 @@ import { AppText } from "@/components/AppText";
 import { ProgressBar } from "@/components/ProgressBar";
 import { colors } from "@/lib/theme";
 import { getPendingJobs, getPlaces, type PendingJob, type Place } from "@/lib/api/places";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { RootStackParamList } from "@/navigation/types";
+import type { MainTabScreenProps } from "@/navigation/types";
 
-type Props = NativeStackScreenProps<RootStackParamList, "PlacesList">;
+type Props = MainTabScreenProps<"PlacesList">;
 
 const CARD_SHADOW = Platform.select({
   ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3 },

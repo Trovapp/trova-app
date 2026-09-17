@@ -32,6 +32,8 @@ type PlaceRowProps = {
   onPressInfo?: () => void;
   // 있으면 이름/주소 영역 옆에 "⋮" 대안 찾기 진입점을 렌더링한다.
   onFindAlternative?: () => void;
+  // 있으면 대안 찾기 버튼 옆에 대화형 비서 진입점을 렌더링한다.
+  onOpenAssistant?: () => void;
   color?: string;
   children?: ReactNode;
 };
@@ -49,6 +51,7 @@ export function PlaceRow({
   dragHandle,
   onPressInfo,
   onFindAlternative,
+  onOpenAssistant,
   color = colors.accent,
   children,
 }: PlaceRowProps) {
@@ -130,6 +133,16 @@ export function PlaceRow({
           >
             <Feather name="repeat" size={16} color={colors.accent} />
             <AppText style={{ fontSize: 9, color: colors.accent }}>대안</AppText>
+          </Pressable>
+        )}
+        {onOpenAssistant && (
+          <Pressable
+            onPress={onOpenAssistant}
+            hitSlop={10}
+            style={{ justifyContent: "center", alignItems: "center", gap: 1, paddingHorizontal: 4 }}
+          >
+            <Feather name="message-circle" size={16} color={colors.accent} />
+            <AppText style={{ fontSize: 9, color: colors.accent }}>비서</AppText>
           </Pressable>
         )}
         {dragHandle && (

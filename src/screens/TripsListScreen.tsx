@@ -4,10 +4,9 @@ import { AppText } from "@/components/AppText";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { listTrips } from "@/lib/api/trips";
 import { colors } from "@/lib/theme";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { RootStackParamList } from "@/navigation/types";
+import type { MainTabScreenProps } from "@/navigation/types";
 
-type Props = NativeStackScreenProps<RootStackParamList, "TripsList">;
+type Props = MainTabScreenProps<"TripsList">;
 
 const CARD_SHADOW = Platform.select({
   ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3 },
