@@ -302,8 +302,8 @@ export function ConversationSheet({
     onClose();
   }
 
-  async function handleSend() {
-    const trimmed = input.trim();
+  async function handleSend(messageOverride?: string) {
+    const trimmed = (messageOverride ?? input).trim();
     if (!trimmed || trimmed.length > MAX_MESSAGE_LENGTH || sending || turnLimitReached || tripPlaceId === null) {
       return;
     }
@@ -384,7 +384,7 @@ export function ConversationSheet({
                   {EXAMPLE_PROMPTS.map((prompt) => (
                     <Pressable
                       key={prompt}
-                      onPress={() => setInput(prompt)}
+                      onPress={() => handleSend(prompt)}
                       style={{
                         paddingVertical: 7,
                         paddingHorizontal: 12,
@@ -464,7 +464,7 @@ export function ConversationSheet({
                   }}
                 />
                 <Pressable
-                  onPress={handleSend}
+                  onPress={() => handleSend()}
                   disabled={sending || !input.trim()}
                   hitSlop={8}
                   style={{

@@ -109,7 +109,9 @@ export function AlternativeFinderSheet({
   const [transportMode, setTransportMode] = useState<"WALK" | "TRANSIT" | "CAR" | null>(null);
   const [maxDistanceKm, setMaxDistanceKm] = useState<number | undefined>(undefined);
   const [maxTravelMinutes, setMaxTravelMinutes] = useState<number | undefined>(undefined);
-  const [filtersExpanded, setFiltersExpanded] = useState(true);
+  // 대부분은 필터 없이 바로 검색하므로 기본은 접어서 "대안 찾기" 버튼이 스크롤
+  // 없이 바로 보이게 한다 — 필터가 필요하면 요약 행을 눌러 펼친다.
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [candidates, setCandidates] = useState<AlternativeCandidate[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchPercent, setSearchPercent] = useState(0);
@@ -131,7 +133,7 @@ export function AlternativeFinderSheet({
       setSelected(null);
       setReviewCandidateId(null);
       setSearchError(null);
-      setFiltersExpanded(true);
+      setFiltersExpanded(false);
       sheetRef.current?.snapToIndex(0);
     } else {
       sheetRef.current?.close();
