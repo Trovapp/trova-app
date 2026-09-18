@@ -7,6 +7,8 @@ import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { ProgressBar } from "@/components/ProgressBar";
+import { RatingBadge } from "@/components/RatingBadge";
+import { RecommendationReason } from "@/components/RecommendationReason";
 import { categoryLabel } from "@/lib/placeCategory";
 import { colors } from "@/lib/theme";
 import {
@@ -347,22 +349,22 @@ export function AlternativeFinderSheet({
                         <AppText weight="medium" numberOfLines={1}>
                           {candidate.name}
                         </AppText>
-                        <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                          {[
-                            categoryLabel(candidate.category),
-                            candidate.rating !== null ? `⭐ ${candidate.rating.toFixed(1)}` : null,
-                            candidate.distanceToNextKm !== null ? `다음 장소까지 ${candidate.distanceToNextKm.toFixed(1)}km` : null,
-                            candidate.estimatedTravelMinutes !== null ? `약 ${candidate.estimatedTravelMinutes}분` : null,
-                            candidate.isCongestionAvailable ? `혼잡도: ${candidate.congestionLevel}` : null,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </AppText>
+                        <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+                          {candidate.rating !== null && <RatingBadge rating={candidate.rating} />}
+                          <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                            {[
+                              categoryLabel(candidate.category),
+                              candidate.distanceToNextKm !== null ? `다음 장소까지 ${candidate.distanceToNextKm.toFixed(1)}km` : null,
+                              candidate.estimatedTravelMinutes !== null ? `약 ${candidate.estimatedTravelMinutes}분` : null,
+                              candidate.isCongestionAvailable ? `혼잡도: ${candidate.congestionLevel}` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </AppText>
+                        </View>
                       </Pressable>
                       {candidate.recommendationReason && (
-                        <AppText style={{ fontSize: 12, color: colors.accent }}>
-                          ✨ {candidate.recommendationReason}
-                        </AppText>
+                        <RecommendationReason text={candidate.recommendationReason} />
                       )}
                       <Pressable
                         onPress={() => setReviewCandidateId(candidate.placeId)}

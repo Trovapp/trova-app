@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Pressable, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
+import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { ProgressBar } from "@/components/ProgressBar";
 import { colors } from "@/lib/theme";
@@ -12,22 +13,22 @@ type Props = NativeStackScreenProps<RootStackParamList, "Processing">;
 
 type Stage = NonNullable<PendingJob["currentStage"]> | "PENDING";
 
-const STAGE_ICON: Record<Stage, string> = {
-  PENDING: "⏳",
-  EXTRACTING: "🎬",
-  GEOCODING: "📍",
-  SELECTING: "🔍",
-  VERIFYING: "✅",
-  SAVING: "💾",
+const STAGE_ICON: Record<Stage, keyof typeof Feather.glyphMap> = {
+  PENDING: "clock",
+  EXTRACTING: "film",
+  GEOCODING: "map-pin",
+  SELECTING: "search",
+  VERIFYING: "check-circle",
+  SAVING: "save",
 };
 
 const STAGE_TIP: Record<Stage, string> = {
-  PENDING: "💡 곧 분석을 시작해요",
-  EXTRACTING: "💡 영상 속 장소 이름을 찾고 있어요",
-  GEOCODING: "💡 정확한 위치 정보를 확인해요",
-  SELECTING: "💡 가장 알맞은 장소를 좁히고 있어요",
-  VERIFYING: "💡 정보가 맞는지 다시 확인해요",
-  SAVING: "💡 저장할 준비를 하고 있어요",
+  PENDING: "곧 분석을 시작해요",
+  EXTRACTING: "영상 속 장소 이름을 찾고 있어요",
+  GEOCODING: "정확한 위치 정보를 확인해요",
+  SELECTING: "가장 알맞은 장소를 좁히고 있어요",
+  VERIFYING: "정보가 맞는지 다시 확인해요",
+  SAVING: "저장할 준비를 하고 있어요",
 };
 
 const STAGE_ANALYSIS: Record<Stage, { title: string; description: string }> = {
@@ -86,7 +87,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
   if (job.status === "FAILED") {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
-        <AppText style={{ fontSize: 48 }}>😵</AppText>
+        <Feather name="alert-circle" size={48} color={colors.accent} />
         <AppText weight="medium" style={{ fontSize: 20 }}>
           처리에 실패했어요
         </AppText>
@@ -138,19 +139,23 @@ export function ProcessingScreen({ route, navigation }: Props) {
             alignItems: "center",
           }}
         >
-          <AppText style={{ fontSize: 52 }}>{STAGE_ICON[stage]}</AppText>
+          <Feather name={STAGE_ICON[stage]} size={52} color={colors.accent} />
         </View>
         <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>
           {message}
         </AppText>
         <View
           style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
             paddingVertical: 8,
             paddingHorizontal: 16,
             borderRadius: 20,
             backgroundColor: colors.bgMuted,
           }}
         >
+          <Feather name="info" size={13} color={colors.inkMuted} />
           <AppText style={{ fontSize: 13, color: colors.inkMuted }}>{STAGE_TIP[stage]}</AppText>
         </View>
       </View>

@@ -93,7 +93,10 @@ export function PlaceRow({
               </AppText>
             )}
             {place.latitude === null && place.longitude === null && (
-              <AppText style={{ fontSize: 11, color: colors.accent }}>⚠ 위치 확인 안됨 · 지도에 안 뜰 수 있어요</AppText>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Feather name="alert-triangle" size={11} color={colors.accent} />
+                <AppText style={{ fontSize: 11, color: colors.accent }}>위치 확인 안됨 · 지도에 안 뜰 수 있어요</AppText>
+              </View>
             )}
           </Pressable>
           {editable && (
@@ -105,14 +108,14 @@ export function PlaceRow({
                     disabled={disabled || index === 0 || !onMoveUp}
                     style={{ opacity: disabled || index === 0 ? 0.3 : 1 }}
                   >
-                    <AppText style={{ fontSize: 13, color: colors.inkMuted }}>↑</AppText>
+                    <Feather name="arrow-up" size={14} color={colors.inkMuted} />
                   </Pressable>
                   <Pressable
                     onPress={onMoveDown}
                     disabled={disabled || isLast || !onMoveDown}
                     style={{ opacity: disabled || isLast ? 0.3 : 1 }}
                   >
-                    <AppText style={{ fontSize: 13, color: colors.inkMuted }}>↓</AppText>
+                    <Feather name="arrow-down" size={14} color={colors.inkMuted} />
                   </Pressable>
                 </View>
               )}

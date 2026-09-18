@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type ElementRef } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
+import { RatingBadge } from "@/components/RatingBadge";
+import { RecommendationReason } from "@/components/RecommendationReason";
 import { categoryLabel } from "@/lib/placeCategory";
 import { colors } from "@/lib/theme";
 import { replacePlace, type AlternativeCandidate } from "@/lib/api/trips";
@@ -16,22 +18,24 @@ const MAX_MESSAGE_LENGTH = 300;
 const EXAMPLE_PROMPTS = ["조용한 카페 알려줘", "사람 적은 곳 있어?", "분위기 좋은 곳으로 바꿔줘"];
 
 // 카드가 텍스트만 있으면 다 비슷해 보여서, 카테고리 문자열(Google Places 타입 또는
-// 한글 카테고리)을 훑어 어울리는 이모지 하나를 붙인다 — 사진을 새로 붙이려면 Google
-// Places Photo API 호출이 필요해서(비용 이슈) 그 전 단계의 저비용 개선.
-function categoryEmoji(category: string | null): string {
-  if (!category) return "📍";
+// 한글 카테고리)을 훑어 어울리는 아이콘 하나를 붙인다 — 사진을 새로 붙이려면 Google
+// Places Photo API 호출이 필요해서(비용 이슈) 그 전 단계의 저비용 개선. 음식/장소
+// 카테고리별로 구분되는 아이콘이 Feather엔 없어서 이 함수만 MaterialCommunityIcons를
+// 쓴다(나머지 화면은 전부 Feather로 통일).
+function categoryIcon(category: string | null): keyof typeof MaterialCommunityIcons.glyphMap {
+  if (!category) return "map-marker";
   const c = category.toLowerCase();
-  if (c.includes("cafe") || c.includes("coffee") || c.includes("카페")) return "☕";
-  if (c.includes("bakery") || c.includes("베이커리")) return "🥐";
-  if (c.includes("restaurant") || c.includes("food") || c.includes("음식")) return "🍽️";
-  if (c.includes("bar") || c.includes("pub") || c.includes("술")) return "🍸";
-  if (c.includes("ice_cream") || c.includes("dessert")) return "🍦";
-  if (c.includes("museum") || c.includes("박물관")) return "🏛️";
-  if (c.includes("park") || c.includes("공원")) return "🌳";
-  if (c.includes("shop") || c.includes("store") || c.includes("쇼핑")) return "🛍️";
-  if (c.includes("hotel") || c.includes("guest_house") || c.includes("lodging")) return "🏨";
-  if (c.includes("landmark") || c.includes("tourist") || c.includes("관광")) return "📸";
-  return "📍";
+  if (c.includes("cafe") || c.includes("coffee") || c.includes("카페")) return "coffee";
+  if (c.includes("bakery") || c.includes("베이커리")) return "bread-slice";
+  if (c.includes("restaurant") || c.includes("food") || c.includes("음식")) return "silverware-fork-knife";
+  if (c.includes("bar") || c.includes("pub") || c.includes("술")) return "glass-cocktail";
+  if (c.includes("ice_cream") || c.includes("dessert")) return "ice-cream";
+  if (c.includes("museum") || c.includes("박물관")) return "bank";
+  if (c.includes("park") || c.includes("공원")) return "tree";
+  if (c.includes("shop") || c.includes("store") || c.includes("쇼핑")) return "shopping";
+  if (c.includes("hotel") || c.includes("guest_house") || c.includes("lodging")) return "bed";
+  if (c.includes("landmark") || c.includes("tourist") || c.includes("관광")) return "camera";
+  return "map-marker";
 }
 
 type ChatMessage =
@@ -80,16 +84,15 @@ function CompactCandidateCard({
       <AppText weight="medium" style={{ fontSize: 12 }} numberOfLines={1}>
         {candidate.name}
       </AppText>
-      <AppText style={{ fontSize: 11, color: colors.inkMuted }} numberOfLines={1}>
-        {[
-          candidate.category
-            ? `${categoryEmoji(candidate.category)} ${categoryLabel(candidate.category)}`
-            : categoryEmoji(null),
-          candidate.rating !== null ? `⭐ ${candidate.rating.toFixed(1)}` : null,
-        ]
-          .filter(Boolean)
-          .join(" · ")}
-      </AppText>
+      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
+        <MaterialCommunityIcons name={categoryIcon(candidate.category)} size={11} color={colors.inkMuted} />
+        {categoryLabel(candidate.category) && (
+          <AppText style={{ fontSize: 11, color: colors.inkMuted }} numberOfLines={1}>
+            {categoryLabel(candidate.category)}
+          </AppText>
+        )}
+        {candidate.rating !== null && <RatingBadge rating={candidate.rating} size={10} />}
+      </View>
     </Pressable>
   );
 }
@@ -110,20 +113,14 @@ function ExpandedCandidateCard({
   return (
     <View style={{ padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, gap: 8 }}>
       <AppText weight="medium">{candidate.name}</AppText>
-      <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-        {[
-          candidate.category
-            ? `${categoryEmoji(candidate.category)} ${categoryLabel(candidate.category)}`
-            : categoryEmoji(null),
-          candidate.rating !== null ? `⭐ ${candidate.rating.toFixed(1)}` : null,
-          candidate.address,
-        ]
-          .filter(Boolean)
-          .join(" · ")}
-      </AppText>
-      {candidate.recommendationReason && (
-        <AppText style={{ fontSize: 12, color: colors.accent }}>✨ {candidate.recommendationReason}</AppText>
-      )}
+      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
+        <MaterialCommunityIcons name={categoryIcon(candidate.category)} size={12} color={colors.inkMuted} />
+        <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+          {[categoryLabel(candidate.category), candidate.address].filter(Boolean).join(" · ")}
+        </AppText>
+        {candidate.rating !== null && <RatingBadge rating={candidate.rating} />}
+      </View>
+      {candidate.recommendationReason && <RecommendationReason text={candidate.recommendationReason} />}
       <InlineMap
         pins={[{ id: "selected", latitude: candidate.latitude, longitude: candidate.longitude, color: colors.accent }]}
         height={110}
@@ -211,7 +208,7 @@ function AssistantAvatar() {
         alignItems: "center",
       }}
     >
-      <AppText style={{ fontSize: 11 }}>💬</AppText>
+      <Feather name="message-circle" size={12} color={colors.accent} />
     </View>
   );
 }

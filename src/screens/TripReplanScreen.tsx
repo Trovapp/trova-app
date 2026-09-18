@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { ProgressBar } from "@/components/ProgressBar";
+import { RatingBadge } from "@/components/RatingBadge";
+import { RecommendationReason } from "@/components/RecommendationReason";
 import { colors } from "@/lib/theme";
 import { getTrip, getTripReplanJob, replacePlace, type TripReplanResult } from "@/lib/api/trips";
 import { categoryLabel } from "@/lib/placeCategory";
@@ -79,7 +82,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
   if (job.status === "FAILED") {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
-        <AppText style={{ fontSize: 48 }}>😵</AppText>
+        <Feather name="alert-circle" size={48} color={colors.accent} />
         <AppText weight="medium" style={{ fontSize: 20 }}>
           재구성에 실패했어요
         </AppText>
@@ -131,20 +134,24 @@ export function TripReplanScreen({ route, navigation }: Props) {
               alignItems: "center",
             }}
           >
-            <AppText style={{ fontSize: 52 }}>🔄</AppText>
+            <Feather name="refresh-cw" size={52} color={colors.accent} />
           </View>
           <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>
             {total === null ? "실외 장소를 살펴보고 있어요" : "실내 대안을 찾고 있어요"}
           </AppText>
           <View
             style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
               paddingVertical: 8,
               paddingHorizontal: 16,
               borderRadius: 20,
               backgroundColor: colors.bgMuted,
             }}
           >
-            <AppText style={{ fontSize: 13, color: colors.inkMuted }}>💡 여행 전체를 확인하는 중이라 조금 걸릴 수 있어요</AppText>
+            <Feather name="info" size={13} color={colors.inkMuted} />
+            <AppText style={{ fontSize: 13, color: colors.inkMuted }}>여행 전체를 확인하는 중이라 조금 걸릴 수 있어요</AppText>
           </View>
         </View>
       </View>
@@ -158,7 +165,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
   if (isEmpty) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
-        <AppText style={{ fontSize: 48 }}>✅</AppText>
+        <Feather name="check-circle" size={48} color={colors.accent} />
         <AppText weight="medium" style={{ fontSize: 18, textAlign: "center" }}>
           재구성할 실외 장소가 없어요
         </AppText>
@@ -214,22 +221,25 @@ export function TripReplanScreen({ route, navigation }: Props) {
               <AppText weight="medium" numberOfLines={1}>
                 {candidate.name}
               </AppText>
-              <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                {[
-                  categoryLabel(candidate.category),
-                  candidate.rating !== null ? `⭐ ${candidate.rating.toFixed(1)}` : null,
-                  candidate.distanceToNextKm !== null ? `다음 장소까지 ${candidate.distanceToNextKm.toFixed(1)}km` : null,
-                  candidate.estimatedTravelMinutes !== null ? `약 ${candidate.estimatedTravelMinutes}분` : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </AppText>
-              {candidate.recommendationReason && (
-                <AppText style={{ fontSize: 12, color: colors.accent }}>✨ {candidate.recommendationReason}</AppText>
-              )}
+              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+                {candidate.rating !== null && <RatingBadge rating={candidate.rating} />}
+                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                  {[
+                    categoryLabel(candidate.category),
+                    candidate.distanceToNextKm !== null ? `다음 장소까지 ${candidate.distanceToNextKm.toFixed(1)}km` : null,
+                    candidate.estimatedTravelMinutes !== null ? `약 ${candidate.estimatedTravelMinutes}분` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </AppText>
+              </View>
+              {candidate.recommendationReason && <RecommendationReason text={candidate.recommendationReason} />}
 
               {status === "confirmed" ? (
-                <AppText style={{ fontSize: 13, color: colors.accent }}>✓ 교체 완료</AppText>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Feather name="check" size={14} color={colors.accent} />
+                  <AppText style={{ fontSize: 13, color: colors.accent }}>교체 완료</AppText>
+                </View>
               ) : status === "skipped" ? (
                 <AppText style={{ fontSize: 13, color: colors.inkMuted }}>건너뜀</AppText>
               ) : (

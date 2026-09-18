@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useQuery } from "@tanstack/react-query";
+import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
 import { ProgressBar } from "@/components/ProgressBar";
+import { RatingBadge } from "@/components/RatingBadge";
 import { getPlaceDetails } from "@/lib/api/recommendations";
 import { getTripPlaceDetails } from "@/lib/api/trips";
 import { categoryLabel } from "@/lib/placeCategory";
@@ -92,16 +94,22 @@ export function PlaceReviewContent({
         <AppText weight="medium" style={{ fontSize: 17 }}>
           {detail.name}
         </AppText>
-        <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-          {[
-            categoryLabel(detail.category),
-            detail.rating !== null
-              ? `⭐ ${detail.rating.toFixed(1)}${detail.userRatingCount !== null ? ` (리뷰 ${detail.userRatingCount}개)` : ""}`
-              : null,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </AppText>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          {categoryLabel(detail.category) && (
+            <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{categoryLabel(detail.category)}</AppText>
+          )}
+          {categoryLabel(detail.category) && detail.rating !== null && (
+            <AppText style={{ fontSize: 12, color: colors.inkMuted }}>·</AppText>
+          )}
+          {detail.rating !== null && (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <RatingBadge rating={detail.rating} />
+              {detail.userRatingCount !== null && (
+                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>(리뷰 {detail.userRatingCount}개)</AppText>
+              )}
+            </View>
+          )}
+        </View>
         {detail.address && <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{detail.address}</AppText>}
       </View>
       {/* 메인 지도가 화면 밖으로 스크롤된 상태에서 카드를 열어도 위치를 볼 수 있게,
@@ -125,9 +133,12 @@ export function PlaceReviewContent({
           <View style={{ flexDirection: "row", gap: 16 }}>
             {detail.pros.length > 0 && (
               <View style={{ flex: 1, gap: 2 }}>
-                <AppText weight="medium" style={{ fontSize: 11, color: colors.inkMuted }}>
-                  👍 좋은 점
-                </AppText>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Feather name="thumbs-up" size={11} color={colors.inkMuted} />
+                  <AppText weight="medium" style={{ fontSize: 11, color: colors.inkMuted }}>
+                    좋은 점
+                  </AppText>
+                </View>
                 {detail.pros.map((p, i) => (
                   <AppText key={i} style={{ fontSize: 12 }}>
                     {p}
@@ -137,9 +148,12 @@ export function PlaceReviewContent({
             )}
             {detail.cons.length > 0 && (
               <View style={{ flex: 1, gap: 2 }}>
-                <AppText weight="medium" style={{ fontSize: 11, color: colors.inkMuted }}>
-                  👎 아쉬운 점
-                </AppText>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Feather name="thumbs-down" size={11} color={colors.inkMuted} />
+                  <AppText weight="medium" style={{ fontSize: 11, color: colors.inkMuted }}>
+                    아쉬운 점
+                  </AppText>
+                </View>
                 {detail.cons.map((c, i) => (
                   <AppText key={i} style={{ fontSize: 12 }}>
                     {c}
@@ -151,17 +165,30 @@ export function PlaceReviewContent({
         )}
 
         {(detail.hours || detail.fee) && (
-          <View style={{ gap: 2 }}>
-            {detail.hours && <AppText style={{ fontSize: 12 }}>🕐 {detail.hours}</AppText>}
-            {detail.fee && <AppText style={{ fontSize: 12 }}>💰 {detail.fee}</AppText>}
+          <View style={{ gap: 4 }}>
+            {detail.hours && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Feather name="clock" size={12} color={colors.ink} />
+                <AppText style={{ fontSize: 12 }}>{detail.hours}</AppText>
+              </View>
+            )}
+            {detail.fee && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Feather name="dollar-sign" size={12} color={colors.ink} />
+                <AppText style={{ fontSize: 12 }}>{detail.fee}</AppText>
+              </View>
+            )}
           </View>
         )}
 
         {detail.tips.length > 0 && (
           <View style={{ padding: 10, borderRadius: 8, backgroundColor: colors.accentBg, gap: 2 }}>
-            <AppText weight="medium" style={{ fontSize: 11, color: colors.accent }}>
-              💡 꿀팁
-            </AppText>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Feather name="info" size={11} color={colors.accent} />
+              <AppText weight="medium" style={{ fontSize: 11, color: colors.accent }}>
+                꿀팁
+              </AppText>
+            </View>
             {detail.tips.map((tip, i) => (
               <AppText key={i} style={{ fontSize: 12 }}>
                 {tip}
@@ -171,11 +198,12 @@ export function PlaceReviewContent({
         )}
 
         {detail.checklist.length > 0 && (
-          <View style={{ gap: 2 }}>
+          <View style={{ gap: 4 }}>
             {detail.checklist.map((item, i) => (
-              <AppText key={i} style={{ fontSize: 12 }}>
-                ☐ {item}
-              </AppText>
+              <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Feather name="square" size={12} color={colors.inkMuted} />
+                <AppText style={{ fontSize: 12 }}>{item}</AppText>
+              </View>
             ))}
           </View>
         )}

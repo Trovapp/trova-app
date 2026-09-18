@@ -2,11 +2,13 @@ import { useMemo, useState } from "react";
 import { Modal, Pressable, TextInput, View } from "react-native";
 import BottomSheet, { BottomSheetFlatList, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { RatingBadge } from "@/components/RatingBadge";
 import {
   addBookmark,
   listBookmarks,
@@ -218,7 +220,7 @@ export function SavedPlacesScreen() {
           // 바뀔 뿐) 선택 상태(reviewPlaceId)와 지도 하이라이트가 그대로 유지된다.
           <BottomSheetScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
             <Pressable onPress={() => setReviewPlaceId(null)} hitSlop={8} style={{ alignSelf: "flex-end" }}>
-              <AppText style={{ fontSize: 18, color: colors.inkMuted }}>✕</AppText>
+              <Feather name="x" size={18} color={colors.inkMuted} />
             </Pressable>
             <PlaceReviewContent placeId={reviewPlaceId} showMiniMap={false} />
           </BottomSheetScrollView>
@@ -229,8 +231,9 @@ export function SavedPlacesScreen() {
             contentContainerStyle={{ padding: 16, gap: 12 }}
             ListHeaderComponent={
               <View style={{ gap: 8, marginBottom: 4 }}>
-                <Pressable onPress={clearSearch}>
-                  <AppText style={{ color: colors.accent }}>✕ 검색 결과 닫기</AppText>
+                <Pressable onPress={clearSearch} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Feather name="x" size={14} color={colors.accent} />
+                  <AppText style={{ color: colors.accent }}>검색 결과 닫기</AppText>
                 </Pressable>
                 {searchError && <AppText style={{ color: colors.accent }}>{searchError}</AppText>}
               </View>
@@ -256,14 +259,22 @@ export function SavedPlacesScreen() {
                       </AppText>
                     )}
                     {item.rating !== null && (
-                      <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                        ⭐ {item.rating.toFixed(1)}
-                        {item.userRatingCount !== null ? ` (리뷰 ${item.userRatingCount}개)` : ""}
-                      </AppText>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                        <RatingBadge rating={item.rating} />
+                        {item.userRatingCount !== null && (
+                          <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                            (리뷰 {item.userRatingCount}개)
+                          </AppText>
+                        )}
+                      </View>
                     )}
                   </View>
                   <Pressable onPress={() => setFolderPickerTarget({ mode: "add", placeId: item.id })}>
-                    <AppText style={{ fontSize: 18 }}>{bookmarkedPlaceIds.has(item.id) ? "⭐" : "☆"}</AppText>
+                    <Feather
+                      name="star"
+                      size={18}
+                      color={bookmarkedPlaceIds.has(item.id) ? colors.accent : colors.border}
+                    />
                   </Pressable>
                 </View>
                 <Pressable onPress={() => setReviewPlaceId(item.id)}>
@@ -333,7 +344,7 @@ export function SavedPlacesScreen() {
                     {activeFolder?.name ?? "미분류"}
                   </AppText>
                   <Pressable onPress={() => setActiveFolderId(null)} hitSlop={8}>
-                    <AppText style={{ fontSize: 18, color: colors.inkMuted }}>✕</AppText>
+                    <Feather name="x" size={18} color={colors.inkMuted} />
                   </Pressable>
                 </View>
                 {removeError && <AppText style={{ color: colors.accent }}>{removeError}</AppText>}

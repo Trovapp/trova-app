@@ -3,6 +3,7 @@ import { Alert, Modal, Platform, Pressable, TextInput, View } from "react-native
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Feather } from "@expo/vector-icons";
 import { AlternativeFinderSheet } from "@/components/AlternativeFinderSheet";
 import { AppText } from "@/components/AppText";
 import { ConversationSheet } from "@/components/ConversationSheet";
@@ -11,6 +12,7 @@ import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
 import { PlaceReviewSheet } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { RatingBadge } from "@/components/RatingBadge";
 import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
 import { getDayColor } from "@/lib/itinerary";
 import { parseTimeToDate, toTimeString } from "@/lib/date";
@@ -565,16 +567,19 @@ export function TripDetailScreen({ route, navigation }: Props) {
             onPress={handleStartReplan}
             disabled={replanStarting || totalPlaceCount === 0}
             style={{
+              flexDirection: "row",
               height: 46,
               borderRadius: 10,
               backgroundColor: colors.accent,
               justifyContent: "center",
               alignItems: "center",
+              gap: 6,
               opacity: replanStarting || totalPlaceCount === 0 ? 0.5 : 1,
             }}
           >
+            {!replanStarting && <Feather name="refresh-cw" size={16} color="#fff" />}
             <AppText weight="medium" style={{ color: "#fff" }}>
-              {replanStarting ? "시작하는 중..." : "🔄 전체 일정 재구성"}
+              {replanStarting ? "시작하는 중..." : "전체 일정 재구성"}
             </AppText>
           </Pressable>
 
@@ -677,15 +682,23 @@ export function TripDetailScreen({ route, navigation }: Props) {
                         </AppText>
                       )}
                       {place.rating !== null && (
-                        <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                          ⭐ {place.rating.toFixed(1)}
-                          {place.userRatingCount !== null ? ` (리뷰 ${place.userRatingCount}개)` : ""}
-                        </AppText>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                          <RatingBadge rating={place.rating} />
+                          {place.userRatingCount !== null && (
+                            <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                              (리뷰 {place.userRatingCount}개)
+                            </AppText>
+                          )}
+                        </View>
                       )}
                     </View>
                     <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
                       <Pressable onPress={() => handleToggleBookmark(place.id)}>
-                        <AppText style={{ fontSize: 18 }}>{bookmarkedPlaceIds.has(place.id) ? "⭐" : "☆"}</AppText>
+                        <Feather
+                          name="star"
+                          size={18}
+                          color={bookmarkedPlaceIds.has(place.id) ? colors.accent : colors.border}
+                        />
                       </Pressable>
                       <Pressable
                         onPress={() => handleAddPlace(place.googlePlaceId)}

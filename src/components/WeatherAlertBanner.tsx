@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { colors } from "@/lib/theme";
 import { dismissNotification, listNotifications } from "@/lib/api/notifications";
@@ -44,7 +45,7 @@ export function WeatherAlertBanner({
         backgroundColor: colors.accentBg,
       }}
     >
-      <AppText style={{ fontSize: 18 }}>☔</AppText>
+      <Feather name="cloud-rain" size={18} color={colors.accent} />
       <View style={{ flex: 1 }}>
         <AppText weight="medium" style={{ fontSize: 13 }}>
           {target.title}
@@ -57,7 +58,7 @@ export function WeatherAlertBanner({
         )}
       </View>
       <Pressable onPress={handleDismiss} hitSlop={10}>
-        <AppText style={{ fontSize: 16, color: colors.inkMuted }}>✕</AppText>
+        <Feather name="x" size={16} color={colors.inkMuted} />
       </Pressable>
     </Pressable>
   );
