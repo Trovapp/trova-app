@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { Emoji } from "@/components/Emoji";
-import { ProgressBar } from "@/components/ProgressBar";
+import { ProgressHero } from "@/components/ProgressHero";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
 import { colors } from "@/lib/theme";
@@ -115,28 +115,13 @@ export function TripReplanScreen({ route, navigation }: Props) {
     const percent = total === null ? 0 : total === 0 ? 100 : Math.round((job.completedTargets / total) * 100);
     return (
       <View style={{ flex: 1, padding: 24, paddingTop: 72, backgroundColor: colors.bg }}>
-        <View style={{ gap: 8 }}>
-          <ProgressBar percent={percent} height={8} />
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
+          <ProgressHero percent={percent} />
           {total !== null && (
-            <AppText mono weight="medium" style={{ color: colors.accent, textAlign: "right" }}>
+            <AppText mono weight="medium" style={{ color: colors.inkMuted }}>
               {job.completedTargets} / {total}
             </AppText>
           )}
-        </View>
-
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
-          <View
-            style={{
-              width: 120,
-              height: 120,
-              borderRadius: 60,
-              backgroundColor: colors.accentBg,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Feather name="refresh-cw" size={52} color={colors.accent} />
-          </View>
           <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>
             {total === null ? "실외 장소를 살펴보고 있어요" : "실내 대안을 찾고 있어요"}
           </AppText>

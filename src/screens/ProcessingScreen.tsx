@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { Emoji } from "@/components/Emoji";
-import { ProgressBar } from "@/components/ProgressBar";
+import { ProgressHero } from "@/components/ProgressHero";
 import { colors } from "@/lib/theme";
 import { getPendingJobs, type PendingJob } from "@/lib/api/places";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -13,15 +13,6 @@ import type { RootStackParamList } from "@/navigation/types";
 type Props = NativeStackScreenProps<RootStackParamList, "Processing">;
 
 type Stage = NonNullable<PendingJob["currentStage"]> | "PENDING";
-
-const STAGE_ICON: Record<Stage, keyof typeof Feather.glyphMap> = {
-  PENDING: "clock",
-  EXTRACTING: "film",
-  GEOCODING: "map-pin",
-  SELECTING: "search",
-  VERIFYING: "check-circle",
-  SAVING: "save",
-};
 
 const STAGE_TIP: Record<Stage, string> = {
   PENDING: "곧 분석을 시작해요",
@@ -122,26 +113,8 @@ export function ProcessingScreen({ route, navigation }: Props) {
 
   return (
     <View style={{ flex: 1, padding: 24, paddingTop: 72, backgroundColor: colors.bg }}>
-      <View style={{ gap: 8 }}>
-        <ProgressBar percent={percent} height={8} />
-        <AppText mono weight="medium" style={{ color: colors.accent, textAlign: "right" }}>
-          {percent}%
-        </AppText>
-      </View>
-
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
-        <View
-          style={{
-            width: 120,
-            height: 120,
-            borderRadius: 60,
-            backgroundColor: colors.accentBg,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Feather name={STAGE_ICON[stage]} size={52} color={colors.accent} />
-        </View>
+        <ProgressHero percent={percent} />
         <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>
           {message}
         </AppText>
