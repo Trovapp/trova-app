@@ -17,13 +17,17 @@ import {
   type BookmarkFolder,
 } from "@/lib/api/bookmarks";
 import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
+import { categoryLabel } from "@/lib/placeCategory";
 import { colors } from "@/lib/theme";
 
 const UNSORTED_ID = -1; // "미분류" 가상 폴더 id — 실제 폴더 id는 항상 양수(DB IDENTITY)라 겹치지 않는다.
 
 // FolderPickerModal은 "어디에 저장할지" 하나만 고르는 UI라, 찜 추가(add)와
 // 폴더 이동(move)에 그대로 재사용한다 — onPick 콜백에서 이 target으로 분기한다.
-type FolderPickerTarget = { mode: "add"; placeId: number } | { mode: "move"; bookmarkId: number };
+type FolderPickerTarget =
+  | { mode: "add"; placeId: number }
+  | { mode: "move"; bookmarkId: number }
+  | { mode: "create" };
 
 export function SavedPlacesScreen() {
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
@@ -142,6 +146,15 @@ export function SavedPlacesScreen() {
     if (folderPickerTarget === null) return;
     const target = folderPickerTarget;
     setFolderPickerTarget(null);
+    if (target.mode === "create") {
+      // 폴더 목록 화면에서 "새 폴더"로 들어온 경우 — 저장할 장소가 없으니
+      // 만든(또는 고른) 폴더로 그냥 이동만 한다. "미분류로 저장"(folderId===null)은
+      // 할 게 없어 그대로 닫는다.
+      if (folderId !== null) {
+        setActiveFolderId(folderId);
+      }
+      return;
+    }
     try {
       if (target.mode === "add") {
         await addBookmark(target.placeId, folderId);
@@ -265,9 +278,21 @@ export function SavedPlacesScreen() {
             keyExtractor={(item: BookmarkFolder) => String(item.id)}
             contentContainerStyle={{ padding: 16, gap: 12 }}
             ListHeaderComponent={
-              <AppText weight="medium" style={{ fontSize: 16, marginBottom: 4 }}>
-                저장 장소
-              </AppText>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 4,
+                }}
+              >
+                <AppText weight="medium" style={{ fontSize: 16 }}>
+                  저장 장소
+                </AppText>
+                <Pressable onPress={() => setFolderPickerTarget({ mode: "create" })} hitSlop={8}>
+                  <AppText style={{ fontSize: 13, color: colors.accent }}>+ 새 폴더</AppText>
+                </Pressable>
+              </View>
             }
             renderItem={({ item }: { item: BookmarkFolder }) => (
               <Pressable
@@ -337,9 +362,9 @@ export function SavedPlacesScreen() {
                     <AppText weight="medium" numberOfLines={1} style={{ flexShrink: 1 }}>
                       {item.placeName}
                     </AppText>
-                    {item.category && (
+                    {categoryLabel(item.category) && (
                       <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
-                        {item.category}
+                        {categoryLabel(item.category)}
                       </AppText>
                     )}
                   </View>

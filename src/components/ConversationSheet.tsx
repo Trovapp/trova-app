@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
+import { categoryLabel } from "@/lib/placeCategory";
 import { colors } from "@/lib/theme";
 import { replacePlace, type AlternativeCandidate } from "@/lib/api/trips";
 import { endConversationSession, sendConversationMessage } from "@/lib/api/conversations";
@@ -81,7 +82,9 @@ function CompactCandidateCard({
       </AppText>
       <AppText style={{ fontSize: 11, color: colors.inkMuted }} numberOfLines={1}>
         {[
-          candidate.category ? `${categoryEmoji(candidate.category)} ${candidate.category}` : categoryEmoji(null),
+          candidate.category
+            ? `${categoryEmoji(candidate.category)} ${categoryLabel(candidate.category)}`
+            : categoryEmoji(null),
           candidate.rating !== null ? `⭐ ${candidate.rating.toFixed(1)}` : null,
         ]
           .filter(Boolean)
@@ -109,7 +112,9 @@ function ExpandedCandidateCard({
       <AppText weight="medium">{candidate.name}</AppText>
       <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
         {[
-          candidate.category ? `${categoryEmoji(candidate.category)} ${candidate.category}` : categoryEmoji(null),
+          candidate.category
+            ? `${categoryEmoji(candidate.category)} ${categoryLabel(candidate.category)}`
+            : categoryEmoji(null),
           candidate.rating !== null ? `⭐ ${candidate.rating.toFixed(1)}` : null,
           candidate.address,
         ]

@@ -7,6 +7,7 @@ import { InlineMap } from "@/components/InlineMap";
 import { ProgressBar } from "@/components/ProgressBar";
 import { getPlaceDetails } from "@/lib/api/recommendations";
 import { getTripPlaceDetails } from "@/lib/api/trips";
+import { categoryLabel } from "@/lib/placeCategory";
 import { colors } from "@/lib/theme";
 
 const SHEET_SNAP_POINTS = ["32%", "60%"];
@@ -93,7 +94,7 @@ export function PlaceReviewContent({
         </AppText>
         <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
           {[
-            detail.category,
+            categoryLabel(detail.category),
             detail.rating !== null
               ? `⭐ ${detail.rating.toFixed(1)}${detail.userRatingCount !== null ? ` (리뷰 ${detail.userRatingCount}개)` : ""}`
               : null,

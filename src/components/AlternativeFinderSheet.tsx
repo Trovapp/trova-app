@@ -7,6 +7,7 @@ import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { ProgressBar } from "@/components/ProgressBar";
+import { categoryLabel } from "@/lib/placeCategory";
 import { colors } from "@/lib/theme";
 import {
   getAlternatives,
@@ -348,7 +349,7 @@ export function AlternativeFinderSheet({
                         </AppText>
                         <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
                           {[
-                            candidate.category,
+                            categoryLabel(candidate.category),
                             candidate.rating !== null ? `⭐ ${candidate.rating.toFixed(1)}` : null,
                             candidate.distanceToNextKm !== null ? `다음 장소까지 ${candidate.distanceToNextKm.toFixed(1)}km` : null,
                             candidate.estimatedTravelMinutes !== null ? `약 ${candidate.estimatedTravelMinutes}분` : null,
