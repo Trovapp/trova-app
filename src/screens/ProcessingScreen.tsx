@@ -14,6 +14,18 @@ type Props = NativeStackScreenProps<RootStackParamList, "Processing">;
 
 type Stage = NonNullable<PendingJob["currentStage"]> | "PENDING";
 
+// 백엔드 ProcessingStage.java와 동일한 고정 퍼센트 — 스테이지별 실제 소요시간은
+// 측정된 적이 없어서(EXTRACTING이 파이썬 서브프로세스 한 번으로 묶여 있어 더
+// 세분화된 측정이 어려움), 다음 스테이지 값만 절대 앞지르지 않게 캡을 잡는 용도로만 쓴다.
+const STAGE_MILESTONES = [0, 20, 50, 70, 90, 100];
+// 스테이지별 소요시간 실측 데이터가 없어 감으로 잡은 크리프 속도.
+const PROCESSING_CREEP_MS = 4000;
+
+function nextCeiling(percent: number): number {
+  const next = STAGE_MILESTONES.find((m) => m > percent) ?? 100;
+  return next === 100 ? 100 : Math.min(next - 2, 99);
+}
+
 const STAGE_TIP: Record<Stage, string> = {
   PENDING: "곧 분석을 시작해요",
   EXTRACTING: "영상 속 장소 이름을 찾고 있어요",
@@ -114,7 +126,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
   return (
     <View style={{ flex: 1, padding: 24, paddingTop: 72, backgroundColor: colors.bg }}>
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
-        <ProgressHero percent={percent} />
+        <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={PROCESSING_CREEP_MS} />
         <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>
           {message}
         </AppText>

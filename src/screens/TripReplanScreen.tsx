@@ -113,10 +113,17 @@ export function TripReplanScreen({ route, navigation }: Props) {
   if (job.status === "PENDING" || job.status === "PROCESSING") {
     const total = job.totalTargets;
     const percent = total === null ? 0 : total === 0 ? 100 : Math.round((job.completedTargets / total) * 100);
+    // 타겟(장소) 하나 처리에 실측 평균 7.6초가 걸린다(docs/benchmarks/2026-09-16-trip-replan-latency.md,
+    // 6타겟 44.36초/47.14초 실측 평균 45.75초÷6) — 그동안 백엔드가 다음 값을 확정할 때까지
+    // 이 시간만큼 천천히 차오르게 하고, 다음 타겟 완료 시점(실제 값)은 절대 앞지르지 않는다.
+    const AVG_TARGET_MS = 7600;
+    const nextTargetPercent =
+      total === null ? 15 : total === 0 ? 100 : Math.round(((job.completedTargets + 1) / total) * 100);
+    const ceiling = Math.min(nextTargetPercent - 2, 99);
     return (
       <View style={{ flex: 1, padding: 24, paddingTop: 72, backgroundColor: colors.bg }}>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
-          <ProgressHero percent={percent} />
+          <ProgressHero percent={percent} ceiling={ceiling} creepMs={AVG_TARGET_MS} />
           {total !== null && (
             <AppText mono weight="medium" style={{ color: colors.inkMuted }}>
               {job.completedTargets} / {total}
