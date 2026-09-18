@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useFonts as useMonoFonts, IBMPlexMono_400Regular, IBMPlexMono_500Medium } from "@expo-google-fonts/ibm-plex-mono";
 import { useFonts as useSansFonts, NotoSansKR_400Regular, NotoSansKR_500Medium } from "@expo-google-fonts/noto-sans-kr";
+import { useFonts as useEmojiFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -23,7 +24,14 @@ export default function App() {
     NotoSansKR_400Regular,
     NotoSansKR_500Medium,
   });
-  const fontsLoaded = monoFontsLoaded && sansFontsLoaded;
+  // 별점/팁/리뷰 반응처럼 감성적인 자리에만 쓰는 이모지 폰트 — 토스가 자체
+  // 스타일로 다시 그린 이모지 세트 (github.com/toss/tossface, 라이선스는
+  // assets/fonts/TOSSFACE_LICENSE.txt 참고). 탭바·버튼 같은 기능성 아이콘은
+  // 계속 Feather를 쓴다.
+  const [emojiFontLoaded] = useEmojiFonts({
+    Tossface: require("./assets/fonts/TossFaceFontMac.ttf"),
+  });
+  const fontsLoaded = monoFontsLoaded && sansFontsLoaded && emojiFontLoaded;
 
   useEffect(() => {
     if (fontsLoaded) {

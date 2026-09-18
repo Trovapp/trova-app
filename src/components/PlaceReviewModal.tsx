@@ -4,6 +4,7 @@ import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
+import { Emoji } from "@/components/Emoji";
 import { InlineMap } from "@/components/InlineMap";
 import { ProgressBar } from "@/components/ProgressBar";
 import { RatingBadge } from "@/components/RatingBadge";
@@ -134,7 +135,7 @@ export function PlaceReviewContent({
             {detail.pros.length > 0 && (
               <View style={{ flex: 1, gap: 2 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <Feather name="thumbs-up" size={11} color={colors.inkMuted} />
+                  <Emoji symbol="👍" size={12} />
                   <AppText weight="medium" style={{ fontSize: 11, color: colors.inkMuted }}>
                     좋은 점
                   </AppText>
@@ -149,7 +150,7 @@ export function PlaceReviewContent({
             {detail.cons.length > 0 && (
               <View style={{ flex: 1, gap: 2 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <Feather name="thumbs-down" size={11} color={colors.inkMuted} />
+                  <Emoji symbol="👎" size={12} />
                   <AppText weight="medium" style={{ fontSize: 11, color: colors.inkMuted }}>
                     아쉬운 점
                   </AppText>
@@ -184,7 +185,7 @@ export function PlaceReviewContent({
         {detail.tips.length > 0 && (
           <View style={{ padding: 10, borderRadius: 8, backgroundColor: colors.accentBg, gap: 2 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Feather name="info" size={11} color={colors.accent} />
+              <Emoji symbol="💡" size={12} />
               <AppText weight="medium" style={{ fontSize: 11, color: colors.accent }}>
                 꿀팁
               </AppText>

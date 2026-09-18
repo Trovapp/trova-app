@@ -3,6 +3,7 @@ import { Pressable, ScrollView, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
+import { Emoji } from "@/components/Emoji";
 import { ProgressBar } from "@/components/ProgressBar";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
@@ -150,7 +151,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
               backgroundColor: colors.bgMuted,
             }}
           >
-            <Feather name="info" size={13} color={colors.inkMuted} />
+            <Emoji symbol="💡" size={14} />
             <AppText style={{ fontSize: 13, color: colors.inkMuted }}>여행 전체를 확인하는 중이라 조금 걸릴 수 있어요</AppText>
           </View>
         </View>

@@ -3,6 +3,7 @@ import { Pressable, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
+import { Emoji } from "@/components/Emoji";
 import { ProgressBar } from "@/components/ProgressBar";
 import { colors } from "@/lib/theme";
 import { getPendingJobs, type PendingJob } from "@/lib/api/places";
@@ -155,7 +156,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
             backgroundColor: colors.bgMuted,
           }}
         >
-          <Feather name="info" size={13} color={colors.inkMuted} />
+          <Emoji symbol="💡" size={14} />
           <AppText style={{ fontSize: 13, color: colors.inkMuted }}>{STAGE_TIP[stage]}</AppText>
         </View>
       </View>
