@@ -258,13 +258,14 @@ export type TripReplanJob = {
   errorMessage: string | null;
 };
 
-// v1은 "실내 위주로 바꾸기" 한 방향만 지원해서(백엔드가 indoorOnly=true 외엔 400) 옵션을
-// 받지 않는다 — 대안 찾기 시트처럼 필터 UI가 필요 없다.
-export async function startTripReplan(tripId: number): Promise<{ jobId: number }> {
+// 기본은 allPlaces=true — 여행에 있는 모든 장소를 대상으로 카테고리 매칭 +
+// 개인화 기반 대안을 추천한다(indoorOnly는 날씨 등으로 "실내 위주로만" 좁히고
+// 싶을 때 별도로 켤 수 있는 독립적인 필터).
+export async function startTripReplan(tripId: number, indoorOnly = false): Promise<{ jobId: number }> {
   const res = await apiFetch(`/api/trips/${tripId}/replan`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ indoorOnly: true }),
+    body: JSON.stringify({ allPlaces: true, indoorOnly }),
   });
   if (!res.ok) {
     throw new Error(`POST /api/trips/${tripId}/replan failed: ${res.status}`);

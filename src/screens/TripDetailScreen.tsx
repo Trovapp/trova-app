@@ -324,7 +324,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
     if (replanStarting) return;
     Alert.alert(
       "전체 일정 재구성",
-      "이 여행의 실외 장소들을 찾아서 실내 대안으로 바꿔드려요. 완료되면 장소마다 교체하거나 건너뛸 수 있어요.",
+      "이 여행에 있는 장소들의 카테고리에 맞춰, 취향에 맞을 만한 다른 장소를 추천해드려요. 완료되면 장소마다 교체하거나 건너뛸 수 있고, 확정한 뒤엔 동선도 자동으로 다시 정리돼요.",
       [
         { text: "취소", style: "cancel" },
         { text: "시작", onPress: () => startReplan() },

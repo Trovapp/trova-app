@@ -8,7 +8,7 @@ import { ProgressHero } from "@/components/ProgressHero";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
 import { colors } from "@/lib/theme";
-import { getTrip, getTripReplanJob, replacePlace, type TripReplanResult } from "@/lib/api/trips";
+import { getTrip, getTripReplanJob, optimizeTripRoute, replacePlace, type TripReplanResult } from "@/lib/api/trips";
 import { categoryLabel } from "@/lib/placeCategory";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
@@ -46,7 +46,23 @@ export function TripReplanScreen({ route, navigation }: Props) {
     (tripQuery.data?.days ?? []).flatMap((d) => d.places).map((p) => [p.id, p.placeName])
   );
 
-  function goBackToTrip() {
+  // 확정한 교체가 하나라도 있으면, 그 장소가 속한 날짜만 골라 동선을 자동으로
+  // 다시 정리한다(이미 있는 RouteOptimizer 기반 엔드포인트 재사용). 실패해도
+  // 화면 이동 자체는 막지 않는다 — 동선 재배치는 있으면 좋은 정리일 뿐, 교체
+  // 자체는 이미 확정됐으므로.
+  async function goBackToTrip() {
+    const confirmedIds = Object.entries(cardStatus)
+      .filter(([, status]) => status === "confirmed")
+      .map(([id]) => Number(id));
+    if (confirmedIds.length > 0 && tripQuery.data) {
+      const affectedDays = new Set<number>();
+      for (const day of tripQuery.data.days) {
+        if (day.places.some((p) => confirmedIds.includes(p.id))) {
+          affectedDays.add(day.day);
+        }
+      }
+      await Promise.allSettled([...affectedDays].map((day) => optimizeTripRoute(tripId, day)));
+    }
     navigation.replace("TripDetail", { id: tripId });
   }
 
@@ -130,7 +146,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
             </AppText>
           )}
           <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>
-            {total === null ? "실외 장소를 살펴보고 있어요" : "실내 대안을 찾고 있어요"}
+            {total === null ? "여행 속 장소들을 살펴보고 있어요" : "취향에 맞는 대안을 찾고 있어요"}
           </AppText>
           <View
             style={{
@@ -160,7 +176,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
         <Feather name="check-circle" size={48} color={colors.accent} />
         <AppText weight="medium" style={{ fontSize: 18, textAlign: "center" }}>
-          재구성할 실외 장소가 없어요
+          추천할 만한 다른 장소를 찾지 못했어요
         </AppText>
         <Pressable
           onPress={goBackToTrip}
@@ -186,10 +202,10 @@ export function TripReplanScreen({ route, navigation }: Props) {
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 64, gap: 16 }}>
         <AppText weight="medium" style={{ fontSize: 18 }}>
-          실내 대안을 찾았어요
+          새로운 추천을 찾았어요
         </AppText>
         <AppText style={{ fontSize: 13, color: colors.inkMuted }}>
-          장소마다 확인하고 교체하거나 건너뛸 수 있어요.
+          장소마다 확인하고 교체하거나 건너뛸 수 있어요. 확정하면 동선도 자동으로 다시 정리돼요.
         </AppText>
 
         {confirmError && <AppText style={{ color: colors.accent }}>{confirmError}</AppText>}
