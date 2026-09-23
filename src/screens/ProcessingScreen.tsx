@@ -14,12 +14,26 @@ type Props = NativeStackScreenProps<RootStackParamList, "Processing">;
 
 type Stage = NonNullable<PendingJob["currentStage"]> | "PENDING";
 
-// 백엔드 ProcessingStage.java와 동일한 고정 퍼센트 — 스테이지별 실제 소요시간은
-// 측정된 적이 없어서(EXTRACTING이 파이썬 서브프로세스 한 번으로 묶여 있어 더
-// 세분화된 측정이 어려움), 다음 스테이지 값만 절대 앞지르지 않게 캡을 잡는 용도로만 쓴다.
+// 백엔드 ProcessingStage.java와 동일한 고정 퍼센트 — 다음 스테이지 값만 절대
+// 앞지르지 않게 캡을 잡는 용도로 쓴다.
 const STAGE_MILESTONES = [0, 20, 50, 70, 90, 100];
-// 스테이지별 소요시간 실측 데이터가 없어 감으로 잡은 크리프 속도.
-const PROCESSING_CREEP_MS = 4000;
+
+// (2026-09 trova-backend 세션에서 실제 파이프라인 여러 번 실행해 스테이지별 소요시간을
+// 실측함 — 예전엔 "측정된 적이 없어서 감으로 잡음"이었던 걸 그 데이터로 교체.
+// EXTRACTING(다운로드+Gemini 추출, 파이썬 서브프로세스 한 번)이 압도적으로 오래
+// 걸리고 변동도 큼(정상 12~40초, Gemini 불안정 시 그 이상) — 크리프를 짧게 잡으면
+// 천장까지 다 채운 뒤 실제 데이터가 올 때까지 프로그레스바가 멈춘 것처럼 보임.
+// GEOCODING은 카카오 API 호출 병렬화 이후 6개 장소 기준 139ms로 사실상 즉시 끝남
+// (실측: 순차 576ms -> 병렬 139ms). SELECTING/VERIFYING은 후보가 모호할 때만
+// 도는 조건부 Gemini 호출이라 스킵되는 경우가 많고, 돌더라도 수 초 내외.
+const STAGE_CREEP_MS: Record<Stage, number> = {
+  PENDING: 20000, // 곧 EXTRACTING으로 넘어가고, 그 구간이 제일 기니 미리 넉넉하게
+  EXTRACTING: 20000, // 실측 중간값(12~40초) 근처로— 너무 일찍 멈춘 것처럼 안 보이게
+  GEOCODING: 2000, // 실측 139ms — 크리프는 거의 항상 실제 값에 바로 덮어써짐
+  SELECTING: 3000,
+  VERIFYING: 3000,
+  SAVING: 1000,
+};
 
 function nextCeiling(percent: number): number {
   const next = STAGE_MILESTONES.find((m) => m > percent) ?? 100;
@@ -126,7 +140,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
   return (
     <View style={{ flex: 1, padding: 24, paddingTop: 72, backgroundColor: colors.bg }}>
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
-        <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={PROCESSING_CREEP_MS} />
+        <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={STAGE_CREEP_MS[stage]} />
         <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>
           {message}
         </AppText>
