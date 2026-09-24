@@ -723,7 +723,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                       )}
                     </View>
                     <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
-                      <PressableScale onPress={() => handleToggleBookmark(place.id)}>
+                      <PressableScale onPress={() => handleToggleBookmark(place.id)} hitSlop={{ top: 13, bottom: 13, left: 13, right: 4 }}>
                         <Feather
                           name="star"
                           size={18}
@@ -744,6 +744,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                       setAlternativeTargetId(null);
                       setReviewTarget({ kind: "place", id: place.id });
                     }}
+                    hitSlop={{ top: 10, bottom: 10, right: 10 }}
                   >
                     <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
                   </PressableScale>
@@ -798,7 +799,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                         >
                           <AppText style={{ fontSize: 12, color: colors.onAccent }}>추가</AppText>
                         </PressableScale>
-                        <PressableScale onPress={() => handleRemoveBookmark(bookmark.id)}>
+                        <PressableScale onPress={() => handleRemoveBookmark(bookmark.id)} hitSlop={{ top: 12, bottom: 12, left: 4, right: 12 }}>
                           <AppText style={{ fontSize: 12, color: colors.inkMuted }}>제거</AppText>
                         </PressableScale>
                       </View>

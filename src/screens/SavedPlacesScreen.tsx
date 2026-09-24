@@ -326,7 +326,7 @@ export function SavedPlacesScreen() {
                         </View>
                       )}
                     </View>
-                    <PressableScale onPress={() => setFolderPickerTarget({ mode: "add", placeId: item.id })}>
+                    <PressableScale onPress={() => setFolderPickerTarget({ mode: "add", placeId: item.id })} hitSlop={13}>
                       <Feather
                         name="star"
                         size={18}
@@ -334,7 +334,7 @@ export function SavedPlacesScreen() {
                       />
                     </PressableScale>
                   </View>
-                  <PressableScale onPress={() => setReviewPlaceId(item.id)}>
+                  <PressableScale onPress={() => setReviewPlaceId(item.id)} hitSlop={{ top: 10, bottom: 10, right: 10 }}>
                     <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
                   </PressableScale>
                 </View>

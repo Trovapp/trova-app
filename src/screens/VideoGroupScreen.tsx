@@ -378,7 +378,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
           )}
 
           {currentActiveDay !== null && emptyDayNumbers.includes(currentActiveDay) && activePlaces.length === 0 && (
-            <PressableScale onPress={() => handleDeleteDay(currentActiveDay)}>
+            <PressableScale onPress={() => handleDeleteDay(currentActiveDay)} hitSlop={10}>
               <AppText style={{ fontSize: 12, color: colors.inkMuted }}>이 빈 날짜 삭제</AppText>
             </PressableScale>
           )}
