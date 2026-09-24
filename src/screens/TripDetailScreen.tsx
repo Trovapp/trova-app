@@ -1,6 +1,12 @@
-import { useState } from "react";
-import { Alert, Modal, Platform, Pressable, TextInput, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Platform, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+  type BottomSheetBackdropProps,
+} from "@gorhom/bottom-sheet";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -78,6 +84,15 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const [assistantTargetId, setAssistantTargetId] = useState<number | null>(null);
   const [gapCardFor, setGapCardFor] = useState<Gap | null>(null);
   const [replanStarting, setReplanStarting] = useState(false);
+
+  const gapSheetRef = useRef<BottomSheetModal>(null);
+  useEffect(() => {
+    if (gapCardFor !== null) {
+      gapSheetRef.current?.present();
+    } else {
+      gapSheetRef.current?.dismiss();
+    }
+  }, [gapCardFor]);
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const foldersQuery = useQuery({ queryKey: ["bookmarkFolders"], queryFn: listFolders });
@@ -811,42 +826,48 @@ export function TripDetailScreen({ route, navigation }: Props) {
       }}
       onClose={() => setAssistantTargetId(null)}
     />
-    <Modal visible={gapCardFor !== null} transparent animationType="slide" onRequestClose={() => setGapCardFor(null)}>
-      <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-end" }} onPress={() => setGapCardFor(null)}>
-        <Pressable
-          style={{ maxHeight: "70%", backgroundColor: colors.bg, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 10 }}
-          onPress={(e) => e.stopPropagation()}
-        >
-          <AppText weight="medium">이 사이 갈 만한 곳</AppText>
-          {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
-          {gapCardFor?.recommendations.map((r) => (
-            <PressableScale
-              key={r.placeId}
-              disabled={busy}
-              onPress={async () => {
-                if (!gapCardFor || busy) return;
-                setBusy(true);
-                setError(null);
-                try {
-                  await insertPlaceAfter(gapCardFor.beforePlaceId, r.googlePlaceId);
-                  setGapCardFor(null);
-                  await reload();
-                  await queryClient.invalidateQueries({ queryKey: ["gapRecommendations", tripId, currentActiveDay] });
-                } catch {
-                  setError("장소를 추가하지 못했어요.");
-                } finally {
-                  setBusy(false);
-                }
-              }}
-              style={{ padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, opacity: busy ? 0.6 : 1 }}
-            >
-              <AppText weight="medium" numberOfLines={1}>{r.name}</AppText>
-              {r.address && <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{r.address}</AppText>}
-            </PressableScale>
-          ))}
-        </Pressable>
-      </Pressable>
-    </Modal>
+    <BottomSheetModal
+      ref={gapSheetRef}
+      enableDynamicSizing
+      onDismiss={() => setGapCardFor(null)}
+      backdropComponent={(props: BottomSheetBackdropProps) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+      )}
+      backgroundStyle={{ backgroundColor: colors.bg }}
+      handleIndicatorStyle={{ backgroundColor: colors.border }}
+    >
+      <BottomSheetView style={{ padding: 16, paddingBottom: 32, gap: 10 }}>
+        <AppText weight="medium">이 사이 갈 만한 곳</AppText>
+        {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
+        {gapCardFor?.recommendations.map((r) => (
+          <PressableScale
+            key={r.placeId}
+            disabled={busy}
+            onPress={async () => {
+              if (!gapCardFor || busy) return;
+              setBusy(true);
+              setError(null);
+              try {
+                await insertPlaceAfter(gapCardFor.beforePlaceId, r.googlePlaceId);
+                // 성공했을 때만 닫는다 — 실패하면 에러 메시지를 보여준 채로 시트를
+                // 열어둬서 사용자가 다른 후보를 다시 고를 수 있게 한다.
+                setGapCardFor(null);
+                await reload();
+                await queryClient.invalidateQueries({ queryKey: ["gapRecommendations", tripId, currentActiveDay] });
+              } catch {
+                setError("장소를 추가하지 못했어요.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+            style={{ padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, opacity: busy ? 0.6 : 1 }}
+          >
+            <AppText weight="medium" numberOfLines={1}>{r.name}</AppText>
+            {r.address && <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{r.address}</AppText>}
+          </PressableScale>
+        ))}
+      </BottomSheetView>
+    </BottomSheetModal>
     </View>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Modal, Pressable, ScrollView, View } from "react-native";
+import { View } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { PressableScale } from "@/components/PressableScale";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
@@ -211,11 +212,11 @@ export function PlaceReviewContent({
 
         {detail.reviewSnippets.length > 0 && (
           <View style={{ gap: 4 }}>
-            <Pressable onPress={() => setShowRawReviews((current) => !current)}>
+            <PressableScale onPress={() => setShowRawReviews((current) => !current)}>
               <AppText style={{ fontSize: 11, color: colors.inkMuted }}>
                 {showRawReviews ? "실제 리뷰 원문 접기 ▲" : "실제 리뷰 원문 보기 ▼"}
               </AppText>
-            </Pressable>
+            </PressableScale>
             {showRawReviews &&
               detail.reviewSnippets.slice(0, 3).map((snippet, i) => (
                 <AppText
@@ -229,39 +230,6 @@ export function PlaceReviewContent({
         )}
       </View>
     </>
-  );
-}
-
-export function PlaceReviewModal({
-  visible,
-  placeId = null,
-  tripPlaceId = null,
-  onClose,
-}: {
-  visible: boolean;
-  placeId?: number | null;
-  tripPlaceId?: number | null;
-  onClose: () => void;
-}) {
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-end" }} onPress={onClose}>
-        <Pressable
-          style={{
-            maxHeight: "75%",
-            backgroundColor: colors.bg,
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            overflow: "hidden",
-          }}
-          onPress={(e) => e.stopPropagation()}
-        >
-          <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
-            <PlaceReviewContent placeId={placeId} tripPlaceId={tripPlaceId} />
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
   );
 }
 

@@ -1,7 +1,14 @@
-import { useMemo, useState } from "react";
-import { Modal, Pressable, TextInput, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
-import BottomSheet, { BottomSheetFlatList, BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetFlatList,
+  BottomSheetModal,
+  BottomSheetScrollView,
+  BottomSheetView,
+  type BottomSheetBackdropProps,
+} from "@gorhom/bottom-sheet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
@@ -47,6 +54,18 @@ export function SavedPlacesScreen() {
   const [menuBookmarkId, setMenuBookmarkId] = useState<number | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
   const snapPoints = useMemo(() => ["18%", "55%", "90%"], []);
+
+  // 북마크 메뉴 시트 — menuBookmarkId(원시 상태)로 여닫는다. menuBookmark(파생값)는
+  // 이 아래 early return들 다음에 계산되므로, 훅 순서 규칙상 그걸 의존성으로 쓰는
+  // effect를 여기 둘 수 없다.
+  const menuSheetRef = useRef<BottomSheetModal>(null);
+  useEffect(() => {
+    if (menuBookmarkId !== null) {
+      menuSheetRef.current?.present();
+    } else {
+      menuSheetRef.current?.dismiss();
+    }
+  }, [menuBookmarkId]);
 
   if (bookmarksQuery.isLoading || foldersQuery.isLoading) {
     return (
@@ -402,48 +421,42 @@ export function SavedPlacesScreen() {
         onPick={handlePickFolder}
       />
 
-      <Modal
-        visible={menuBookmark !== null}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setMenuBookmarkId(null)}
+      <BottomSheetModal
+        ref={menuSheetRef}
+        enableDynamicSizing
+        onDismiss={() => setMenuBookmarkId(null)}
+        backdropComponent={(props: BottomSheetBackdropProps) => (
+          <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+        )}
+        backgroundStyle={{ backgroundColor: colors.bg }}
+        handleIndicatorStyle={{ backgroundColor: colors.border }}
       >
-        <Pressable
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-end" }}
-          onPress={() => setMenuBookmarkId(null)}
-        >
-          <Pressable
-            style={{ backgroundColor: colors.bg, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 8 }}
-            onPress={(e) => e.stopPropagation()}
+        <BottomSheetView style={{ padding: 8, paddingBottom: 32 }}>
+          <AppText weight="medium" numberOfLines={1} style={{ padding: 12, color: colors.inkMuted, fontSize: 13 }}>
+            {menuBookmark?.placeName}
+          </AppText>
+          <PressableScale
+            onPress={() => {
+              if (!menuBookmark) return;
+              setFolderPickerTarget({ mode: "move", bookmarkId: menuBookmark.id });
+              menuSheetRef.current?.dismiss();
+            }}
+            style={{ padding: 14 }}
           >
-            <AppText weight="medium" numberOfLines={1} style={{ padding: 12, color: colors.inkMuted, fontSize: 13 }}>
-              {menuBookmark?.placeName}
-            </AppText>
-            <PressableScale
-              onPress={() => {
-                if (!menuBookmark) return;
-                const bookmarkId = menuBookmark.id;
-                setMenuBookmarkId(null);
-                setFolderPickerTarget({ mode: "move", bookmarkId });
-              }}
-              style={{ padding: 14 }}
-            >
-              <AppText>다른 폴더로 이동</AppText>
-            </PressableScale>
-            <PressableScale
-              onPress={() => {
-                if (!menuBookmark) return;
-                const bookmarkId = menuBookmark.id;
-                setMenuBookmarkId(null);
-                handleRemove(bookmarkId);
-              }}
-              style={{ padding: 14 }}
-            >
-              <AppText style={{ color: colors.accent }}>찜 해제</AppText>
-            </PressableScale>
-          </Pressable>
-        </Pressable>
-      </Modal>
+            <AppText>다른 폴더로 이동</AppText>
+          </PressableScale>
+          <PressableScale
+            onPress={() => {
+              if (!menuBookmark) return;
+              handleRemove(menuBookmark.id);
+              menuSheetRef.current?.dismiss();
+            }}
+            style={{ padding: 14 }}
+          >
+            <AppText style={{ color: colors.accent }}>찜 해제</AppText>
+          </PressableScale>
+        </BottomSheetView>
+      </BottomSheetModal>
     </View>
   );
 }

@@ -1,7 +1,16 @@
-import { useState } from "react";
-import { Modal, Pressable, ScrollView, TextInput, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { View } from "react-native";
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetScrollView,
+  BottomSheetTextInput,
+  BottomSheetView,
+  type BottomSheetBackdropProps,
+} from "@gorhom/bottom-sheet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { DISTINCT_COLORS } from "@/lib/colorPresets";
 import { createFolder, listFolders } from "@/lib/api/bookmarks";
@@ -25,6 +34,15 @@ export function FolderPickerModal({
   const [newColor, setNewColor] = useState<string>(DISTINCT_COLORS[0]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const ref = useRef<BottomSheetModal>(null);
+  useEffect(() => {
+    if (visible) {
+      ref.current?.present();
+    } else {
+      ref.current?.dismiss();
+    }
+  }, [visible]);
 
   function reset() {
     setCreating(false);
@@ -50,122 +68,121 @@ export function FolderPickerModal({
   }
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-      onDismiss={reset}
+    <BottomSheetModal
+      ref={ref}
+      snapPoints={["70%"]}
+      onDismiss={() => {
+        reset();
+        onClose();
+      }}
+      backdropComponent={(props: BottomSheetBackdropProps) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+      )}
+      backgroundStyle={{ backgroundColor: colors.bg }}
+      handleIndicatorStyle={{ backgroundColor: colors.border }}
     >
-      <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-end" }} onPress={onClose}>
-        <Pressable
-          style={{ maxHeight: "70%", backgroundColor: colors.bg, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
-          onPress={(e) => e.stopPropagation()}
+      <BottomSheetScrollView contentContainerStyle={{ padding: 20, gap: 12, paddingBottom: 32 }}>
+        <AppText weight="medium" style={{ fontSize: 16 }}>
+          어느 폴더에 저장할까요?
+        </AppText>
+
+        <PressableScale
+          onPress={() => onPick(null)}
+          style={{ padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}
         >
-          <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
-            <AppText weight="medium" style={{ fontSize: 16 }}>
-              어느 폴더에 저장할까요?
-            </AppText>
+          <AppText>미분류로 저장</AppText>
+        </PressableScale>
 
-            <Pressable
-              onPress={() => onPick(null)}
-              style={{ padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}
+        {foldersQuery.isLoading && (
+          <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>불러오는 중...</AppText>
+        )}
+
+        {foldersQuery.isError && (
+          <QueryErrorView message="폴더 목록을 불러오지 못했어요." onRetry={() => foldersQuery.refetch()} />
+        )}
+
+        {!foldersQuery.isLoading &&
+          !foldersQuery.isError &&
+          (foldersQuery.data ?? []).map((folder) => (
+            <PressableScale
+              key={folder.id}
+              onPress={() => onPick(folder.id)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+                padding: 12,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
             >
-              <AppText>미분류로 저장</AppText>
-            </Pressable>
+              <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: folder.color }} />
+              <AppText style={{ flex: 1 }}>{folder.name}</AppText>
+              <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{folder.placeCount}개</AppText>
+            </PressableScale>
+          ))}
 
-            {foldersQuery.isLoading && (
-              <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>불러오는 중...</AppText>
-            )}
+        {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
 
-            {foldersQuery.isError && (
-              <QueryErrorView message="폴더 목록을 불러오지 못했어요." onRetry={() => foldersQuery.refetch()} />
-            )}
-
-            {!foldersQuery.isLoading &&
-              !foldersQuery.isError &&
-              (foldersQuery.data ?? []).map((folder) => (
-                <Pressable
-                  key={folder.id}
-                  onPress={() => onPick(folder.id)}
+        {creating ? (
+          <View style={{ gap: 10, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}>
+            <BottomSheetTextInput
+              autoFocus
+              value={newName}
+              onChangeText={setNewName}
+              placeholder="새 폴더 이름"
+              style={{
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 8,
+                paddingHorizontal: 10,
+                paddingVertical: 8,
+                fontSize: 14,
+              }}
+            />
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {DISTINCT_COLORS.map((color) => (
+                <PressableScale
+                  key={color}
+                  onPress={() => setNewColor(color)}
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: 12,
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: folder.color }} />
-                  <AppText style={{ flex: 1 }}>{folder.name}</AppText>
-                  <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{folder.placeCount}개</AppText>
-                </Pressable>
-              ))}
-
-            {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
-
-            {creating ? (
-              <View style={{ gap: 10, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}>
-                <TextInput
-                  autoFocus
-                  value={newName}
-                  onChangeText={setNewName}
-                  placeholder="새 폴더 이름"
-                  style={{
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: 8,
-                    paddingHorizontal: 10,
-                    paddingVertical: 8,
-                    fontSize: 14,
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: color,
+                    borderWidth: newColor === color ? 3 : 0,
+                    borderColor: colors.ink,
                   }}
                 />
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  {DISTINCT_COLORS.map((color) => (
-                    <Pressable
-                      key={color}
-                      onPress={() => setNewColor(color)}
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 14,
-                        backgroundColor: color,
-                        borderWidth: newColor === color ? 3 : 0,
-                        borderColor: colors.ink,
-                      }}
-                    />
-                  ))}
-                </View>
-                <Pressable
-                  onPress={handleCreateAndPick}
-                  disabled={!newName.trim() || busy}
-                  style={{
-                    height: 40,
-                    borderRadius: 8,
-                    backgroundColor: colors.accent,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    opacity: !newName.trim() || busy ? 0.5 : 1,
-                  }}
-                >
-                  <AppText weight="medium" style={{ color: "#fff" }}>
-                    만들고 저장
-                  </AppText>
-                </Pressable>
-              </View>
-            ) : (
-              <Pressable
-                onPress={() => setCreating(true)}
-                style={{ padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, borderStyle: "dashed" }}
-              >
-                <AppText style={{ color: colors.accent }}>+ 새 폴더 만들기</AppText>
-              </Pressable>
-            )}
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+              ))}
+            </View>
+            <PressableScale
+              onPress={handleCreateAndPick}
+              disabled={!newName.trim() || busy}
+              style={{
+                height: 40,
+                borderRadius: 8,
+                backgroundColor: colors.accent,
+                justifyContent: "center",
+                alignItems: "center",
+                opacity: !newName.trim() || busy ? 0.5 : 1,
+              }}
+            >
+              <AppText weight="medium" style={{ color: "#fff" }}>
+                만들고 저장
+              </AppText>
+            </PressableScale>
+          </View>
+        ) : (
+          <PressableScale
+            onPress={() => setCreating(true)}
+            style={{ padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, borderStyle: "dashed" }}
+          >
+            <AppText style={{ color: colors.accent }}>+ 새 폴더 만들기</AppText>
+          </PressableScale>
+        )}
+      </BottomSheetScrollView>
+    </BottomSheetModal>
   );
 }
