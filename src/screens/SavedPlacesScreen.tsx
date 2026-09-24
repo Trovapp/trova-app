@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Modal, Pressable, TextInput, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 import BottomSheet, { BottomSheetFlatList, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
@@ -191,7 +192,7 @@ export function SavedPlacesScreen() {
             fontFamily: "NotoSansKR_400Regular",
           }}
         />
-        <Pressable
+        <PressableScale
           onPress={handleSearch}
           disabled={searching || !query.trim()}
           style={{
@@ -207,7 +208,7 @@ export function SavedPlacesScreen() {
           <AppText weight="medium" style={{ color: "#fff" }}>
             {searching ? "검색 중..." : "검색"}
           </AppText>
-        </Pressable>
+        </PressableScale>
       </View>
 
       <View style={{ flex: 1 }}>
@@ -219,9 +220,9 @@ export function SavedPlacesScreen() {
           // 그래야 시트 밖(지도) 영역이 계속 터치되고, 시트를 살짝 내려도(스냅포인트만
           // 바뀔 뿐) 선택 상태(reviewPlaceId)와 지도 하이라이트가 그대로 유지된다.
           <BottomSheetScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
-            <Pressable onPress={() => setReviewPlaceId(null)} hitSlop={8} style={{ alignSelf: "flex-end" }}>
+            <PressableScale onPress={() => setReviewPlaceId(null)} hitSlop={8} style={{ alignSelf: "flex-end" }}>
               <Feather name="x" size={18} color={colors.inkMuted} />
-            </Pressable>
+            </PressableScale>
             <PlaceReviewContent placeId={reviewPlaceId} showMiniMap={false} />
           </BottomSheetScrollView>
         ) : searchResults.length > 0 ? (
@@ -231,10 +232,10 @@ export function SavedPlacesScreen() {
             contentContainerStyle={{ padding: 16, gap: 12 }}
             ListHeaderComponent={
               <View style={{ gap: 8, marginBottom: 4 }}>
-                <Pressable onPress={clearSearch} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <PressableScale onPress={clearSearch} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                   <Feather name="x" size={14} color={colors.accent} />
                   <AppText style={{ color: colors.accent }}>검색 결과 닫기</AppText>
-                </Pressable>
+                </PressableScale>
                 {searchError && <AppText style={{ color: colors.accent }}>{searchError}</AppText>}
               </View>
             }
@@ -269,17 +270,17 @@ export function SavedPlacesScreen() {
                       </View>
                     )}
                   </View>
-                  <Pressable onPress={() => setFolderPickerTarget({ mode: "add", placeId: item.id })}>
+                  <PressableScale onPress={() => setFolderPickerTarget({ mode: "add", placeId: item.id })}>
                     <Feather
                       name="star"
                       size={18}
                       color={bookmarkedPlaceIds.has(item.id) ? colors.accent : colors.border}
                     />
-                  </Pressable>
+                  </PressableScale>
                 </View>
-                <Pressable onPress={() => setReviewPlaceId(item.id)}>
+                <PressableScale onPress={() => setReviewPlaceId(item.id)}>
                   <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
-                </Pressable>
+                </PressableScale>
               </View>
             )}
           />
@@ -300,13 +301,13 @@ export function SavedPlacesScreen() {
                 <AppText weight="medium" style={{ fontSize: 16 }}>
                   저장 장소
                 </AppText>
-                <Pressable onPress={() => setFolderPickerTarget({ mode: "create" })} hitSlop={8}>
+                <PressableScale onPress={() => setFolderPickerTarget({ mode: "create" })} hitSlop={8}>
                   <AppText style={{ fontSize: 13, color: colors.accent }}>+ 새 폴더</AppText>
-                </Pressable>
+                </PressableScale>
               </View>
             }
             renderItem={({ item }: { item: BookmarkFolder }) => (
-              <Pressable
+              <PressableScale
                 onPress={() => setActiveFolderId(item.id)}
                 style={{
                   flexDirection: "row",
@@ -321,7 +322,7 @@ export function SavedPlacesScreen() {
                 <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: item.color }} />
                 <AppText style={{ flex: 1 }}>{item.name}</AppText>
                 <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{item.placeCount}개</AppText>
-              </Pressable>
+              </PressableScale>
             )}
           />
         ) : (
@@ -343,9 +344,9 @@ export function SavedPlacesScreen() {
                   <AppText weight="medium" style={{ fontSize: 16, flex: 1 }} numberOfLines={1}>
                     {activeFolder?.name ?? "미분류"}
                   </AppText>
-                  <Pressable onPress={() => setActiveFolderId(null)} hitSlop={8}>
+                  <PressableScale onPress={() => setActiveFolderId(null)} hitSlop={8}>
                     <Feather name="x" size={18} color={colors.inkMuted} />
-                  </Pressable>
+                  </PressableScale>
                 </View>
                 {removeError && <AppText style={{ color: colors.accent }}>{removeError}</AppText>}
                 {moveError && <AppText style={{ color: colors.accent }}>{moveError}</AppText>}
@@ -357,7 +358,7 @@ export function SavedPlacesScreen() {
               </AppText>
             }
             renderItem={({ item }: { item: Bookmark }) => (
-              <Pressable
+              <PressableScale
                 onPress={() => setReviewPlaceId(item.placeId)}
                 style={{
                   flexDirection: "row",
@@ -385,10 +386,10 @@ export function SavedPlacesScreen() {
                     </AppText>
                   )}
                 </View>
-                <Pressable onPress={() => setMenuBookmarkId(item.id)} hitSlop={10} style={{ paddingHorizontal: 4 }}>
+                <PressableScale onPress={() => setMenuBookmarkId(item.id)} hitSlop={10} style={{ paddingHorizontal: 4 }}>
                   <AppText style={{ fontSize: 16, color: colors.inkMuted }}>⋮</AppText>
-                </Pressable>
-              </Pressable>
+                </PressableScale>
+              </PressableScale>
             )}
           />
         )}
@@ -418,7 +419,7 @@ export function SavedPlacesScreen() {
             <AppText weight="medium" numberOfLines={1} style={{ padding: 12, color: colors.inkMuted, fontSize: 13 }}>
               {menuBookmark?.placeName}
             </AppText>
-            <Pressable
+            <PressableScale
               onPress={() => {
                 if (!menuBookmark) return;
                 const bookmarkId = menuBookmark.id;
@@ -428,8 +429,8 @@ export function SavedPlacesScreen() {
               style={{ padding: 14 }}
             >
               <AppText>다른 폴더로 이동</AppText>
-            </Pressable>
-            <Pressable
+            </PressableScale>
+            <PressableScale
               onPress={() => {
                 if (!menuBookmark) return;
                 const bookmarkId = menuBookmark.id;
@@ -439,7 +440,7 @@ export function SavedPlacesScreen() {
               style={{ padding: 14 }}
             >
               <AppText style={{ color: colors.accent }}>찜 해제</AppText>
-            </Pressable>
+            </PressableScale>
           </Pressable>
         </Pressable>
       </Modal>

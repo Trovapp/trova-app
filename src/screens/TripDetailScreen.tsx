@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Alert, Modal, Platform, Pressable, TextInput, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -375,7 +376,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
           }}
         >
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: 4 }}>
-            <Pressable
+            <PressableScale
               onPress={() => {
                 setEditingField({ placeId: place.id, field: "time" });
                 setTimeDraft(parseTimeToDate(place.visitStartTime));
@@ -385,9 +386,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
               <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
                 {place.visitStartTime ? `${place.visitStartTime.slice(0, 5)} 도착` : "시간 추가"}
               </AppText>
-            </Pressable>
+            </PressableScale>
 
-            <Pressable
+            <PressableScale
               onPress={() =>
                 setEditingField(
                   editingField?.placeId === place.id && editingField.field === "transport"
@@ -399,9 +400,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
               <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
                 {place.arrivalTransportMode ? TRANSPORT_LABEL[place.arrivalTransportMode] : "이동수단 추가"}
               </AppText>
-            </Pressable>
+            </PressableScale>
 
-            <Pressable
+            <PressableScale
               onPress={() => {
                 setMemoDraft(place.memo ?? "");
                 setEditingField({ placeId: place.id, field: "memo" });
@@ -410,9 +411,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
               <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
                 {place.memo || "메모 추가"}
               </AppText>
-            </Pressable>
+            </PressableScale>
 
-            <Pressable
+            <PressableScale
               onPress={() =>
                 Alert.alert("장소를 삭제할까요?", `"${place.placeName}"을(를) 일정에서 삭제합니다.`, [
                   { text: "취소", style: "cancel" },
@@ -423,13 +424,13 @@ export function TripDetailScreen({ route, navigation }: Props) {
               style={{ marginLeft: "auto" }}
             >
               <AppText style={{ fontSize: 13, color: colors.inkMuted }}>삭제</AppText>
-            </Pressable>
+            </PressableScale>
           </View>
 
           {editingField?.placeId === place.id && editingField.field === "transport" && (
             <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
               {(["WALK", "TRANSIT", "CAR"] as const).map((mode) => (
-                <Pressable
+                <PressableScale
                   key={mode}
                   onPress={() => handleUpdateDetails(place.id, { arrivalTransportMode: mode })}
                   style={{
@@ -442,7 +443,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                   <AppText style={{ fontSize: 11, color: place.arrivalTransportMode === mode ? "#fff" : colors.inkMuted }}>
                     {TRANSPORT_LABEL[mode]}
                   </AppText>
-                </Pressable>
+                </PressableScale>
               ))}
             </View>
           )}
@@ -489,10 +490,10 @@ export function TripDetailScreen({ route, navigation }: Props) {
               />
               {Platform.OS === "ios" && (
                 <View style={{ flexDirection: "row", gap: 16, justifyContent: "flex-end" }}>
-                  <Pressable onPress={closeTimePicker} disabled={busy}>
+                  <PressableScale onPress={closeTimePicker} disabled={busy}>
                     <AppText style={{ fontSize: 13, color: colors.inkMuted }}>취소</AppText>
-                  </Pressable>
-                  <Pressable
+                  </PressableScale>
+                  <PressableScale
                     onPress={() => commitTime(place, timeDraft ?? parseTimeToDate(place.visitStartTime))}
                     disabled={busy}
                     style={{ opacity: busy ? 0.4 : 1 }}
@@ -500,14 +501,14 @@ export function TripDetailScreen({ route, navigation }: Props) {
                     <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
                       확인
                     </AppText>
-                  </Pressable>
+                  </PressableScale>
                 </View>
               )}
             </View>
           )}
         </PlaceRow>
         {gap && gap.recommendations.length > 0 && (
-          <Pressable
+          <PressableScale
             onPress={() => setGapCardFor(gap)}
             style={{
               marginLeft: 38,
@@ -521,7 +522,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             <AppText style={{ fontSize: 12, color: colors.accent }}>
               {gap.gapMinutes}분 비어요 — 이 사이 갈 곳 추천받기
             </AppText>
-          </Pressable>
+          </PressableScale>
         )}
       </View>
     );
@@ -542,7 +543,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, flex: 1 }}>
               {trip.days.map((d) => (
-                <Pressable
+                <PressableScale
                   key={d.day}
                   onPress={() => setActiveDay(d.day)}
                   style={{
@@ -555,15 +556,15 @@ export function TripDetailScreen({ route, navigation }: Props) {
                   <AppText weight="medium" style={{ color: d.day === currentActiveDay ? "#fff" : colors.inkMuted, fontSize: 13 }}>
                     {d.day}일차{d.date ? ` (${d.date.slice(5)})` : ""}
                   </AppText>
-                </Pressable>
+                </PressableScale>
               ))}
             </View>
-            <Pressable onPress={handleCheckWeather} disabled={busy || !activeDayData?.date}>
+            <PressableScale onPress={handleCheckWeather} disabled={busy || !activeDayData?.date}>
               <AppText style={{ fontSize: 13, color: colors.accent, opacity: !activeDayData?.date ? 0.4 : 1 }}>날씨 확인</AppText>
-            </Pressable>
+            </PressableScale>
           </View>
 
-          <Pressable
+          <PressableScale
             onPress={handleStartReplan}
             disabled={replanStarting || totalPlaceCount === 0}
             style={{
@@ -581,7 +582,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             <AppText weight="medium" style={{ color: "#fff" }}>
               {replanStarting ? "시작하는 중..." : "전체 일정 재구성"}
             </AppText>
-          </Pressable>
+          </PressableScale>
 
           <WeatherAlertBanner
             tripId={tripId}
@@ -598,11 +599,11 @@ export function TripDetailScreen({ route, navigation }: Props) {
             </View>
           )}
 
-          <Pressable onPress={handleOptimizeRoute} disabled={busy || places.length < 2}>
+          <PressableScale onPress={handleOptimizeRoute} disabled={busy || places.length < 2}>
             <AppText style={{ fontSize: 13, color: colors.accent, opacity: places.length < 2 ? 0.4 : 1 }}>
               동선 최적화
             </AppText>
-          </Pressable>
+          </PressableScale>
 
           {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
 
@@ -622,16 +623,16 @@ export function TripDetailScreen({ route, navigation }: Props) {
       ListFooterComponent={
         <View style={{ gap: 16, marginTop: 16 }}>
           <View style={{ flexDirection: "row", gap: 16, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16 }}>
-            <Pressable onPress={() => setActiveTab("search")}>
+            <PressableScale onPress={() => setActiveTab("search")}>
               <AppText weight="medium" style={{ color: activeTab === "search" ? colors.accent : colors.inkMuted }}>
                 검색
               </AppText>
-            </Pressable>
-            <Pressable onPress={() => setActiveTab("bookmarks")}>
+            </PressableScale>
+            <PressableScale onPress={() => setActiveTab("bookmarks")}>
               <AppText weight="medium" style={{ color: activeTab === "bookmarks" ? colors.accent : colors.inkMuted }}>
                 찜한 장소
               </AppText>
-            </Pressable>
+            </PressableScale>
           </View>
           {activeTab === "search" ? (
             <View style={{ gap: 12 }}>
@@ -650,7 +651,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                     fontFamily: "NotoSansKR_400Regular",
                   }}
                 />
-                <Pressable
+                <PressableScale
                   onPress={handleSearch}
                   disabled={searching || !query.trim()}
                   style={{
@@ -666,7 +667,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                   <AppText weight="medium" style={{ color: "#fff" }}>
                     {searching ? "검색 중..." : "검색"}
                   </AppText>
-                </Pressable>
+                </PressableScale>
               </View>
 
               {searchResults.map((place) => (
@@ -693,30 +694,30 @@ export function TripDetailScreen({ route, navigation }: Props) {
                       )}
                     </View>
                     <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
-                      <Pressable onPress={() => handleToggleBookmark(place.id)}>
+                      <PressableScale onPress={() => handleToggleBookmark(place.id)}>
                         <Feather
                           name="star"
                           size={18}
                           color={bookmarkedPlaceIds.has(place.id) ? colors.accent : colors.border}
                         />
-                      </Pressable>
-                      <Pressable
+                      </PressableScale>
+                      <PressableScale
                         onPress={() => handleAddPlace(place.googlePlaceId)}
                         disabled={busy}
                         style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
                       >
                         <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
-                      </Pressable>
+                      </PressableScale>
                     </View>
                   </View>
-                  <Pressable
+                  <PressableScale
                     onPress={() => {
                       setAlternativeTargetId(null);
                       setReviewTarget({ kind: "place", id: place.id });
                     }}
                   >
                     <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
-                  </Pressable>
+                  </PressableScale>
                 </View>
               ))}
             </View>
@@ -749,7 +750,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                         borderRadius: 12,
                       }}
                     >
-                      <Pressable
+                      <PressableScale
                         style={{ flex: 1 }}
                         onPress={() => {
                           setAlternativeTargetId(null);
@@ -759,18 +760,18 @@ export function TripDetailScreen({ route, navigation }: Props) {
                         <AppText weight="medium" numberOfLines={1}>
                           {bookmark.placeName}
                         </AppText>
-                      </Pressable>
+                      </PressableScale>
                       <View style={{ flexDirection: "row", gap: 10 }}>
-                        <Pressable
+                        <PressableScale
                           onPress={() => handleAddPlace(bookmark.googlePlaceId)}
                           disabled={busy}
                           style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
                         >
                           <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
-                        </Pressable>
-                        <Pressable onPress={() => handleRemoveBookmark(bookmark.id)}>
+                        </PressableScale>
+                        <PressableScale onPress={() => handleRemoveBookmark(bookmark.id)}>
                           <AppText style={{ fontSize: 12, color: colors.inkMuted }}>제거</AppText>
-                        </Pressable>
+                        </PressableScale>
                       </View>
                     </View>
                   ))}
@@ -819,7 +820,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
           <AppText weight="medium">이 사이 갈 만한 곳</AppText>
           {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
           {gapCardFor?.recommendations.map((r) => (
-            <Pressable
+            <PressableScale
               key={r.placeId}
               disabled={busy}
               onPress={async () => {
@@ -841,7 +842,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             >
               <AppText weight="medium" numberOfLines={1}>{r.name}</AppText>
               {r.address && <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{r.address}</AppText>}
-            </Pressable>
+            </PressableScale>
           ))}
         </Pressable>
       </Pressable>

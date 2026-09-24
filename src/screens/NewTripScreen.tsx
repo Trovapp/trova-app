@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Platform, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Platform, ScrollView, TextInput, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { PressableScale } from "@/components/PressableScale";
 import { createTrip } from "@/lib/api/trips";
 import { toDateString } from "@/lib/date";
 import { colors } from "@/lib/theme";
@@ -64,7 +65,7 @@ export function NewTripScreen({ navigation }: Props) {
       <View style={{ flexDirection: "row", gap: 12 }}>
         <View style={{ flex: 1, gap: 4 }}>
           <AppText style={{ fontSize: 12, color: colors.inkMuted }}>출발일</AppText>
-          <Pressable
+          <PressableScale
             onPress={() => {
               setShowEndPicker(false);
               setShowStartPicker(true);
@@ -72,11 +73,11 @@ export function NewTripScreen({ navigation }: Props) {
             style={{ height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 12, justifyContent: "center", paddingHorizontal: 12 }}
           >
             <AppText>{toDateString(startDate)}</AppText>
-          </Pressable>
+          </PressableScale>
         </View>
         <View style={{ flex: 1, gap: 4 }}>
           <AppText style={{ fontSize: 12, color: colors.inkMuted }}>도착일</AppText>
-          <Pressable
+          <PressableScale
             onPress={() => {
               setShowStartPicker(false);
               setShowEndPicker(true);
@@ -84,7 +85,7 @@ export function NewTripScreen({ navigation }: Props) {
             style={{ height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 12, justifyContent: "center", paddingHorizontal: 12 }}
           >
             <AppText>{toDateString(endDate)}</AppText>
-          </Pressable>
+          </PressableScale>
         </View>
       </View>
 
@@ -104,11 +105,11 @@ export function NewTripScreen({ navigation }: Props) {
             }}
           />
           {Platform.OS === "ios" && (
-            <Pressable onPress={() => setShowStartPicker(false)} style={{ alignSelf: "flex-end" }}>
+            <PressableScale onPress={() => setShowStartPicker(false)} style={{ alignSelf: "flex-end" }}>
               <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
                 확인
               </AppText>
-            </Pressable>
+            </PressableScale>
           )}
         </View>
       )}
@@ -126,18 +127,18 @@ export function NewTripScreen({ navigation }: Props) {
             }}
           />
           {Platform.OS === "ios" && (
-            <Pressable onPress={() => setShowEndPicker(false)} style={{ alignSelf: "flex-end" }}>
+            <PressableScale onPress={() => setShowEndPicker(false)} style={{ alignSelf: "flex-end" }}>
               <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
                 확인
               </AppText>
-            </Pressable>
+            </PressableScale>
           )}
         </View>
       )}
 
       {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
 
-      <Pressable
+      <PressableScale
         onPress={handleSubmit}
         disabled={!title.trim() || submitting}
         style={{
@@ -152,7 +153,7 @@ export function NewTripScreen({ navigation }: Props) {
         <AppText weight="medium" style={{ color: "#fff" }}>
           {submitting ? "만드는 중..." : "여행 만들기"}
         </AppText>
-      </Pressable>
+      </PressableScale>
     </ScrollView>
   );
 }

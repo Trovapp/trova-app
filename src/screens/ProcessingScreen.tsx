@@ -1,9 +1,10 @@
 import { useEffect } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { Emoji } from "@/components/Emoji";
+import { PressableScale } from "@/components/PressableScale";
 import { ProgressHero } from "@/components/ProgressHero";
 import { colors } from "@/lib/theme";
 import { getPendingJobs, type PendingJob } from "@/lib/api/places";
@@ -112,7 +113,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
         <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>
           {job.title ?? job.sourceUrl}
         </AppText>
-        <Pressable
+        <PressableScale
           onPress={() => navigation.replace("MainTabs")}
           style={{
             marginTop: 12,
@@ -127,7 +128,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
           <AppText weight="medium" style={{ color: "#fff" }}>
             홈으로 돌아가기
           </AppText>
-        </Pressable>
+        </PressableScale>
       </View>
     );
   }

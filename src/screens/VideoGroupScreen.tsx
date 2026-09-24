@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { ScrollView, TextInput, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
@@ -239,7 +240,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             .filter((p) => p.latitude !== null && p.longitude !== null)
             .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
         />
-        <Pressable
+        <PressableScale
           onPress={handleGenerateItinerary}
           disabled={generating}
           style={{
@@ -254,7 +255,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
           <AppText weight="medium" style={{ color: "#fff" }}>
             {generating ? "일정 생성 중..." : "일정 짜기"}
           </AppText>
-        </Pressable>
+        </PressableScale>
         {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
         <View style={{ gap: 12 }}>
           {group.map((place, index) => {
@@ -299,7 +300,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
           </AppText>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {dayNumbers.map((day) => (
-              <Pressable
+              <PressableScale
                 key={day}
                 onPress={() => setActiveDay(day)}
                 style={{
@@ -312,18 +313,18 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                 <AppText weight="medium" style={{ color: day === currentActiveDay ? "#fff" : colors.inkMuted, fontSize: 13 }}>
                   {day}일차
                 </AppText>
-              </Pressable>
+              </PressableScale>
             ))}
-            <Pressable
+            <PressableScale
               onPress={handleAddDay}
               style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.border }}
             >
               <AppText style={{ fontSize: 13, color: colors.inkMuted }}>+ 날짜 추가</AppText>
-            </Pressable>
+            </PressableScale>
           </View>
 
           {!showTripForm ? (
-            <Pressable
+            <PressableScale
               onPress={() => {
                 setTripTitle(title);
                 setShowTripForm(true);
@@ -333,7 +334,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
               <AppText weight="medium" style={{ color: colors.accent }}>
                 여행으로 만들기
               </AppText>
-            </Pressable>
+            </PressableScale>
           ) : (
             <View style={{ gap: 8, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 12 }}>
               <TextInput
@@ -349,7 +350,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                   fontFamily: "NotoSansKR_400Regular",
                 }}
               />
-              <Pressable
+              <PressableScale
                 onPress={handleConfirmTrip}
                 disabled={confirmingTrip}
                 style={{
@@ -364,24 +365,24 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                 <AppText weight="medium" style={{ color: "#fff" }}>
                   {confirmingTrip ? "확정 중..." : "확정"}
                 </AppText>
-              </Pressable>
+              </PressableScale>
               {tripError && <AppText style={{ color: colors.accent }}>{tripError}</AppText>}
             </View>
           )}
 
           {currentActiveDay !== null && emptyDayNumbers.includes(currentActiveDay) && activePlaces.length === 0 && (
-            <Pressable onPress={() => handleDeleteDay(currentActiveDay)}>
+            <PressableScale onPress={() => handleDeleteDay(currentActiveDay)}>
               <AppText style={{ fontSize: 12, color: colors.inkMuted }}>이 빈 날짜 삭제</AppText>
-            </Pressable>
+            </PressableScale>
           )}
 
-          <Pressable
+          <PressableScale
             onPress={handleOptimizeRoute}
             disabled={actionPending || activePlaces.length < 2}
             style={{ opacity: actionPending || activePlaces.length < 2 ? 0.4 : 1 }}
           >
             <AppText style={{ fontSize: 13, color: colors.accent }}>동선 최적화</AppText>
-          </Pressable>
+          </PressableScale>
 
           {itineraryError && <AppText style={{ color: colors.accent }}>{itineraryError}</AppText>}
 

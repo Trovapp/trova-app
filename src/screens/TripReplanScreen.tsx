@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
@@ -106,7 +107,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
         {job.errorMessage && (
           <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>{job.errorMessage}</AppText>
         )}
-        <Pressable
+        <PressableScale
           onPress={goBackToTrip}
           style={{
             marginTop: 12,
@@ -121,7 +122,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
           <AppText weight="medium" style={{ color: "#fff" }}>
             여행으로 돌아가기
           </AppText>
-        </Pressable>
+        </PressableScale>
       </View>
     );
   }
@@ -178,7 +179,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
         <AppText weight="medium" style={{ fontSize: 18, textAlign: "center" }}>
           추천할 만한 다른 장소를 찾지 못했어요
         </AppText>
-        <Pressable
+        <PressableScale
           onPress={goBackToTrip}
           style={{
             marginTop: 12,
@@ -193,7 +194,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
           <AppText weight="medium" style={{ color: "#fff" }}>
             여행으로 돌아가기
           </AppText>
-        </Pressable>
+        </PressableScale>
       </View>
     );
   }
@@ -253,7 +254,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
                 <AppText style={{ fontSize: 13, color: colors.inkMuted }}>건너뜀</AppText>
               ) : (
                 <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
-                  <Pressable
+                  <PressableScale
                     onPress={() => handleSkip(tripPlaceId)}
                     disabled={status === "confirming"}
                     style={{
@@ -267,8 +268,8 @@ export function TripReplanScreen({ route, navigation }: Props) {
                     }}
                   >
                     <AppText style={{ fontSize: 13, color: colors.inkMuted }}>건너뛰기</AppText>
-                  </Pressable>
-                  <Pressable
+                  </PressableScale>
+                  <PressableScale
                     onPress={() => handleConfirm(tripPlaceId, candidate.googlePlaceId)}
                     disabled={status === "confirming"}
                     style={{
@@ -284,7 +285,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
                     <AppText weight="medium" style={{ fontSize: 13, color: "#fff" }}>
                       {status === "confirming" ? "교체 중..." : "교체"}
                     </AppText>
-                  </Pressable>
+                  </PressableScale>
                 </View>
               )}
             </View>
@@ -304,7 +305,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
           </View>
         )}
 
-        <Pressable
+        <PressableScale
           onPress={goBackToTrip}
           style={{
             marginTop: 8,
@@ -318,7 +319,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
           <AppText weight="medium" style={{ color: "#fff" }}>
             여행으로 돌아가기
           </AppText>
-        </Pressable>
+        </PressableScale>
       </ScrollView>
     </View>
   );

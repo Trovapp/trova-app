@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Image, Pressable, View } from "react-native";
+import { Image, View } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { AppText } from "@/components/AppText";
+import { PressableScale } from "@/components/PressableScale";
 import { oauthUrl } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { colors } from "@/lib/theme";
@@ -52,7 +53,7 @@ export function LoginScreen() {
       </View>
 
       <View style={{ gap: 12 }}>
-        <Pressable
+        <PressableScale
           onPress={() => handleLogin("kakao")}
           disabled={isLoggingIn}
           style={{
@@ -65,8 +66,8 @@ export function LoginScreen() {
           }}
         >
           <AppText weight="medium">카카오로 시작하기</AppText>
-        </Pressable>
-        <Pressable
+        </PressableScale>
+        <PressableScale
           onPress={() => handleLogin("google")}
           disabled={isLoggingIn}
           style={{
@@ -80,7 +81,7 @@ export function LoginScreen() {
           }}
         >
           <AppText weight="medium">Google로 계속하기</AppText>
-        </Pressable>
+        </PressableScale>
       </View>
     </View>
   );

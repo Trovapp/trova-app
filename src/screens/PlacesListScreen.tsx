@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
-import { FlatList, Platform, Pressable, View } from "react-native";
+import { FlatList, Platform, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
 import { colors } from "@/lib/theme";
 import { getPendingJobs, getPlaces, type PendingJob, type Place } from "@/lib/api/places";
@@ -94,7 +95,7 @@ function PendingJobCard({ job }: { job: PendingJob }) {
 
 function VideoGroupCard({ group, onPress }: { group: VideoGroup; onPress: () => void }) {
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       style={{
         padding: 16,
@@ -114,7 +115,7 @@ function VideoGroupCard({ group, onPress }: { group: VideoGroup; onPress: () => 
       <AppText mono style={{ marginTop: 4, fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
         {placePreview(group.places)}
       </AppText>
-    </Pressable>
+    </PressableScale>
   );
 }
 

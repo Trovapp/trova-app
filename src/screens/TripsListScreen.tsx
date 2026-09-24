@@ -1,6 +1,7 @@
-import { FlatList, Platform, Pressable, View } from "react-native";
+import { FlatList, Platform, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { listTrips } from "@/lib/api/trips";
 import { colors } from "@/lib/theme";
@@ -43,7 +44,7 @@ export function TripsListScreen({ navigation }: Props) {
       data={trips}
       keyExtractor={(item) => String(item.id)}
       ListHeaderComponent={
-        <Pressable
+        <PressableScale
           onPress={() => navigation.navigate("NewTrip")}
           style={{
             marginBottom: 4,
@@ -57,11 +58,11 @@ export function TripsListScreen({ navigation }: Props) {
           <AppText weight="medium" style={{ color: "#fff" }}>
             새 여행 만들기
           </AppText>
-        </Pressable>
+        </PressableScale>
       }
       ListEmptyComponent={<AppText style={{ textAlign: "center", marginTop: 32 }}>아직 만든 여행이 없어요.</AppText>}
       renderItem={({ item }) => (
-        <Pressable
+        <PressableScale
           onPress={() => navigation.navigate("TripDetail", { id: item.id })}
           style={{
             padding: 16,
@@ -78,7 +79,7 @@ export function TripsListScreen({ navigation }: Props) {
               {item.startDate} ~ {item.endDate}
             </AppText>
           )}
-        </Pressable>
+        </PressableScale>
       )}
     />
   );
