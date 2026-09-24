@@ -54,6 +54,9 @@ export function SavedPlacesScreen() {
   const [searchResults, setSearchResults] = useState<RecommendedPlace[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  // 마지막으로 실행한 검색어. null이 아니면 "검색 모드" — 결과가 0건이어도 검색 패널을
+  // 유지해야 "검색 결과 없음"이나 검색 실패 메시지를 보여줄 수 있다.
+  const [searchedQuery, setSearchedQuery] = useState<string | null>(null);
   const [folderPickerTarget, setFolderPickerTarget] = useState<FolderPickerTarget | null>(null);
   const [reviewPlaceId, setReviewPlaceId] = useState<number | null>(null);
   const [menuBookmarkId, setMenuBookmarkId] = useState<number | null>(null);
@@ -160,14 +163,17 @@ export function SavedPlacesScreen() {
   }
 
   async function handleSearch() {
-    if (!query.trim() || searching) return;
+    const trimmed = query.trim();
+    if (!trimmed || searching) return;
     setSearching(true);
     setSearchError(null);
     try {
-      setSearchResults(await searchPlaces(query.trim()));
+      setSearchResults(await searchPlaces(trimmed));
     } catch {
+      setSearchResults([]);
       setSearchError("장소를 찾지 못했어요. 다른 검색어로 시도해보세요.");
     } finally {
+      setSearchedQuery(trimmed);
       setSearching(false);
     }
   }
@@ -176,6 +182,7 @@ export function SavedPlacesScreen() {
     setQuery("");
     setSearchResults([]);
     setSearchError(null);
+    setSearchedQuery(null);
   }
 
   async function handlePickFolder(folderId: number | null) {
@@ -214,6 +221,7 @@ export function SavedPlacesScreen() {
           value={query}
           onChangeText={setQuery}
           placeholder="장소 이름으로 검색 (예: 경복궁)"
+          returnKeyType="search"
           onSubmitEditing={handleSearch}
           style={{
             flex: 1,
@@ -258,7 +266,7 @@ export function SavedPlacesScreen() {
             </PressableScale>
             <PlaceReviewContent placeId={reviewPlaceId} showMiniMap={false} />
           </BottomSheetScrollView>
-        ) : searchResults.length > 0 ? (
+        ) : searchedQuery !== null ? (
           <BottomSheetFlatList
             data={searchResults}
             keyExtractor={(item: RecommendedPlace) => String(item.id)}
@@ -271,6 +279,13 @@ export function SavedPlacesScreen() {
                 </PressableScale>
                 {searchError && <AppText style={{ color: colors.accent }}>{searchError}</AppText>}
               </View>
+            }
+            ListEmptyComponent={
+              searchError ? null : (
+                <AppText style={{ textAlign: "center", marginTop: 24, color: colors.inkMuted }}>
+                  '{searchedQuery}' 검색 결과가 없어요.{"\n"}다른 이름으로 검색해보세요.
+                </AppText>
+              )
             }
             renderItem={({ item, index }: { item: RecommendedPlace; index: number }) => (
               <Animated.View entering={entranceFor(item.id, index)}>

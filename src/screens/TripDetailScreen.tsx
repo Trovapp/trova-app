@@ -76,6 +76,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const [memoDraft, setMemoDraft] = useState("");
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<RecommendedPlace[]>([]);
+  // 마지막으로 성공한 검색어 — 결과 0건일 때 "검색 결과 없음"을 보여주는 데 쓴다.
+  const [searchedQuery, setSearchedQuery] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   // 검색결과 카드("장소 카탈로그")는 placeId로, 여행에 이미 담긴 장소 카드는
   // tripPlaceId로 리뷰 요약을 연다 — 서로 다른 id 공간이라 구분해서 들고 있는다.
@@ -169,11 +171,13 @@ export function TripDetailScreen({ route, navigation }: Props) {
   ].filter((section) => section.bookmarks.length > 0);
 
   async function handleSearch() {
-    if (!query.trim() || searching) return;
+    const trimmed = query.trim();
+    if (!trimmed || searching) return;
     setSearching(true);
     setError(null);
     try {
-      setSearchResults(await searchPlaces(query.trim()));
+      setSearchResults(await searchPlaces(trimmed));
+      setSearchedQuery(trimmed);
     } catch {
       setError("장소를 찾지 못했어요. 다른 검색어로 시도해보세요.");
     } finally {
@@ -655,6 +659,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
                   value={query}
                   onChangeText={setQuery}
                   placeholder="장소 이름으로 검색 (예: 경복궁)"
+                  returnKeyType="search"
+                  onSubmitEditing={handleSearch}
                   style={{
                     flex: 1,
                     height: 40,
@@ -683,6 +689,12 @@ export function TripDetailScreen({ route, navigation }: Props) {
                   </AppText>
                 </PressableScale>
               </View>
+
+              {searchedQuery !== null && !searching && searchResults.length === 0 && (
+                <AppText style={{ color: colors.inkMuted }}>
+                  '{searchedQuery}' 검색 결과가 없어요. 다른 이름으로 검색해보세요.
+                </AppText>
+              )}
 
               {searchResults.map((place) => (
                 <View key={place.id} style={{ padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 12, gap: 6 }}>
