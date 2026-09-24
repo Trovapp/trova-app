@@ -7,6 +7,7 @@ import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
 import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
+import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
 import { createShare } from "@/lib/api/places";
@@ -115,6 +116,8 @@ export function HomeScreen({ navigation }: Props) {
             <Skeleton style={{ width: 100, height: 17 }} />
             <Skeleton style={{ width: "100%", height: 160, borderRadius: 12 }} />
           </View>
+        ) : bookmarksQuery.isError ? (
+          <QueryErrorView message="찜한 장소를 불러오지 못했어요." onRetry={() => bookmarksQuery.refetch()} />
         ) : (
           pins.length > 0 && (
             <View style={{ gap: 10 }}>
@@ -136,6 +139,8 @@ export function HomeScreen({ navigation }: Props) {
             <SkeletonRow />
             <SkeletonRow />
           </View>
+        ) : tripsQuery.isError ? (
+          <QueryErrorView message="최근 여행을 불러오지 못했어요." onRetry={() => tripsQuery.refetch()} />
         ) : (
           recentTrips.length > 0 && (
             <View>

@@ -7,6 +7,7 @@ import { BackButton } from "@/components/BackButton";
 import { Emoji } from "@/components/Emoji";
 import { PressableScale } from "@/components/PressableScale";
 import { ProgressHero } from "@/components/ProgressHero";
+import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
 import { getPendingJobs, type PendingJob } from "@/lib/api/places";
@@ -104,6 +105,20 @@ export function ProcessingScreen({ route, navigation }: Props) {
       navigation.replace("VideoGroup", { jobId });
     }
   }, [pendingQuery.isSuccess, job, jobId, navigation]);
+
+  // 폴링이 계속 실패하면 로딩 스켈레톤에 영원히 멈춰 보인다 — 재시도 수단을 준다.
+  if (pendingQuery.isError) {
+    return (
+      <View style={{ flex: 1 }}>
+        <BackButton onPress={handleBack} />
+        <QueryErrorView
+          fullScreen
+          message="처리 상태를 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요."
+          onRetry={() => pendingQuery.refetch()}
+        />
+      </View>
+    );
+  }
 
   if (pendingQuery.isLoading || !job) {
     return (

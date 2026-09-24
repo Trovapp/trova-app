@@ -9,6 +9,10 @@ import { clearToken, setToken } from "@/lib/tokenStorage";
 type AuthState = {
   user: CurrentUser | null;
   loading: boolean;
+  // getMe()가 401이 아닌 이유(네트워크 끊김, 서버 오류)로 실패했을 때만 true —
+  // 진짜 "로그인 안 됨"(401 → null)과 구분해서, 오프라인일 때 로그인 화면으로
+  // 잘못 떨어지지 않고 재시도할 수 있게 한다.
+  authError: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
   handleAuthCallback: (url: string) => Promise<void>;
@@ -19,12 +23,19 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(false);
   const queryClient = useQueryClient();
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
       setUser(await getMe());
+      setAuthError(false);
+    } catch {
+      // user는 건드리지 않는다 — 네트워크 오류로 세션이 있는 사용자를 로그아웃
+      // 상태로 오해하게 만들지 않기 위함(RootNavigator가 authError를 보고
+      // 재시도 화면을 보여준다).
+      setAuthError(true);
     } finally {
       setLoading(false);
     }
@@ -78,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [handleAuthCallback]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, refresh, logout, handleAuthCallback }}>
+    <AuthContext.Provider value={{ user, loading, authError, refresh, logout, handleAuthCallback }}>
       {children}
     </AuthContext.Provider>
   );

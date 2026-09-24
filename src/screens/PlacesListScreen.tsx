@@ -7,6 +7,7 @@ import { AppText } from "@/components/AppText";
 import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
+import { QueryErrorView } from "@/components/QueryErrorView";
 import { SkeletonRow } from "@/components/Skeleton";
 import { useListEntrance } from "@/hooks/useListEntrance";
 import { haptics } from "@/lib/haptics";
@@ -190,6 +191,17 @@ export function PlacesListScreen({ navigation }: Props) {
         <SkeletonRow />
         <SkeletonRow />
       </View>
+    );
+  }
+
+  // 조회 실패를 "영상 없음"으로 보여주지 않는다.
+  if (placesQuery.isError) {
+    return (
+      <QueryErrorView
+        fullScreen
+        message="영상 기록을 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요."
+        onRetry={() => placesQuery.refetch()}
+      />
     );
   }
 

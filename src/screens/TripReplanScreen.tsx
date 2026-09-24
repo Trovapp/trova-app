@@ -7,6 +7,7 @@ import { AppText } from "@/components/AppText";
 import { BackButton } from "@/components/BackButton";
 import { Emoji } from "@/components/Emoji";
 import { ProgressHero } from "@/components/ProgressHero";
+import { QueryErrorView } from "@/components/QueryErrorView";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
 import { Skeleton } from "@/components/Skeleton";
@@ -103,6 +104,20 @@ export function TripReplanScreen({ route, navigation }: Props) {
     }
     if (status) previousStatusRef.current = status;
   }, [replanQuery.data?.status]);
+
+  // 폴링이 계속 실패하면 로딩 스켈레톤에 영원히 멈춰 보인다 — 재시도 수단을 준다.
+  if (replanQuery.isError) {
+    return (
+      <View style={{ flex: 1 }}>
+        <BackButton onPress={goBackToTrip} />
+        <QueryErrorView
+          fullScreen
+          message="재구성 상태를 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요."
+          onRetry={() => replanQuery.refetch()}
+        />
+      </View>
+    );
+  }
 
   if (replanQuery.isLoading || !job) {
     return (
