@@ -15,6 +15,7 @@ import { listBookmarks } from "@/lib/api/bookmarks";
 import { listTrips } from "@/lib/api/trips";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { colors } from "@/lib/theme";
+import { isSupportedShareUrl } from "@/lib/shareUrl";
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"Home">;
@@ -50,6 +51,10 @@ export function HomeScreen({ navigation }: Props) {
 
   async function handleSubmit() {
     if (!url.trim() || submitting) return;
+    if (!isSupportedShareUrl(url)) {
+      setError("인스타그램 또는 유튜브 링크만 넣을 수 있어요.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -73,10 +78,16 @@ export function HomeScreen({ navigation }: Props) {
           <View style={{ gap: 10 }}>
             <TextInput
               value={url}
-              onChangeText={setUrl}
+              onChangeText={(text) => {
+                setUrl(text);
+                if (error) setError(null);
+              }}
               placeholder="인스타그램 또는 유튜브 링크"
               autoCapitalize="none"
               autoCorrect={false}
+              keyboardType="url"
+              returnKeyType="go"
+              onSubmitEditing={handleSubmit}
               style={{
                 height: 52,
                 borderWidth: 1,
@@ -89,14 +100,14 @@ export function HomeScreen({ navigation }: Props) {
             />
             <PressableScale
               onPress={handleSubmit}
-              disabled={submitting}
+              disabled={!url.trim() || submitting}
               style={{
                 height: 52,
                 borderRadius: 14,
                 backgroundColor: colors.accent,
                 justifyContent: "center",
                 alignItems: "center",
-                opacity: submitting ? 0.6 : 1,
+                opacity: !url.trim() || submitting ? 0.6 : 1,
               }}
             >
               <AppText weight="medium" style={{ color: colors.onAccent, fontSize: 16 }}>

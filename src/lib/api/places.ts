@@ -47,7 +47,8 @@ export async function createShare(url: string): Promise<{ jobId: number }> {
     throw new Error(body?.message ?? "지원하지 않는 URL입니다.");
   }
   if (!res.ok) {
-    throw new Error(`POST /api/shares failed: ${res.status}`);
+    // HomeScreen이 이 메시지를 그대로 화면에 띄우므로 사용자용 문구로 던진다.
+    throw new Error("링크를 처리하지 못했어요. 잠시 후 다시 시도해주세요.");
   }
   return res.json();
 }
