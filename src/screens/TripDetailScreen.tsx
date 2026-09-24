@@ -799,7 +799,14 @@ export function TripDetailScreen({ route, navigation }: Props) {
                         >
                           <AppText style={{ fontSize: 12, color: colors.onAccent }}>추가</AppText>
                         </PressableScale>
-                        <PressableScale onPress={() => handleRemoveBookmark(bookmark.id)} hitSlop={{ top: 12, bottom: 12, left: 4, right: 12 }}>
+                        <PressableScale
+                          onPress={() =>
+                            Alert.alert("찜을 해제할까요?", `"${bookmark.placeName}"을(를) 저장 장소에서 뺍니다.`, [
+                              { text: "취소", style: "cancel" },
+                              { text: "해제", style: "destructive", onPress: () => handleRemoveBookmark(bookmark.id) },
+                            ])
+                          }
+                          hitSlop={{ top: 12, bottom: 12, left: 4, right: 12 }}>
                           <AppText style={{ fontSize: 12, color: colors.inkMuted }}>제거</AppText>
                         </PressableScale>
                       </View>

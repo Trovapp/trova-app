@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TextInput, View } from "react-native";
+import { Alert, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import BottomSheet, {
   BottomSheetBackdrop,
@@ -489,9 +489,14 @@ export function SavedPlacesScreen() {
           </PressableScale>
           <PressableScale
             onPress={() => {
-              if (!menuBookmark) return;
-              handleRemove(menuBookmark.id);
+              const target = menuBookmark;
               menuSheetRef.current?.dismiss();
+              if (!target) return;
+              // 일정 장소 삭제와 같은 확인 흐름 — 폴더 분류까지 함께 사라지고 되돌릴 수 없다.
+              Alert.alert("찜을 해제할까요?", `"${target.placeName}"을(를) 저장 장소에서 뺍니다.`, [
+                { text: "취소", style: "cancel" },
+                { text: "해제", style: "destructive", onPress: () => handleRemove(target.id) },
+              ]);
             }}
             style={{ padding: 14 }}
           >
