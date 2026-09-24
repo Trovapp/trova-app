@@ -23,11 +23,9 @@ type PlaceRowProps = {
   distanceKm: number | null;
   editable?: boolean;
   disabled?: boolean;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
   onOpenDayPicker?: () => void;
-  // 위/아래 버튼 대신 드래그로 순서를 바꾸는 화면(여행 상세)에서 전달한다 —
-  // 있으면 화살표 대신 드래그 핸들을 렌더링한다.
+  // 있으면 드래그 핸들을 렌더링한다 — 순서 변경이 필요한 화면(여행 상세,
+  // 영상 속 장소)은 전부 드래그 방식이라 항상 이걸 넘긴다.
   dragHandle?: { onPressIn: () => void };
   // 있으면 이름/주소 영역을 탭해서 장소 상세(리뷰 요약)를 열 수 있게 한다.
   onPressInfo?: () => void;
@@ -45,8 +43,6 @@ export function PlaceRow({
   distanceKm,
   editable = false,
   disabled = false,
-  onMoveUp,
-  onMoveDown,
   onOpenDayPicker,
   dragHandle,
   onPressInfo,
@@ -98,24 +94,6 @@ export function PlaceRow({
           </PressableScale>
           {editable && (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              {!dragHandle && (onMoveUp || onMoveDown) && (
-                <View style={{ flexDirection: "row", gap: 6 }}>
-                  <PressableScale
-                    onPress={onMoveUp}
-                    disabled={disabled || index === 0 || !onMoveUp}
-                    style={{ opacity: disabled || index === 0 ? 0.3 : 1 }}
-                  >
-                    <Feather name="arrow-up" size={14} color={colors.inkMuted} />
-                  </PressableScale>
-                  <PressableScale
-                    onPress={onMoveDown}
-                    disabled={disabled || isLast || !onMoveDown}
-                    style={{ opacity: disabled || isLast ? 0.3 : 1 }}
-                  >
-                    <Feather name="arrow-down" size={14} color={colors.inkMuted} />
-                  </PressableScale>
-                </View>
-              )}
               {onOpenDayPicker && (
                 <PressableScale onPress={onOpenDayPicker} disabled={disabled}>
                   <AppText style={{ fontSize: 13, color: colors.inkMuted }}>다른 날로 이동</AppText>

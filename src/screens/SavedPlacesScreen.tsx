@@ -421,7 +421,7 @@ export function SavedPlacesScreen() {
                     )}
                   </View>
                   <PressableScale onPress={() => setMenuBookmarkId(item.id)} hitSlop={10} style={{ paddingHorizontal: 4 }}>
-                    <AppText style={{ fontSize: 16, color: colors.inkMuted }}>⋮</AppText>
+                    <Feather name="more-vertical" size={18} color={colors.inkMuted} />
                   </PressableScale>
                 </PressableRow>
               </Animated.View>

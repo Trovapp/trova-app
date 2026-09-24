@@ -326,7 +326,7 @@ export function AlternativeFinderSheet({
                 onPress={handleSearch}
                 disabled={searching}
                 style={{
-                  height: 46,
+                  height: 48,
                   borderRadius: 10,
                   backgroundColor: colors.accent,
                   justifyContent: "center",
@@ -412,7 +412,7 @@ export function AlternativeFinderSheet({
                             onPress={handleReplace}
                             disabled={replacing}
                             style={{
-                              height: 46,
+                              height: 48,
                               borderRadius: 10,
                               backgroundColor: colors.accent,
                               justifyContent: "center",

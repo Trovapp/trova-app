@@ -657,7 +657,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                   placeholder="장소 이름으로 검색 (예: 경복궁)"
                   style={{
                     flex: 1,
-                    height: 44,
+                    height: 40,
                     borderWidth: 1,
                     borderColor: colors.border,
                     borderRadius: 10,
@@ -669,7 +669,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                   onPress={handleSearch}
                   disabled={searching || !query.trim()}
                   style={{
-                    height: 44,
+                    height: 40,
                     paddingHorizontal: 16,
                     borderRadius: 10,
                     backgroundColor: colors.accent,
