@@ -10,6 +10,7 @@ export type MainTabParamList = {
   PlacesList: undefined;
   TripsList: undefined;
   SavedPlaces: undefined;
+  MyPage: undefined;
 };
 
 export type RootStackParamList = {

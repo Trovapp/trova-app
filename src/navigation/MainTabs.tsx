@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { HomeScreen } from "@/screens/HomeScreen";
+import { MyPageScreen } from "@/screens/MyPageScreen";
 import { PlacesListScreen } from "@/screens/PlacesListScreen";
 import { SavedPlacesScreen } from "@/screens/SavedPlacesScreen";
 import { TripsListScreen } from "@/screens/TripsListScreen";
@@ -16,6 +17,7 @@ const TAB_ICON: Record<keyof MainTabParamList, keyof typeof Feather.glyphMap> = 
   PlacesList: "film",
   TripsList: "calendar",
   SavedPlaces: "map-pin",
+  MyPage: "user",
 };
 
 export function MainTabs() {
@@ -33,6 +35,7 @@ export function MainTabs() {
       <Tab.Screen name="PlacesList" component={PlacesListScreen} options={{ title: "영상 기록", tabBarLabel: "영상 기록" }} />
       <Tab.Screen name="TripsList" component={TripsListScreen} options={{ title: "내 여행", tabBarLabel: "내 여행" }} />
       <Tab.Screen name="SavedPlaces" component={SavedPlacesScreen} options={{ title: "저장 장소", tabBarLabel: "저장 장소" }} />
+      <Tab.Screen name="MyPage" component={MyPageScreen} options={{ title: "마이페이지", tabBarLabel: "마이페이지" }} />
     </Tab.Navigator>
   );
 }

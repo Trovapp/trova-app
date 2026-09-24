@@ -21,3 +21,10 @@ export async function getMe(): Promise<CurrentUser | null> {
 export function oauthUrl(provider: "kakao" | "google"): string {
   return `${API_BASE_URL}/oauth2/authorization/${provider}?mobile=true`;
 }
+
+export async function withdraw(): Promise<void> {
+  const res = await apiFetch("/api/users/me", { method: "DELETE" });
+  if (!res.ok) {
+    throw new Error(`DELETE /api/users/me failed: ${res.status}`);
+  }
+}

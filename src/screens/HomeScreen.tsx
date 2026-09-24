@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
@@ -32,7 +32,7 @@ type Props = MainTabScreenProps<"Home">;
 // - 로딩 중엔 섹션이 안 보이는 대신 스켈레톤으로 자리 표시
 // - useReducedMotion으로 "동작 줄이기" 켜져 있으면 등장 애니메이션 생략
 export function HomeScreen({ navigation }: Props) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [url, setUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -175,9 +175,6 @@ export function HomeScreen({ navigation }: Props) {
           )
         )}
 
-        <Pressable onPress={() => logout()} style={{ alignItems: "center" }}>
-          <AppText style={{ color: colors.inkMuted, fontSize: 13 }}>로그아웃</AppText>
-        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
