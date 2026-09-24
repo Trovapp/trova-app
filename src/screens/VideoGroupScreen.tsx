@@ -264,7 +264,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
           </AppText>
         </PressableScale>
         {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
-        <View style={{ gap: 12 }}>
+        <View>
           {group.map((place, index) => {
             const isLast = index === group.length - 1;
             const next = group[index + 1];
@@ -298,7 +298,6 @@ export function VideoGroupScreen({ route, navigation }: Props) {
       onDragEnd={handleDragEnd}
       renderItem={renderActivePlaceItem}
       activationDistance={0}
-      ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       contentContainerStyle={{ padding: 16 }}
       ListHeaderComponent={
         <View style={{ gap: 12, marginBottom: 12 }}>
@@ -412,6 +411,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
               <AppText weight="medium" style={{ fontSize: 13, color: colors.inkMuted }}>
                 아직 날짜가 없는 장소
               </AppText>
+              <View>
               {unassignedPlaces.map((place, index) => (
                 <PlaceRow
                   key={place.id}
@@ -425,6 +425,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                   onPressInfo={() => setReviewPlaceId(place.id)}
                 />
               ))}
+              </View>
             </View>
           )}
 

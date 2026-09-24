@@ -31,10 +31,9 @@ type PlaceRowProps = {
   dragHandle?: { onPressIn: () => void };
   // 있으면 이름/주소 영역을 탭해서 장소 상세(리뷰 요약)를 열 수 있게 한다.
   onPressInfo?: () => void;
-  // 있으면 이름/주소 영역 옆에 "⋮" 대안 찾기 진입점을 렌더링한다.
-  onFindAlternative?: () => void;
-  // 있으면 대안 찾기 버튼 옆에 대화형 비서 진입점을 렌더링한다.
-  onOpenAssistant?: () => void;
+  // 있으면 "⋮" 더보기 메뉴 진입점을 렌더링한다(대안 찾기/비서/삭제 등 자주 안
+  // 쓰는 동작을 한데 묶는 곳 — 실제 메뉴 내용은 호출부 책임).
+  onOpenMenu?: () => void;
   color?: string;
   children?: ReactNode;
 };
@@ -51,8 +50,7 @@ export function PlaceRow({
   onOpenDayPicker,
   dragHandle,
   onPressInfo,
-  onFindAlternative,
-  onOpenAssistant,
+  onOpenMenu,
   color = colors.accent,
   children,
 }: PlaceRowProps) {
@@ -62,11 +60,9 @@ export function PlaceRow({
         style={{
           flexDirection: "row",
           gap: 12,
-          padding: 12,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: colors.border,
-          backgroundColor: colors.bg,
+          paddingVertical: 14,
+          borderTopWidth: index === 0 ? 0 : 1,
+          borderTopColor: colors.borderSubtle,
         }}
       >
         <View
@@ -129,24 +125,14 @@ export function PlaceRow({
           )}
           {children}
         </View>
-        {onFindAlternative && (
+        {onOpenMenu && (
           <PressableScale
-            onPress={onFindAlternative}
+            onPress={onOpenMenu}
+            disabled={disabled}
             hitSlop={10}
-            style={{ justifyContent: "center", alignItems: "center", gap: 1, paddingHorizontal: 4 }}
+            style={{ justifyContent: "center", alignItems: "center", paddingHorizontal: 4 }}
           >
-            <Feather name="repeat" size={16} color={colors.accent} />
-            <AppText style={{ fontSize: 9, color: colors.accent }}>대안</AppText>
-          </PressableScale>
-        )}
-        {onOpenAssistant && (
-          <PressableScale
-            onPress={onOpenAssistant}
-            hitSlop={10}
-            style={{ justifyContent: "center", alignItems: "center", gap: 1, paddingHorizontal: 4 }}
-          >
-            <Feather name="message-circle" size={16} color={colors.accent} />
-            <AppText style={{ fontSize: 9, color: colors.accent }}>비서</AppText>
+            <Feather name="more-vertical" size={18} color={colors.inkMuted} />
           </PressableScale>
         )}
         {dragHandle && (

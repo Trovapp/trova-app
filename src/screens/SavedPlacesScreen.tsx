@@ -16,6 +16,7 @@ import { AppText } from "@/components/AppText";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
+import { PressableRow } from "@/components/PressableRow";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { RatingBadge } from "@/components/RatingBadge";
 import { Skeleton } from "@/components/Skeleton";
@@ -261,9 +262,9 @@ export function SavedPlacesScreen() {
           <BottomSheetFlatList
             data={searchResults}
             keyExtractor={(item: RecommendedPlace) => String(item.id)}
-            contentContainerStyle={{ padding: 16, gap: 12 }}
+            contentContainerStyle={{ padding: 16 }}
             ListHeaderComponent={
-              <View style={{ gap: 8, marginBottom: 4 }}>
+              <View style={{ gap: 8, marginBottom: 12 }}>
                 <PressableScale onPress={clearSearch} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                   <Feather name="x" size={14} color={colors.accent} />
                   <AppText style={{ color: colors.accent }}>검색 결과 닫기</AppText>
@@ -275,10 +276,9 @@ export function SavedPlacesScreen() {
               <Animated.View entering={entranceFor(item.id, index)}>
                 <View
                   style={{
-                    padding: 12,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: colors.border,
+                    paddingVertical: 14,
+                    borderTopWidth: index === 0 ? 0 : 1,
+                    borderTopColor: colors.borderSubtle,
                     gap: 6,
                   }}
                 >
@@ -322,19 +322,16 @@ export function SavedPlacesScreen() {
           <BottomSheetFlatList
             data={[{ id: UNSORTED_ID, name: "미분류", color: colors.inkMuted, placeCount: unsortedCount }, ...folders]}
             keyExtractor={(item: BookmarkFolder) => String(item.id)}
-            contentContainerStyle={{ padding: 16, gap: 12 }}
+            contentContainerStyle={{ padding: 16 }}
             ListHeaderComponent={
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 4,
+                  justifyContent: "flex-end",
+                  marginBottom: 12,
                 }}
               >
-                <AppText weight="medium" style={{ fontSize: 16 }}>
-                  저장 장소
-                </AppText>
                 <PressableScale onPress={() => setFolderPickerTarget({ mode: "create" })} hitSlop={8}>
                   <AppText style={{ fontSize: 13, color: colors.accent }}>+ 새 폴더</AppText>
                 </PressableScale>
@@ -342,22 +339,22 @@ export function SavedPlacesScreen() {
             }
             renderItem={({ item, index }: { item: BookmarkFolder; index: number }) => (
               <Animated.View entering={entranceFor(item.id, index)}>
-                <PressableScale
+                <PressableRow
                   onPress={() => setActiveFolderId(item.id)}
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 10,
-                    padding: 14,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: colors.border,
+                    paddingVertical: 14,
+                    borderTopWidth: index === 0 ? 0 : 1,
+                    borderTopColor: colors.borderSubtle,
                   }}
                 >
                   <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: item.color }} />
                   <AppText style={{ flex: 1 }}>{item.name}</AppText>
                   <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{item.placeCount}개</AppText>
-                </PressableScale>
+                  <Feather name="chevron-right" size={16} color={colors.inkMuted} />
+                </PressableRow>
               </Animated.View>
             )}
           />
@@ -365,9 +362,9 @@ export function SavedPlacesScreen() {
           <BottomSheetFlatList
             data={visibleBookmarks}
             keyExtractor={(item: Bookmark) => String(item.id)}
-            contentContainerStyle={{ padding: 16, gap: 12 }}
+            contentContainerStyle={{ padding: 16 }}
             ListHeaderComponent={
-              <View style={{ gap: 8, marginBottom: 4 }}>
+              <View style={{ gap: 8, marginBottom: 12 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                   <View
                     style={{
@@ -395,15 +392,15 @@ export function SavedPlacesScreen() {
             }
             renderItem={({ item, index }: { item: Bookmark; index: number }) => (
               <Animated.View entering={entranceFor(item.id, index)}>
-                <PressableScale
+                <PressableRow
                   onPress={() => setReviewPlaceId(item.placeId)}
                   style={{
                     flexDirection: "row",
+                    alignItems: "center",
                     gap: 8,
-                    padding: 12,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: colors.border,
+                    paddingVertical: 14,
+                    borderTopWidth: index === 0 ? 0 : 1,
+                    borderTopColor: colors.borderSubtle,
                   }}
                 >
                   <View style={{ flex: 1, gap: 2 }}>
@@ -426,7 +423,7 @@ export function SavedPlacesScreen() {
                   <PressableScale onPress={() => setMenuBookmarkId(item.id)} hitSlop={10} style={{ paddingHorizontal: 4 }}>
                     <AppText style={{ fontSize: 16, color: colors.inkMuted }}>⋮</AppText>
                   </PressableScale>
-                </PressableScale>
+                </PressableRow>
               </Animated.View>
             )}
           />

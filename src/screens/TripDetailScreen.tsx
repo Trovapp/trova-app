@@ -86,6 +86,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const [assistantTargetId, setAssistantTargetId] = useState<number | null>(null);
   const [gapCardFor, setGapCardFor] = useState<Gap | null>(null);
   const [replanStarting, setReplanStarting] = useState(false);
+  // 장소 카드 "⋮" 더보기 메뉴(대안 찾기/비서/삭제) — 자주 안 쓰는 동작들을
+  // 카드에 아이콘으로 늘어놓는 대신 여기 하나로 모은다.
+  const [menuPlaceId, setMenuPlaceId] = useState<number | null>(null);
 
   const gapSheetRef = useRef<BottomSheetModal>(null);
   useEffect(() => {
@@ -95,6 +98,15 @@ export function TripDetailScreen({ route, navigation }: Props) {
       gapSheetRef.current?.dismiss();
     }
   }, [gapCardFor]);
+
+  const menuSheetRef = useRef<BottomSheetModal>(null);
+  useEffect(() => {
+    if (menuPlaceId !== null) {
+      menuSheetRef.current?.present();
+    } else {
+      menuSheetRef.current?.dismiss();
+    }
+  }, [menuPlaceId]);
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const foldersQuery = useQuery({ queryKey: ["bookmarkFolders"], queryFn: listFolders });
@@ -137,6 +149,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const currentActiveDay = activeDay ?? trip.days[0]?.day ?? 1;
   const activeDayData = trip.days.find((d) => d.day === currentActiveDay);
   const places = activeDayData?.places ?? [];
+  const menuPlace = places.find((p) => p.id === menuPlaceId) ?? null;
   const dayColor = getDayColor(currentActiveDay);
   const tripId = trip.id;
   const totalPlaceCount = trip.days.reduce((sum, d) => sum + d.places.length, 0);
@@ -373,7 +386,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
     const index = getIndex() ?? 0;
     const gap = (gapRecommendationsQuery.data ?? []).find((g) => g.beforePlaceId === place.id);
     return (
-      <View style={{ opacity: isActive ? 0.9 : 1, gap: 12 }}>
+      <View style={{ opacity: isActive ? 0.9 : 1 }}>
         <PlaceRow
           place={place}
           index={index}
@@ -387,16 +400,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             setAlternativeTargetId(null);
             setReviewTarget({ kind: "tripPlace", id: place.id });
           }}
-          onFindAlternative={() => {
-            setReviewTarget(null);
-            setAlternativeInitialIndoor(false);
-            setAlternativeTargetId(place.id);
-          }}
-          onOpenAssistant={() => {
-            setReviewTarget(null);
-            setAlternativeTargetId(null);
-            setAssistantTargetId(place.id);
-          }}
+          onOpenMenu={() => setMenuPlaceId(place.id)}
         >
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: 4 }}>
             <PressableScale
@@ -434,19 +438,6 @@ export function TripDetailScreen({ route, navigation }: Props) {
               <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
                 {place.memo || "메모 추가"}
               </AppText>
-            </PressableScale>
-
-            <PressableScale
-              onPress={() =>
-                Alert.alert("장소를 삭제할까요?", `"${place.placeName}"을(를) 일정에서 삭제합니다.`, [
-                  { text: "취소", style: "cancel" },
-                  { text: "삭제", style: "destructive", onPress: () => handleRemove(place.id) },
-                ])
-              }
-              disabled={busy}
-              style={{ marginLeft: "auto" }}
-            >
-              <AppText style={{ fontSize: 13, color: colors.inkMuted }}>삭제</AppText>
             </PressableScale>
           </View>
 
@@ -559,7 +550,6 @@ export function TripDetailScreen({ route, navigation }: Props) {
       onDragEnd={handleDragEnd}
       renderItem={renderPlaceItem}
       activationDistance={0}
-      ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       contentContainerStyle={{ padding: 16 }}
       ListHeaderComponent={
         <View style={{ gap: 16, marginBottom: 16 }}>
@@ -592,17 +582,18 @@ export function TripDetailScreen({ route, navigation }: Props) {
             disabled={replanStarting || totalPlaceCount === 0}
             style={{
               flexDirection: "row",
-              height: 46,
+              height: 44,
               borderRadius: 10,
-              backgroundColor: colors.accent,
+              borderWidth: 1,
+              borderColor: colors.accent,
               justifyContent: "center",
               alignItems: "center",
               gap: 6,
-              opacity: replanStarting || totalPlaceCount === 0 ? 0.5 : 1,
+              opacity: replanStarting || totalPlaceCount === 0 ? 0.4 : 1,
             }}
           >
-            {!replanStarting && <Feather name="refresh-cw" size={16} color={colors.onAccent} />}
-            <AppText weight="medium" style={{ color: colors.onAccent }}>
+            {!replanStarting && <Feather name="refresh-cw" size={15} color={colors.accent} />}
+            <AppText weight="medium" style={{ color: colors.accent, fontSize: 14 }}>
               {replanStarting ? "시작하는 중..." : "전체 일정 재구성"}
             </AppText>
           </PressableScale>
@@ -834,6 +825,63 @@ export function TripDetailScreen({ route, navigation }: Props) {
       }}
       onClose={() => setAssistantTargetId(null)}
     />
+    <BottomSheetModal
+      ref={menuSheetRef}
+      enableDynamicSizing
+      onDismiss={() => {
+        haptics.light();
+        setMenuPlaceId(null);
+      }}
+      backdropComponent={(props: BottomSheetBackdropProps) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+      )}
+      backgroundStyle={{ backgroundColor: colors.bg }}
+      handleIndicatorStyle={{ backgroundColor: colors.border }}
+    >
+      <BottomSheetView style={{ padding: 8, paddingBottom: 32 }}>
+        <AppText weight="medium" numberOfLines={1} style={{ padding: 12, color: colors.inkMuted, fontSize: 13 }}>
+          {menuPlace?.placeName}
+        </AppText>
+        <PressableScale
+          onPress={() => {
+            if (!menuPlace) return;
+            setReviewTarget(null);
+            setAlternativeInitialIndoor(false);
+            setAlternativeTargetId(menuPlace.id);
+            menuSheetRef.current?.dismiss();
+          }}
+          style={{ padding: 14 }}
+        >
+          <AppText>대안 찾기</AppText>
+        </PressableScale>
+        <PressableScale
+          onPress={() => {
+            if (!menuPlace) return;
+            setReviewTarget(null);
+            setAlternativeTargetId(null);
+            setAssistantTargetId(menuPlace.id);
+            menuSheetRef.current?.dismiss();
+          }}
+          style={{ padding: 14 }}
+        >
+          <AppText>비서에게 물어보기</AppText>
+        </PressableScale>
+        <PressableScale
+          onPress={() => {
+            const target = menuPlace;
+            menuSheetRef.current?.dismiss();
+            if (!target) return;
+            Alert.alert("장소를 삭제할까요?", `"${target.placeName}"을(를) 일정에서 삭제합니다.`, [
+              { text: "취소", style: "cancel" },
+              { text: "삭제", style: "destructive", onPress: () => handleRemove(target.id) },
+            ]);
+          }}
+          style={{ padding: 14 }}
+        >
+          <AppText style={{ color: colors.accent }}>삭제</AppText>
+        </PressableScale>
+      </BottomSheetView>
+    </BottomSheetModal>
     <BottomSheetModal
       ref={gapSheetRef}
       enableDynamicSizing
