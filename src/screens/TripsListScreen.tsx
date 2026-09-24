@@ -10,6 +10,7 @@ import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { useListEntrance } from "@/hooks/useListEntrance";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { listTrips } from "@/lib/api/trips";
+import { formatTripDates } from "@/lib/date";
 import { colors } from "@/lib/theme";
 import type { MainTabScreenProps } from "@/navigation/types";
 
@@ -95,8 +96,8 @@ export function TripsListScreen({ navigation }: Props) {
                 {item.title}
               </AppText>
               {item.startDate && (
-                <AppText mono style={{ fontSize: 12, color: colors.inkMuted }}>
-                  {item.startDate} ~ {item.endDate}
+                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                  {formatTripDates(item.startDate, item.endDate)}
                 </AppText>
               )}
             </View>

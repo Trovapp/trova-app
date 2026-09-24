@@ -15,6 +15,7 @@ import { listBookmarks } from "@/lib/api/bookmarks";
 import { listTrips } from "@/lib/api/trips";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { formatTripDates } from "@/lib/date";
 import { colors } from "@/lib/theme";
 import { isSupportedShareUrl } from "@/lib/shareUrl";
 import type { MainTabScreenProps } from "@/navigation/types";
@@ -188,8 +189,8 @@ export function HomeScreen({ navigation }: Props) {
                         {trip.title}
                       </AppText>
                       {trip.startDate && (
-                        <AppText mono style={{ fontSize: 12, color: colors.inkMuted }}>
-                          {trip.startDate} ~ {trip.endDate}
+                        <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                          {formatTripDates(trip.startDate, trip.endDate)}
                         </AppText>
                       )}
                     </View>
