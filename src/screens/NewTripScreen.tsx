@@ -46,9 +46,6 @@ export function NewTripScreen({ navigation }: Props) {
       contentContainerStyle={{ padding: 24, gap: 16 }}
       keyboardShouldPersistTaps="handled"
     >
-      <AppText weight="medium" style={{ fontSize: 20 }}>
-        새 여행 만들기
-      </AppText>
       <TextInput
         value={title}
         onChangeText={setTitle}

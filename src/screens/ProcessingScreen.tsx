@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
+import { BackButton } from "@/components/BackButton";
 import { Emoji } from "@/components/Emoji";
 import { PressableScale } from "@/components/PressableScale";
 import { ProgressHero } from "@/components/ProgressHero";
@@ -86,6 +87,14 @@ export function ProcessingScreen({ route, navigation }: Props) {
 
   const job = pendingQuery.data?.find((item) => item.jobId === jobId);
 
+  function handleBack() {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.replace("MainTabs");
+    }
+  }
+
   useEffect(() => {
     // FAILED 작업도 /api/places/pending 목록에 남아있으므로, 목록에서 사라졌다는
     // 것은 처리가 끝나 저장까지 완료됐다는 뜻이다. 완료 후에는 항상 이 영상의
@@ -99,6 +108,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
   if (pendingQuery.isLoading || !job) {
     return (
       <View style={{ flex: 1, padding: 24, gap: 16, justifyContent: "center" }}>
+        <BackButton onPress={handleBack} />
         <Skeleton style={{ width: "50%", height: 22, alignSelf: "center" }} />
         <Skeleton style={{ width: "80%", height: 14, alignSelf: "center" }} />
         <Skeleton style={{ height: 10, borderRadius: 5, marginTop: 8 }} />
@@ -109,6 +119,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
   if (job.status === "FAILED") {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
+        <BackButton onPress={handleBack} />
         <Feather name="alert-circle" size={48} color={colors.accent} />
         <AppText weight="medium" style={{ fontSize: 20 }}>
           처리에 실패했어요
@@ -143,6 +154,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
 
   return (
     <View style={{ flex: 1, padding: 24, paddingTop: 72, backgroundColor: colors.bg }}>
+      <BackButton onPress={handleBack} />
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
         <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={STAGE_CREEP_MS[stage]} />
         <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>

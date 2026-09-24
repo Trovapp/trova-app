@@ -4,6 +4,7 @@ import { PressableScale } from "@/components/PressableScale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
+import { BackButton } from "@/components/BackButton";
 import { Emoji } from "@/components/Emoji";
 import { ProgressHero } from "@/components/ProgressHero";
 import { RatingBadge } from "@/components/RatingBadge";
@@ -106,6 +107,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
   if (replanQuery.isLoading || !job) {
     return (
       <View style={{ flex: 1, padding: 24, gap: 16, justifyContent: "center" }}>
+        <BackButton onPress={goBackToTrip} />
         <Skeleton style={{ width: "50%", height: 22, alignSelf: "center" }} />
         <Skeleton style={{ width: "80%", height: 14, alignSelf: "center" }} />
         <Skeleton style={{ height: 10, borderRadius: 5, marginTop: 8 }} />
@@ -116,6 +118,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
   if (job.status === "FAILED") {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
+        <BackButton onPress={goBackToTrip} />
         <Feather name="alert-circle" size={48} color={colors.accent} />
         <AppText weight="medium" style={{ fontSize: 20 }}>
           재구성에 실패했어요
@@ -155,6 +158,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
     const ceiling = Math.min(nextTargetPercent - 2, 99);
     return (
       <View style={{ flex: 1, padding: 24, paddingTop: 72, backgroundColor: colors.bg }}>
+        <BackButton onPress={goBackToTrip} />
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
           <ProgressHero percent={percent} ceiling={ceiling} creepMs={AVG_TARGET_MS} />
           {total !== null && (
@@ -191,6 +195,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
   if (isEmpty) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
+        <BackButton onPress={goBackToTrip} />
         <Feather name="check-circle" size={48} color={colors.accent} />
         <AppText weight="medium" style={{ fontSize: 18, textAlign: "center" }}>
           추천할 만한 다른 장소를 찾지 못했어요
@@ -217,6 +222,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <BackButton onPress={goBackToTrip} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 64, gap: 16 }}>
         <AppText weight="medium" style={{ fontSize: 18 }}>
           새로운 추천을 찾았어요
