@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
+import { useCallback, useState } from "react";
+import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, TextInput, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
@@ -14,6 +14,7 @@ import { createShare } from "@/lib/api/places";
 import { listBookmarks } from "@/lib/api/bookmarks";
 import { listTrips } from "@/lib/api/trips";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { colors } from "@/lib/theme";
 import { isSupportedShareUrl } from "@/lib/shareUrl";
 import type { MainTabScreenProps } from "@/navigation/types";
@@ -43,6 +44,11 @@ export function HomeScreen({ navigation }: Props) {
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: listTrips });
+  const refetchAll = useCallback(
+    () => Promise.all([bookmarksQuery.refetch(), tripsQuery.refetch()]),
+    [bookmarksQuery.refetch, tripsQuery.refetch]
+  );
+  const { refreshing, onRefresh } = usePullToRefresh(refetchAll);
 
   const pins = (bookmarksQuery.data ?? [])
     .filter((b) => b.latitude !== null && b.longitude !== null)
@@ -69,7 +75,10 @@ export function HomeScreen({ navigation }: Props) {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 24, gap: 28 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 24, gap: 28 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         <View style={{ gap: 16 }}>
           <AppText weight="bold" style={{ fontSize: 26, lineHeight: 34 }}>
             {user?.nickname ?? "여행자"}님,{"\n"}어디로 떠나볼까요?

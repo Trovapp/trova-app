@@ -1,4 +1,4 @@
-import { FlatList, View } from "react-native";
+import { FlatList, RefreshControl, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
@@ -8,6 +8,7 @@ import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { useListEntrance } from "@/hooks/useListEntrance";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { listTrips } from "@/lib/api/trips";
 import { colors } from "@/lib/theme";
 import type { MainTabScreenProps } from "@/navigation/types";
@@ -20,6 +21,7 @@ type Props = MainTabScreenProps<"TripsList">;
 export function TripsListScreen({ navigation }: Props) {
   const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: listTrips });
   const entranceFor = useListEntrance();
+  const { refreshing, onRefresh } = usePullToRefresh(tripsQuery.refetch);
 
   if (tripsQuery.isLoading) {
     return (
@@ -48,6 +50,7 @@ export function TripsListScreen({ navigation }: Props) {
   return (
     <FlatList
       contentContainerStyle={{ padding: 16 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       data={trips}
       keyExtractor={(item) => String(item.id)}
       ListHeaderComponent={

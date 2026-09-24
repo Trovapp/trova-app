@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ComponentProps } from "react";
-import { Alert, FlatList, View } from "react-native";
+import { useCallback, useEffect, useRef, useState, type ComponentProps } from "react";
+import { Alert, FlatList, RefreshControl, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
@@ -10,6 +10,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { SkeletonRow } from "@/components/Skeleton";
 import { useListEntrance } from "@/hooks/useListEntrance";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { haptics } from "@/lib/haptics";
 import { colors } from "@/lib/theme";
 import { deletePendingJob, getPendingJobs, getPlaces, type PendingJob, type Place } from "@/lib/api/places";
@@ -155,6 +156,11 @@ export function PlacesListScreen({ navigation }: Props) {
     queryFn: getPendingJobs,
     refetchInterval: (query) => ((query.state.data?.length ?? 0) > 0 ? 5000 : false),
   });
+  const refetchAll = useCallback(
+    () => Promise.all([placesQuery.refetch(), pendingQuery.refetch()]),
+    [placesQuery.refetch, pendingQuery.refetch]
+  );
+  const { refreshing, onRefresh } = usePullToRefresh(refetchAll);
 
   const [deletingJobId, setDeletingJobId] = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -212,6 +218,7 @@ export function PlacesListScreen({ navigation }: Props) {
   return (
     <FlatList
       contentContainerStyle={{ padding: 16 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       data={videoGroups}
       keyExtractor={(item) => String(item.jobId)}
       ListHeaderComponent={

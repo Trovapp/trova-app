@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Platform, TextInput, View } from "react-native";
+import { Alert, Platform, RefreshControl, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import {
   BottomSheetBackdrop,
@@ -25,6 +25,7 @@ import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
 import { getDayColor } from "@/lib/itinerary";
 import { haptics } from "@/lib/haptics";
 import { parseTimeToDate, toTimeString } from "@/lib/date";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { colors } from "@/lib/theme";
 import { addBookmark, listBookmarks, listFolders, removeBookmark } from "@/lib/api/bookmarks";
 import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
@@ -62,6 +63,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const { id } = route.params;
   const queryClient = useQueryClient();
   const tripQuery = useQuery({ queryKey: ["trip", id], queryFn: () => getTrip(id) });
+  const { refreshing, onRefresh } = usePullToRefresh(tripQuery.refetch);
 
   const [activeDay, setActiveDay] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"search" | "bookmarks">("search");
@@ -555,6 +557,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
       renderItem={renderPlaceItem}
       activationDistance={0}
       contentContainerStyle={{ padding: 16 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       ListHeaderComponent={
         <View style={{ gap: 16, marginBottom: 16 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
