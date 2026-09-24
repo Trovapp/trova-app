@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
+import { PressableScale } from "@/components/PressableScale";
 import { colors } from "@/lib/theme";
 
 type PlaceRowItem = {
@@ -83,7 +84,7 @@ export function PlaceRow({
           </AppText>
         </View>
         <View style={{ flex: 1, gap: 6 }}>
-          <Pressable onPress={onPressInfo} disabled={!onPressInfo}>
+          <PressableScale onPress={onPressInfo} disabled={!onPressInfo}>
             <AppText weight="medium" numberOfLines={1}>
               {place.placeName}
             </AppText>
@@ -98,65 +99,65 @@ export function PlaceRow({
                 <AppText style={{ fontSize: 11, color: colors.accent }}>위치 확인 안됨 · 지도에 안 뜰 수 있어요</AppText>
               </View>
             )}
-          </Pressable>
+          </PressableScale>
           {editable && (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               {!dragHandle && (onMoveUp || onMoveDown) && (
                 <View style={{ flexDirection: "row", gap: 6 }}>
-                  <Pressable
+                  <PressableScale
                     onPress={onMoveUp}
                     disabled={disabled || index === 0 || !onMoveUp}
                     style={{ opacity: disabled || index === 0 ? 0.3 : 1 }}
                   >
                     <Feather name="arrow-up" size={14} color={colors.inkMuted} />
-                  </Pressable>
-                  <Pressable
+                  </PressableScale>
+                  <PressableScale
                     onPress={onMoveDown}
                     disabled={disabled || isLast || !onMoveDown}
                     style={{ opacity: disabled || isLast ? 0.3 : 1 }}
                   >
                     <Feather name="arrow-down" size={14} color={colors.inkMuted} />
-                  </Pressable>
+                  </PressableScale>
                 </View>
               )}
               {onOpenDayPicker && (
-                <Pressable onPress={onOpenDayPicker} disabled={disabled}>
+                <PressableScale onPress={onOpenDayPicker} disabled={disabled}>
                   <AppText style={{ fontSize: 13, color: colors.inkMuted }}>다른 날로 이동</AppText>
-                </Pressable>
+                </PressableScale>
               )}
             </View>
           )}
           {children}
         </View>
         {onFindAlternative && (
-          <Pressable
+          <PressableScale
             onPress={onFindAlternative}
             hitSlop={10}
             style={{ justifyContent: "center", alignItems: "center", gap: 1, paddingHorizontal: 4 }}
           >
             <Feather name="repeat" size={16} color={colors.accent} />
             <AppText style={{ fontSize: 9, color: colors.accent }}>대안</AppText>
-          </Pressable>
+          </PressableScale>
         )}
         {onOpenAssistant && (
-          <Pressable
+          <PressableScale
             onPress={onOpenAssistant}
             hitSlop={10}
             style={{ justifyContent: "center", alignItems: "center", gap: 1, paddingHorizontal: 4 }}
           >
             <Feather name="message-circle" size={16} color={colors.accent} />
             <AppText style={{ fontSize: 9, color: colors.accent }}>비서</AppText>
-          </Pressable>
+          </PressableScale>
         )}
         {dragHandle && (
-          <Pressable
+          <PressableScale
             onPressIn={dragHandle.onPressIn}
             disabled={disabled}
             hitSlop={12}
             style={{ justifyContent: "center", paddingHorizontal: 4, opacity: disabled ? 0.3 : 1 }}
           >
             <AppText style={{ fontSize: 18, color: colors.inkMuted }}>⠿</AppText>
-          </Pressable>
+          </PressableScale>
         )}
       </View>
       {!isLast && distanceKm !== null && (

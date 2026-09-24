@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ElementRef } from "react";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
+import { PressableScale } from "@/components/PressableScale";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
 import { categoryLabel } from "@/lib/placeCategory";
@@ -69,7 +70,7 @@ function CompactCandidateCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       style={{
         width: 140,
@@ -93,7 +94,7 @@ function CompactCandidateCard({
         )}
         {candidate.rating !== null && <RatingBadge rating={candidate.rating} size={10} />}
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -126,12 +127,12 @@ function ExpandedCandidateCard({
         height={110}
         showPath={false}
       />
-      <Pressable onPress={onOpenReview} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+      <PressableScale onPress={onOpenReview} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
         <AppText style={{ fontSize: 12, color: colors.accent }}>리뷰 보기</AppText>
         <Feather name="chevron-right" size={12} color={colors.accent} />
-      </Pressable>
+      </PressableScale>
       {error && <AppText style={{ color: colors.accent, fontSize: 12 }}>{error}</AppText>}
-      <Pressable
+      <PressableScale
         onPress={onConfirm}
         disabled={confirming}
         style={{
@@ -146,7 +147,7 @@ function ExpandedCandidateCard({
         <AppText weight="medium" style={{ color: "#fff" }}>
           {confirming ? "교체 중..." : "이 장소로 확정"}
         </AppText>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }
@@ -360,14 +361,14 @@ export function ConversationSheet({
       <BottomSheetScrollView ref={scrollRef} contentContainerStyle={{ padding: 20, gap: 14 }}>
         {reviewCandidateId !== null ? (
           <>
-            <Pressable
+            <PressableScale
               onPress={() => setReviewCandidateId(null)}
               hitSlop={8}
               style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
             >
               <Feather name="chevron-left" size={18} color={colors.accent} />
               <AppText style={{ fontSize: 14, color: colors.accent }}>대화로</AppText>
-            </Pressable>
+            </PressableScale>
             <PlaceReviewContent placeId={reviewCandidateId} showMiniMap={false} />
           </>
         ) : (
@@ -384,7 +385,7 @@ export function ConversationSheet({
                 <AppText style={{ fontSize: 13, color: colors.inkMuted }}>이렇게 물어보세요</AppText>
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                   {EXAMPLE_PROMPTS.map((prompt) => (
-                    <Pressable
+                    <PressableScale
                       key={prompt}
                       onPress={() => handleSend(prompt)}
                       style={{
@@ -395,7 +396,7 @@ export function ConversationSheet({
                       }}
                     >
                       <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{prompt}</AppText>
-                    </Pressable>
+                    </PressableScale>
                   ))}
                 </View>
               </View>
@@ -434,14 +435,14 @@ export function ConversationSheet({
                 <AppText style={{ fontSize: 12, color: colors.inkMuted, textAlign: "center" }}>
                   이번 대화의 최대 턴 수에 도달했어요.
                 </AppText>
-                <Pressable
+                <PressableScale
                   onPress={resetSession}
                   style={{ paddingVertical: 9, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.accent }}
                 >
                   <AppText weight="medium" style={{ color: "#fff", fontSize: 13 }}>
                     새로 시작하기
                   </AppText>
-                </Pressable>
+                </PressableScale>
               </View>
             ) : (
               <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 8 }}>
@@ -465,7 +466,7 @@ export function ConversationSheet({
                     color: colors.ink,
                   }}
                 />
-                <Pressable
+                <PressableScale
                   onPress={() => handleSend()}
                   disabled={sending || !input.trim()}
                   hitSlop={8}
@@ -480,7 +481,7 @@ export function ConversationSheet({
                   }}
                 >
                   <Feather name="send" size={18} color="#fff" />
-                </Pressable>
+                </PressableScale>
               </View>
             )}
           </>

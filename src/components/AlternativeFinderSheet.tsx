@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ElementRef, type ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
+import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
@@ -68,7 +69,7 @@ function Chip({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       style={{
         paddingVertical: 7,
@@ -78,7 +79,7 @@ function Chip({
       }}
     >
       <AppText style={{ fontSize: 12, color: active ? "#fff" : colors.inkMuted }}>{label}</AppText>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -219,14 +220,14 @@ export function AlternativeFinderSheet({
       <BottomSheetScrollView ref={scrollRef} contentContainerStyle={{ padding: 20, gap: 16 }}>
         {reviewCandidateId !== null ? (
           <>
-            <Pressable
+            <PressableScale
               onPress={() => setReviewCandidateId(null)}
               hitSlop={8}
               style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
             >
               <Feather name="chevron-left" size={18} color={colors.accent} />
               <AppText style={{ fontSize: 14, color: colors.accent }}>목록으로</AppText>
-            </Pressable>
+            </PressableScale>
             <PlaceReviewContent placeId={reviewCandidateId} showMiniMap={false} />
           </>
         ) : (
@@ -235,7 +236,7 @@ export function AlternativeFinderSheet({
               대안 찾기
             </AppText>
 
-            <Pressable
+            <PressableScale
               onPress={() => setFiltersExpanded((v) => !v)}
               style={{
                 flexDirection: "row",
@@ -250,7 +251,7 @@ export function AlternativeFinderSheet({
                 {filterSummary}
               </AppText>
               <Feather name={filtersExpanded ? "chevron-up" : "chevron-down"} size={16} color={colors.inkMuted} />
-            </Pressable>
+            </PressableScale>
 
             {filtersExpanded && (
               <>
@@ -302,7 +303,7 @@ export function AlternativeFinderSheet({
             )}
 
             <View style={{ gap: 8 }}>
-              <Pressable
+              <PressableScale
                 onPress={handleSearch}
                 disabled={searching}
                 style={{
@@ -317,7 +318,7 @@ export function AlternativeFinderSheet({
                 <AppText weight="medium" style={{ color: "#fff" }}>
                   {searching ? `대안 찾는 중... ${searchPercent}%` : "대안 찾기"}
                 </AppText>
-              </Pressable>
+              </PressableScale>
               {searching && <ProgressBar percent={searchPercent} height={4} />}
             </View>
 
@@ -345,7 +346,7 @@ export function AlternativeFinderSheet({
                         gap: 6,
                       }}
                     >
-                      <Pressable onPress={() => setSelected(isSelected ? null : candidate)}>
+                      <PressableScale onPress={() => setSelected(isSelected ? null : candidate)}>
                         <AppText weight="medium" numberOfLines={1}>
                           {candidate.name}
                         </AppText>
@@ -362,18 +363,18 @@ export function AlternativeFinderSheet({
                               .join(" · ")}
                           </AppText>
                         </View>
-                      </Pressable>
+                      </PressableScale>
                       {candidate.recommendationReason && (
                         <RecommendationReason text={candidate.recommendationReason} />
                       )}
-                      <Pressable
+                      <PressableScale
                         onPress={() => setReviewCandidateId(candidate.placeId)}
                         hitSlop={6}
                         style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
                       >
                         <AppText style={{ fontSize: 12, color: colors.accent }}>리뷰 보기</AppText>
                         <Feather name="chevron-right" size={12} color={colors.accent} />
-                      </Pressable>
+                      </PressableScale>
 
                       {isSelected && (
                         <View style={{ gap: 8, marginTop: 4, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10 }}>
@@ -383,7 +384,7 @@ export function AlternativeFinderSheet({
                             showPath={false}
                           />
                           {searchError && <AppText style={{ color: colors.accent }}>{searchError}</AppText>}
-                          <Pressable
+                          <PressableScale
                             onPress={handleReplace}
                             disabled={replacing}
                             style={{
@@ -398,7 +399,7 @@ export function AlternativeFinderSheet({
                             <AppText weight="medium" style={{ color: "#fff" }}>
                               {replacing ? "교체 중..." : "이 장소로 확정"}
                             </AppText>
-                          </Pressable>
+                          </PressableScale>
                         </View>
                       )}
                     </View>

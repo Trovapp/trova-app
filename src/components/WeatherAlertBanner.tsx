@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
+import { PressableScale } from "@/components/PressableScale";
 import { colors } from "@/lib/theme";
 import { dismissNotification, listNotifications } from "@/lib/api/notifications";
 
@@ -34,7 +35,7 @@ export function WeatherAlertBanner({
   }
 
   return (
-    <Pressable
+    <PressableScale
       onPress={() => onOpenAlternative(target.tripId, target.tripPlaceId)}
       style={{
         flexDirection: "row",
@@ -57,9 +58,9 @@ export function WeatherAlertBanner({
           <AppText style={{ fontSize: 12, color: colors.accent }}>{dismissError}</AppText>
         )}
       </View>
-      <Pressable onPress={handleDismiss} hitSlop={10}>
+      <PressableScale onPress={handleDismiss} hitSlop={10}>
         <Feather name="x" size={16} color={colors.inkMuted} />
-      </Pressable>
-    </Pressable>
+      </PressableScale>
+    </PressableScale>
   );
 }

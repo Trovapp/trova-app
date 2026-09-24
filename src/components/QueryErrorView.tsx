@@ -1,5 +1,6 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { AppText } from "@/components/AppText";
+import { PressableScale } from "@/components/PressableScale";
 import { colors } from "@/lib/theme";
 
 // 조회 실패를 "데이터 없음"과 구분해서 보여주고, 다시 시도할 수단을 준다.
@@ -21,7 +22,7 @@ export function QueryErrorView({
       }
     >
       <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>{message}</AppText>
-      <Pressable
+      <PressableScale
         onPress={onRetry}
         style={{
           paddingVertical: 8,
@@ -34,7 +35,7 @@ export function QueryErrorView({
         <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
           다시 시도
         </AppText>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }
