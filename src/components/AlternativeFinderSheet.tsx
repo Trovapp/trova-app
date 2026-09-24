@@ -59,6 +59,9 @@ const TRAVEL_TIME_OPTIONS: { label: string; value?: number }[] = [
 // 호출)보다는 짧은 요청이라 예상 소요시간만 더 짧게 잡는다.
 const EXPECTED_SEARCH_MS = 3000;
 const SIMULATED_CAP_PERCENT = 92;
+// 92%에서 이만큼 더 지나면 "느린 이유" 안내를 보여준다 — PlaceReviewModal과 동일한
+// 이유(무료 티어 rate limit 백오프로 가끔 오래 걸림).
+const SLOW_NOTICE_DELAY_MS = 4000;
 
 function Chip({
   label,
@@ -120,6 +123,7 @@ export function AlternativeFinderSheet({
   const [candidates, setCandidates] = useState<AlternativeCandidate[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchPercent, setSearchPercent] = useState(0);
+  const [showSlowNotice, setShowSlowNotice] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [selected, setSelected] = useState<AlternativeCandidate | null>(null);
   const [reviewCandidateId, setReviewCandidateId] = useState<number | null>(null);
@@ -154,12 +158,16 @@ export function AlternativeFinderSheet({
   useEffect(() => {
     if (!searching) {
       setSearchPercent(0);
+      setShowSlowNotice(false);
       return;
     }
     const start = Date.now();
     const timer = setInterval(() => {
       const elapsed = Date.now() - start;
       setSearchPercent(Math.min(SIMULATED_CAP_PERCENT, Math.round((elapsed / EXPECTED_SEARCH_MS) * SIMULATED_CAP_PERCENT)));
+      if (elapsed > EXPECTED_SEARCH_MS + SLOW_NOTICE_DELAY_MS) {
+        setShowSlowNotice(true);
+      }
     }, 150);
     return () => clearInterval(timer);
   }, [searching]);
@@ -331,6 +339,11 @@ export function AlternativeFinderSheet({
                 </AppText>
               </PressableScale>
               {searching && <ProgressBar percent={searchPercent} height={4} />}
+              {searching && showSlowNotice && (
+                <AppText style={{ color: colors.inkMuted, fontSize: 12 }}>
+                  무료 API를 쓰고 있어서 가끔 평소보다 오래 걸릴 수 있어요.
+                </AppText>
+              )}
             </View>
 
             {searchError && <AppText style={{ color: colors.accent }}>{searchError}</AppText>}

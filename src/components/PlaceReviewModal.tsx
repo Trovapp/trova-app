@@ -22,6 +22,10 @@ const SHEET_SNAP_POINTS = ["32%", "60%"];
 // 동안 92%까지 서서히 채우고, 실제 응답이 오면(로딩 종료) 그 즉시 콘텐츠로 바뀐다.
 const EXPECTED_LOAD_MS = 6000;
 const SIMULATED_CAP_PERCENT = 92;
+// 92%에서 이만큼 더 지나면 "느린 이유" 안내를 보여준다 — 백엔드가 무료 티어 rate
+// limit에 걸려 지수 백오프로 재시도 중일 때(실측 최대 53초, docs 없음·2026-09-24
+// api_call_logs 조회로 확인) 아무 설명 없이 멈춰 보이는 걸 막는다.
+const SLOW_NOTICE_DELAY_MS = 4000;
 
 function HighlightedText({ text }: { text: string }) {
   const parts = text.split(/\*\*(.+?)\*\*/g);
@@ -67,15 +71,20 @@ export function PlaceReviewContent({
   const detail = detailQuery.data;
 
   const [loadingPercent, setLoadingPercent] = useState(0);
+  const [showSlowNotice, setShowSlowNotice] = useState(false);
   useEffect(() => {
     if (!detailQuery.isLoading) {
       setLoadingPercent(0);
+      setShowSlowNotice(false);
       return;
     }
     const start = Date.now();
     const timer = setInterval(() => {
       const elapsed = Date.now() - start;
       setLoadingPercent(Math.min(SIMULATED_CAP_PERCENT, Math.round((elapsed / EXPECTED_LOAD_MS) * SIMULATED_CAP_PERCENT)));
+      if (elapsed > EXPECTED_LOAD_MS + SLOW_NOTICE_DELAY_MS) {
+        setShowSlowNotice(true);
+      }
     }, 150);
     return () => clearInterval(timer);
   }, [detailQuery.isLoading, placeId, tripPlaceId]);
@@ -87,6 +96,11 @@ export function PlaceReviewContent({
           리뷰 요약을 만들고 있어요... {loadingPercent}%
         </AppText>
         <ProgressBar percent={loadingPercent} />
+        {showSlowNotice && (
+          <AppText style={{ color: colors.inkMuted, fontSize: 12 }}>
+            무료 API를 쓰고 있어서 가끔 평소보다 오래 걸릴 수 있어요.
+          </AppText>
+        )}
       </View>
     );
   }
