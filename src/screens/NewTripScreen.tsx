@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Platform, ScrollView, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
@@ -41,11 +41,12 @@ export function NewTripScreen({ navigation }: Props) {
   }
 
   return (
-    <ScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 24, gap: 16 }}
-      keyboardShouldPersistTaps="handled"
-    >
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 24, gap: 16 }}
+        keyboardShouldPersistTaps="handled"
+      >
       <TextInput
         value={title}
         onChangeText={setTitle}
@@ -153,6 +154,7 @@ export function NewTripScreen({ navigation }: Props) {
           {submitting ? "만드는 중..." : "여행 만들기"}
         </AppText>
       </PressableScale>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
