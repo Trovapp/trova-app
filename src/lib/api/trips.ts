@@ -52,6 +52,10 @@ export async function getTripPlaceDetails(id: number): Promise<TripPlaceReviewSu
   return res.json();
 }
 
+// 백엔드 trips.title은 길이 지정 없는 @Column(ddl-auto) → varchar(255). 목록에선 한 줄로
+// 잘려 보이므로 UI 기준으로 훨씬 짧게 제한해 저장 실패와 읽기 힘든 긴 이름을 함께 막는다.
+export const TRIP_TITLE_MAX_LENGTH = 50;
+
 export async function confirmTrip(jobId: number, title: string, startDate: string | null): Promise<Trip> {
   const res = await apiFetch(`/api/places/videos/${jobId}/confirm-trip`, {
     method: "POST",

@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { haversineDistanceKm } from "@/lib/geo";
 import { haptics } from "@/lib/haptics";
 import { generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
-import { confirmTrip } from "@/lib/api/trips";
+import { confirmTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
 import { toDateString } from "@/lib/date";
 import { groupByDay, isItineraryGroup } from "@/lib/itinerary";
 import { colors } from "@/lib/theme";
@@ -135,7 +135,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     setConfirmingTrip(true);
     setTripError(null);
     try {
-      const trip = await confirmTrip(group[0].jobId, tripTitle.trim() || title, toDateString(new Date()));
+      const trip = await confirmTrip(group[0].jobId, tripTitle.trim() || title.slice(0, TRIP_TITLE_MAX_LENGTH), toDateString(new Date()));
       haptics.success();
       // replace는 아래에 깔린 여행 목록 화면을 unmount하지 않는다 — 무효화해두지 않으면
       // 뒤로 가기로 돌아왔을 때 방금 확정한 여행이 목록에 없다.
@@ -347,6 +347,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                 value={tripTitle}
                 onChangeText={setTripTitle}
                 placeholder="여행 이름"
+                maxLength={TRIP_TITLE_MAX_LENGTH}
                 style={{
                   height: 40,
                   borderWidth: 1,

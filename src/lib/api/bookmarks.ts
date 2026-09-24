@@ -69,6 +69,9 @@ export async function listFolders(): Promise<BookmarkFolder[]> {
   return res.json();
 }
 
+// 백엔드 bookmark_folders.name은 varchar(255)지만, 폴더명은 목록/선택 모달에 짧게 보이는 라벨이라 20자로 제한한다.
+export const FOLDER_NAME_MAX_LENGTH = 20;
+
 export async function createFolder(name: string, color: string): Promise<BookmarkFolder> {
   const res = await apiFetch(`/api/bookmarks/folders`, {
     method: "POST",

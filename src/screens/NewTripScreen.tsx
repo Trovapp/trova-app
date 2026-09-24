@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { haptics } from "@/lib/haptics";
-import { createTrip } from "@/lib/api/trips";
+import { createTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
 import { toDateString } from "@/lib/date";
 import { colors } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -51,6 +51,7 @@ export function NewTripScreen({ navigation }: Props) {
         value={title}
         onChangeText={setTitle}
         placeholder="예: 김해 당일치기"
+        maxLength={TRIP_TITLE_MAX_LENGTH}
         autoFocus
         style={{
           height: 48,

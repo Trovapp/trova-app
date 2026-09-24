@@ -13,7 +13,7 @@ import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { DISTINCT_COLORS } from "@/lib/colorPresets";
-import { createFolder, listFolders } from "@/lib/api/bookmarks";
+import { createFolder, FOLDER_NAME_MAX_LENGTH, listFolders } from "@/lib/api/bookmarks";
 import { haptics } from "@/lib/haptics";
 import { colors } from "@/lib/theme";
 
@@ -134,6 +134,7 @@ export function FolderPickerModal({
               value={newName}
               onChangeText={setNewName}
               placeholder="새 폴더 이름"
+              maxLength={FOLDER_NAME_MAX_LENGTH}
               style={{
                 borderWidth: 1,
                 borderColor: colors.border,
