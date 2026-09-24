@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useFonts as useMonoFonts, IBMPlexMono_400Regular, IBMPlexMono_500Medium } from "@expo-google-fonts/ibm-plex-mono";
-import { useFonts as useSansFonts, NotoSansKR_400Regular, NotoSansKR_500Medium } from "@expo-google-fonts/noto-sans-kr";
+import { useFonts as useSansFonts, NotoSansKR_400Regular, NotoSansKR_500Medium, NotoSansKR_700Bold } from "@expo-google-fonts/noto-sans-kr";
 import { useFonts as useEmojiFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -23,6 +23,7 @@ export default function App() {
   const [sansFontsLoaded] = useSansFonts({
     NotoSansKR_400Regular,
     NotoSansKR_500Medium,
+    NotoSansKR_700Bold,
   });
   // 별점/팁/리뷰 반응처럼 감성적인 자리에만 쓰는 이모지 폰트 — 토스가 자체
   // 스타일로 다시 그린 이모지 세트 (github.com/toss/tossface, 라이선스는

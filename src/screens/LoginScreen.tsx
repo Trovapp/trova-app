@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { AppText } from "@/components/AppText";
 import { oauthUrl } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { colors } from "@/lib/theme";
 
+// 디자인(2026-09): 로그인 전 첫 화면인데도 브랜드 요소가 하나도 없던 걸
+// 고쳤다 — 앱 아이콘 마크(핀+재생버튼) + Trova 워드마크(이 화면의 유일한
+// bold 지점) + 한 줄 가치 설명으로 첫인상을 만든다. 버튼은 각 로그인
+// 제공자 브랜드 색(카카오 노랑)/아웃라인(구글)을 그대로 유지 — 이건
+// OAuth 버튼의 정석 관례라 바꿀 이유가 없다.
 export function LoginScreen() {
   const { handleAuthCallback } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -31,39 +36,51 @@ export function LoginScreen() {
   }
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 12 }}>
-      <AppText weight="medium" style={{ fontSize: 24, marginBottom: 24, textAlign: "center" }}>
-        Trova에 로그인
-      </AppText>
-      <Pressable
-        onPress={() => handleLogin("kakao")}
-        disabled={isLoggingIn}
-        style={{
-          height: 48,
-          borderRadius: 12,
-          backgroundColor: colors.kakao,
-          justifyContent: "center",
-          alignItems: "center",
-          opacity: isLoggingIn ? 0.6 : 1,
-        }}
-      >
-        <AppText weight="medium">카카오로 시작하기</AppText>
-      </Pressable>
-      <Pressable
-        onPress={() => handleLogin("google")}
-        disabled={isLoggingIn}
-        style={{
-          height: 48,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: colors.border,
-          justifyContent: "center",
-          alignItems: "center",
-          opacity: isLoggingIn ? 0.6 : 1,
-        }}
-      >
-        <AppText weight="medium">Google로 계속하기</AppText>
-      </Pressable>
+    <View style={{ flex: 1, justifyContent: "center", padding: 24 }}>
+      <View style={{ alignItems: "center", marginBottom: 40 }}>
+        <Image
+          source={require("../../assets/icon.png")}
+          style={{ width: 88, height: 88, borderRadius: 20, marginBottom: 20 }}
+        />
+        <AppText weight="bold" style={{ fontSize: 32 }}>
+          Trova
+        </AppText>
+        <AppText style={{ marginTop: 8, fontSize: 14, color: colors.inkMuted, textAlign: "center" }}>
+          여행 영상 속 장소를 지도로 옮겨드려요
+        </AppText>
+      </View>
+
+      <View style={{ gap: 12 }}>
+        <Pressable
+          onPress={() => handleLogin("kakao")}
+          disabled={isLoggingIn}
+          style={{
+            height: 48,
+            borderRadius: 12,
+            backgroundColor: colors.kakao,
+            justifyContent: "center",
+            alignItems: "center",
+            opacity: isLoggingIn ? 0.6 : 1,
+          }}
+        >
+          <AppText weight="medium">카카오로 시작하기</AppText>
+        </Pressable>
+        <Pressable
+          onPress={() => handleLogin("google")}
+          disabled={isLoggingIn}
+          style={{
+            height: 48,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: colors.border,
+            justifyContent: "center",
+            alignItems: "center",
+            opacity: isLoggingIn ? 0.6 : 1,
+          }}
+        >
+          <AppText weight="medium">Google로 계속하기</AppText>
+        </Pressable>
+      </View>
     </View>
   );
 }
