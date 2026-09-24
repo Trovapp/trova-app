@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
-import { FlatList, Platform, View } from "react-native";
+import { FlatList, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -9,11 +10,6 @@ import { getPendingJobs, getPlaces, type PendingJob, type Place } from "@/lib/ap
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"PlacesList">;
-
-const CARD_SHADOW = Platform.select({
-  ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3 },
-  android: { elevation: 2 },
-});
 
 const PLATFORM_LABEL: Record<Place["sourcePlatform"], string> = {
   INSTAGRAM: "인스타그램",
@@ -57,6 +53,9 @@ function placePreview(places: Place[]): string {
   return rest > 0 ? `${names.join(", ")} 외 ${rest}곳` : names.join(", ");
 }
 
+// 진행 중인 작업은 완료된 영상들과 시각적으로 구분되게(진행률 바가 있는
+// 살아있는 상태라) 옅은 배경 블록으로 남겨두고, 완료된 목록만 구분선 리스트로
+// 낮춘다(2026-09 디자인 — TripsListScreen과 동일한 원칙).
 function PendingJobCard({ job }: { job: PendingJob }) {
   const isFailed = job.status === "FAILED";
   // 백엔드가 진짜로 도달한 파이프라인 단계만 반영한다 — 아직 EXTRACTING도 시작 전(PENDING)이면
@@ -65,16 +64,7 @@ function PendingJobCard({ job }: { job: PendingJob }) {
   const message = isFailed ? "처리에 실패했어요" : job.stageMessage ?? "처리 대기 중이에요";
 
   return (
-    <View
-      style={{
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.bg,
-        ...CARD_SHADOW,
-      }}
-    >
+    <View style={{ padding: 16, borderRadius: 12, backgroundColor: colors.bgMuted }}>
       <AppText style={{ fontSize: 11, color: colors.inkMuted, marginBottom: 2 }}>
         {PLATFORM_LABEL[job.sourcePlatform]}
       </AppText>
@@ -93,28 +83,29 @@ function PendingJobCard({ job }: { job: PendingJob }) {
   );
 }
 
-function VideoGroupCard({ group, onPress }: { group: VideoGroup; onPress: () => void }) {
+function VideoGroupCard({ group, onPress, isFirst }: { group: VideoGroup; onPress: () => void; isFirst: boolean }) {
   return (
     <PressableScale
       onPress={onPress}
       style={{
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.bg,
-        ...CARD_SHADOW,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingVertical: 14,
+        borderTopWidth: isFirst ? 0 : 1,
+        borderTopColor: colors.borderSubtle,
       }}
     >
-      <AppText style={{ fontSize: 11, color: colors.inkMuted, marginBottom: 2 }}>
-        {PLATFORM_LABEL[group.sourcePlatform]}
-      </AppText>
-      <AppText weight="medium" numberOfLines={1}>
-        {group.title ?? group.sourceUrl}
-      </AppText>
-      <AppText mono style={{ marginTop: 4, fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
-        {placePreview(group.places)}
-      </AppText>
+      <View style={{ flex: 1, gap: 2 }}>
+        <AppText style={{ fontSize: 11, color: colors.inkMuted }}>{PLATFORM_LABEL[group.sourcePlatform]}</AppText>
+        <AppText weight="medium" numberOfLines={1}>
+          {group.title ?? group.sourceUrl}
+        </AppText>
+        <AppText mono style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+          {placePreview(group.places)}
+        </AppText>
+      </View>
+      <Feather name="chevron-right" size={18} color={colors.inkMuted} />
     </PressableScale>
   );
 }
@@ -152,12 +143,12 @@ export function PlacesListScreen({ navigation }: Props) {
 
   return (
     <FlatList
-      contentContainerStyle={{ padding: 16, gap: 12 }}
+      contentContainerStyle={{ padding: 16 }}
       data={videoGroups}
       keyExtractor={(item) => String(item.jobId)}
       ListHeaderComponent={
         pendingJobs.length > 0 ? (
-          <View style={{ gap: 12, marginBottom: 12 }}>
+          <View style={{ gap: 12, marginBottom: 20 }}>
             {pendingJobs.map((job) => (
               <PendingJobCard key={job.jobId} job={job} />
             ))}
@@ -165,8 +156,12 @@ export function PlacesListScreen({ navigation }: Props) {
         ) : null
       }
       ListEmptyComponent={<AppText style={{ textAlign: "center", marginTop: 32 }}>아직 저장한 영상이 없어요.</AppText>}
-      renderItem={({ item }) => (
-        <VideoGroupCard group={item} onPress={() => navigation.navigate("VideoGroup", { jobId: item.jobId })} />
+      renderItem={({ item, index }) => (
+        <VideoGroupCard
+          group={item}
+          isFirst={index === 0}
+          onPress={() => navigation.navigate("VideoGroup", { jobId: item.jobId })}
+        />
       )}
     />
   );

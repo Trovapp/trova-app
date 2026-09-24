@@ -1,5 +1,6 @@
-import { FlatList, Platform, View } from "react-native";
+import { FlatList, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
+import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
@@ -9,11 +10,9 @@ import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"TripsList">;
 
-const CARD_SHADOW = Platform.select({
-  ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3 },
-  android: { elevation: 2 },
-});
-
+// 디자인(2026-09): 예전엔 테두리+그림자 카드로 반복하던 걸, 홈 화면 "최근 여행"과
+// 같은 구분선 리스트로 통일했다 — 같은 데이터(여행)가 화면마다 다르게 보이던
+// 불일치를 없앤다. "새 여행 만들기"만 강한 accent 버튼으로 남기고 나머지는 낮춘다.
 export function TripsListScreen({ navigation }: Props) {
   const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: listTrips });
 
@@ -40,14 +39,14 @@ export function TripsListScreen({ navigation }: Props) {
 
   return (
     <FlatList
-      contentContainerStyle={{ padding: 16, gap: 12 }}
+      contentContainerStyle={{ padding: 16 }}
       data={trips}
       keyExtractor={(item) => String(item.id)}
       ListHeaderComponent={
         <PressableScale
           onPress={() => navigation.navigate("NewTrip")}
           style={{
-            marginBottom: 4,
+            marginBottom: 20,
             height: 48,
             borderRadius: 12,
             backgroundColor: colors.accent,
@@ -61,24 +60,29 @@ export function TripsListScreen({ navigation }: Props) {
         </PressableScale>
       }
       ListEmptyComponent={<AppText style={{ textAlign: "center", marginTop: 32 }}>아직 만든 여행이 없어요.</AppText>}
-      renderItem={({ item }) => (
+      renderItem={({ item, index }) => (
         <PressableScale
           onPress={() => navigation.navigate("TripDetail", { id: item.id })}
           style={{
-            padding: 16,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: colors.border,
-            backgroundColor: colors.bg,
-            ...CARD_SHADOW,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingVertical: 14,
+            borderTopWidth: index === 0 ? 0 : 1,
+            borderTopColor: colors.borderSubtle,
           }}
         >
-          <AppText weight="medium">{item.title}</AppText>
-          {item.startDate && (
-            <AppText style={{ marginTop: 4, fontSize: 12, color: colors.inkMuted }}>
-              {item.startDate} ~ {item.endDate}
+          <View style={{ flex: 1, gap: 2 }}>
+            <AppText weight="medium" numberOfLines={1}>
+              {item.title}
             </AppText>
-          )}
+            {item.startDate && (
+              <AppText mono style={{ fontSize: 12, color: colors.inkMuted }}>
+                {item.startDate} ~ {item.endDate}
+              </AppText>
+            )}
+          </View>
+          <Feather name="chevron-right" size={18} color={colors.inkMuted} />
         </PressableScale>
       )}
     />
