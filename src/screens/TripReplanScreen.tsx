@@ -8,6 +8,7 @@ import { Emoji } from "@/components/Emoji";
 import { ProgressHero } from "@/components/ProgressHero";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
+import { Skeleton } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
 import { getTrip, getTripReplanJob, optimizeTripRoute, replacePlace, type TripReplanResult } from "@/lib/api/trips";
 import { categoryLabel } from "@/lib/placeCategory";
@@ -91,8 +92,10 @@ export function TripReplanScreen({ route, navigation }: Props) {
 
   if (replanQuery.isLoading || !job) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <AppText>불러오는 중...</AppText>
+      <View style={{ flex: 1, padding: 24, gap: 16, justifyContent: "center" }}>
+        <Skeleton style={{ width: "50%", height: 22, alignSelf: "center" }} />
+        <Skeleton style={{ width: "80%", height: 14, alignSelf: "center" }} />
+        <Skeleton style={{ height: 10, borderRadius: 5, marginTop: 8 }} />
       </View>
     );
   }

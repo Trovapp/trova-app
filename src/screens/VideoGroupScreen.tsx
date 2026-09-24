@@ -9,6 +9,7 @@ import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
 import { PlaceReviewSheet } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { Skeleton } from "@/components/Skeleton";
 import { haversineDistanceKm } from "@/lib/geo";
 import { generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
 import { confirmTrip } from "@/lib/api/trips";
@@ -176,8 +177,11 @@ export function VideoGroupScreen({ route, navigation }: Props) {
 
   if (placesQuery.isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <AppText>불러오는 중...</AppText>
+      <View style={{ flex: 1, padding: 16, gap: 12 }}>
+        <Skeleton style={{ width: "70%", height: 20 }} />
+        <Skeleton style={{ height: 180, borderRadius: 12 }} />
+        <Skeleton style={{ height: 64, borderRadius: 12 }} />
+        <Skeleton style={{ height: 64, borderRadius: 12 }} />
       </View>
     );
   }

@@ -6,6 +6,7 @@ import { AppText } from "@/components/AppText";
 import { Emoji } from "@/components/Emoji";
 import { PressableScale } from "@/components/PressableScale";
 import { ProgressHero } from "@/components/ProgressHero";
+import { Skeleton } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
 import { getPendingJobs, type PendingJob } from "@/lib/api/places";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -97,8 +98,10 @@ export function ProcessingScreen({ route, navigation }: Props) {
 
   if (pendingQuery.isLoading || !job) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <AppText>불러오는 중...</AppText>
+      <View style={{ flex: 1, padding: 24, gap: 16, justifyContent: "center" }}>
+        <Skeleton style={{ width: "50%", height: 22, alignSelf: "center" }} />
+        <Skeleton style={{ width: "80%", height: 14, alignSelf: "center" }} />
+        <Skeleton style={{ height: 10, borderRadius: 5, marginTop: 8 }} />
       </View>
     );
   }

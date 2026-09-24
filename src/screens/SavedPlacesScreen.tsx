@@ -11,12 +11,14 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
+import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { RatingBadge } from "@/components/RatingBadge";
+import { Skeleton } from "@/components/Skeleton";
 import {
   addBookmark,
   listBookmarks,
@@ -54,6 +56,7 @@ export function SavedPlacesScreen() {
   const [menuBookmarkId, setMenuBookmarkId] = useState<number | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
   const snapPoints = useMemo(() => ["18%", "55%", "90%"], []);
+  const reducedMotion = useReducedMotion();
 
   // 북마크 메뉴 시트 — menuBookmarkId(원시 상태)로 여닫는다. menuBookmark(파생값)는
   // 이 아래 early return들 다음에 계산되므로, 훅 순서 규칙상 그걸 의존성으로 쓰는
@@ -69,8 +72,15 @@ export function SavedPlacesScreen() {
 
   if (bookmarksQuery.isLoading || foldersQuery.isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <AppText>불러오는 중...</AppText>
+      <View style={{ flex: 1 }}>
+        <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+          <Skeleton style={{ height: 40, borderRadius: 10 }} />
+        </View>
+        <Skeleton style={{ flex: 1 }} />
+        <View style={{ padding: 16, gap: 12, backgroundColor: colors.bg }}>
+          <Skeleton style={{ height: 60, borderRadius: 12 }} />
+          <Skeleton style={{ height: 60, borderRadius: 12 }} />
+        </View>
       </View>
     );
   }
@@ -258,49 +268,51 @@ export function SavedPlacesScreen() {
                 {searchError && <AppText style={{ color: colors.accent }}>{searchError}</AppText>}
               </View>
             }
-            renderItem={({ item }: { item: RecommendedPlace }) => (
-              <View
-                style={{
-                  padding: 12,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  gap: 6,
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                  <View style={{ flex: 1 }}>
-                    <AppText weight="medium" numberOfLines={1}>
-                      {item.name}
-                    </AppText>
-                    {item.address && (
-                      <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
-                        {item.address}
+            renderItem={({ item, index }: { item: RecommendedPlace; index: number }) => (
+              <Animated.View entering={reducedMotion ? undefined : FadeInDown.delay(index * 60).springify().damping(16)}>
+                <View
+                  style={{
+                    padding: 12,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    gap: 6,
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <AppText weight="medium" numberOfLines={1}>
+                        {item.name}
                       </AppText>
-                    )}
-                    {item.rating !== null && (
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-                        <RatingBadge rating={item.rating} />
-                        {item.userRatingCount !== null && (
-                          <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                            (리뷰 {item.userRatingCount}개)
-                          </AppText>
-                        )}
-                      </View>
-                    )}
+                      {item.address && (
+                        <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+                          {item.address}
+                        </AppText>
+                      )}
+                      {item.rating !== null && (
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                          <RatingBadge rating={item.rating} />
+                          {item.userRatingCount !== null && (
+                            <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                              (리뷰 {item.userRatingCount}개)
+                            </AppText>
+                          )}
+                        </View>
+                      )}
+                    </View>
+                    <PressableScale onPress={() => setFolderPickerTarget({ mode: "add", placeId: item.id })}>
+                      <Feather
+                        name="star"
+                        size={18}
+                        color={bookmarkedPlaceIds.has(item.id) ? colors.accent : colors.border}
+                      />
+                    </PressableScale>
                   </View>
-                  <PressableScale onPress={() => setFolderPickerTarget({ mode: "add", placeId: item.id })}>
-                    <Feather
-                      name="star"
-                      size={18}
-                      color={bookmarkedPlaceIds.has(item.id) ? colors.accent : colors.border}
-                    />
+                  <PressableScale onPress={() => setReviewPlaceId(item.id)}>
+                    <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
                   </PressableScale>
                 </View>
-                <PressableScale onPress={() => setReviewPlaceId(item.id)}>
-                  <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
-                </PressableScale>
-              </View>
+              </Animated.View>
             )}
           />
         ) : activeFolderId === null ? (
@@ -325,23 +337,25 @@ export function SavedPlacesScreen() {
                 </PressableScale>
               </View>
             }
-            renderItem={({ item }: { item: BookmarkFolder }) => (
-              <PressableScale
-                onPress={() => setActiveFolderId(item.id)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: 14,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-              >
-                <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: item.color }} />
-                <AppText style={{ flex: 1 }}>{item.name}</AppText>
-                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{item.placeCount}개</AppText>
-              </PressableScale>
+            renderItem={({ item, index }: { item: BookmarkFolder; index: number }) => (
+              <Animated.View entering={reducedMotion ? undefined : FadeInDown.delay(index * 60).springify().damping(16)}>
+                <PressableScale
+                  onPress={() => setActiveFolderId(item.id)}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: 14,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: item.color }} />
+                  <AppText style={{ flex: 1 }}>{item.name}</AppText>
+                  <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{item.placeCount}개</AppText>
+                </PressableScale>
+              </Animated.View>
             )}
           />
         ) : (
@@ -376,39 +390,41 @@ export function SavedPlacesScreen() {
                 이 폴더엔 아직 저장한 장소가 없어요.
               </AppText>
             }
-            renderItem={({ item }: { item: Bookmark }) => (
-              <PressableScale
-                onPress={() => setReviewPlaceId(item.placeId)}
-                style={{
-                  flexDirection: "row",
-                  gap: 8,
-                  padding: 12,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-              >
-                <View style={{ flex: 1, gap: 2 }}>
-                  <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
-                    <AppText weight="medium" numberOfLines={1} style={{ flexShrink: 1 }}>
-                      {item.placeName}
-                    </AppText>
-                    {categoryLabel(item.category) && (
+            renderItem={({ item, index }: { item: Bookmark; index: number }) => (
+              <Animated.View entering={reducedMotion ? undefined : FadeInDown.delay(index * 60).springify().damping(16)}>
+                <PressableScale
+                  onPress={() => setReviewPlaceId(item.placeId)}
+                  style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    padding: 12,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
+                      <AppText weight="medium" numberOfLines={1} style={{ flexShrink: 1 }}>
+                        {item.placeName}
+                      </AppText>
+                      {categoryLabel(item.category) && (
+                        <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+                          {categoryLabel(item.category)}
+                        </AppText>
+                      )}
+                    </View>
+                    {item.address && (
                       <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
-                        {categoryLabel(item.category)}
+                        {item.address}
                       </AppText>
                     )}
                   </View>
-                  {item.address && (
-                    <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
-                      {item.address}
-                    </AppText>
-                  )}
-                </View>
-                <PressableScale onPress={() => setMenuBookmarkId(item.id)} hitSlop={10} style={{ paddingHorizontal: 4 }}>
-                  <AppText style={{ fontSize: 16, color: colors.inkMuted }}>⋮</AppText>
+                  <PressableScale onPress={() => setMenuBookmarkId(item.id)} hitSlop={10} style={{ paddingHorizontal: 4 }}>
+                    <AppText style={{ fontSize: 16, color: colors.inkMuted }}>⋮</AppText>
+                  </PressableScale>
                 </PressableScale>
-              </PressableScale>
+              </Animated.View>
             )}
           />
         )}

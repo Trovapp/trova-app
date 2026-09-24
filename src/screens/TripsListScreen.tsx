@@ -1,9 +1,11 @@
 import { FlatList, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
+import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { listTrips } from "@/lib/api/trips";
 import { colors } from "@/lib/theme";
 import type { MainTabScreenProps } from "@/navigation/types";
@@ -15,11 +17,15 @@ type Props = MainTabScreenProps<"TripsList">;
 // 불일치를 없앤다. "새 여행 만들기"만 강한 accent 버튼으로 남기고 나머지는 낮춘다.
 export function TripsListScreen({ navigation }: Props) {
   const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: listTrips });
+  const reducedMotion = useReducedMotion();
 
   if (tripsQuery.isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <AppText>불러오는 중...</AppText>
+      <View style={{ padding: 16 }}>
+        <Skeleton style={{ height: 48, borderRadius: 12, marginBottom: 20 }} />
+        <SkeletonRow />
+        <SkeletonRow />
+        <SkeletonRow />
       </View>
     );
   }
@@ -61,29 +67,31 @@ export function TripsListScreen({ navigation }: Props) {
       }
       ListEmptyComponent={<AppText style={{ textAlign: "center", marginTop: 32 }}>아직 만든 여행이 없어요.</AppText>}
       renderItem={({ item, index }) => (
-        <PressableScale
-          onPress={() => navigation.navigate("TripDetail", { id: item.id })}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingVertical: 14,
-            borderTopWidth: index === 0 ? 0 : 1,
-            borderTopColor: colors.borderSubtle,
-          }}
-        >
-          <View style={{ flex: 1, gap: 2 }}>
-            <AppText weight="medium" numberOfLines={1}>
-              {item.title}
-            </AppText>
-            {item.startDate && (
-              <AppText mono style={{ fontSize: 12, color: colors.inkMuted }}>
-                {item.startDate} ~ {item.endDate}
+        <Animated.View entering={reducedMotion ? undefined : FadeInDown.delay(index * 60).springify().damping(16)}>
+          <PressableScale
+            onPress={() => navigation.navigate("TripDetail", { id: item.id })}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingVertical: 14,
+              borderTopWidth: index === 0 ? 0 : 1,
+              borderTopColor: colors.borderSubtle,
+            }}
+          >
+            <View style={{ flex: 1, gap: 2 }}>
+              <AppText weight="medium" numberOfLines={1}>
+                {item.title}
               </AppText>
-            )}
-          </View>
-          <Feather name="chevron-right" size={18} color={colors.inkMuted} />
-        </PressableScale>
+              {item.startDate && (
+                <AppText mono style={{ fontSize: 12, color: colors.inkMuted }}>
+                  {item.startDate} ~ {item.endDate}
+                </AppText>
+              )}
+            </View>
+            <Feather name="chevron-right" size={18} color={colors.inkMuted} />
+          </PressableScale>
+        </Animated.View>
       )}
     />
   );

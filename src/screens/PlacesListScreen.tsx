@@ -2,9 +2,11 @@ import { useEffect, useRef } from "react";
 import { FlatList, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
+import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
+import { SkeletonRow } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
 import { getPendingJobs, getPlaces, type PendingJob, type Place } from "@/lib/api/places";
 import type { MainTabScreenProps } from "@/navigation/types";
@@ -83,35 +85,50 @@ function PendingJobCard({ job }: { job: PendingJob }) {
   );
 }
 
-function VideoGroupCard({ group, onPress, isFirst }: { group: VideoGroup; onPress: () => void; isFirst: boolean }) {
+function VideoGroupCard({
+  group,
+  onPress,
+  isFirst,
+  index,
+  reducedMotion,
+}: {
+  group: VideoGroup;
+  onPress: () => void;
+  isFirst: boolean;
+  index: number;
+  reducedMotion: boolean;
+}) {
   return (
-    <PressableScale
-      onPress={onPress}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingVertical: 14,
-        borderTopWidth: isFirst ? 0 : 1,
-        borderTopColor: colors.borderSubtle,
-      }}
-    >
-      <View style={{ flex: 1, gap: 2 }}>
-        <AppText style={{ fontSize: 11, color: colors.inkMuted }}>{PLATFORM_LABEL[group.sourcePlatform]}</AppText>
-        <AppText weight="medium" numberOfLines={1}>
-          {group.title ?? group.sourceUrl}
-        </AppText>
-        <AppText mono style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
-          {placePreview(group.places)}
-        </AppText>
-      </View>
-      <Feather name="chevron-right" size={18} color={colors.inkMuted} />
-    </PressableScale>
+    <Animated.View entering={reducedMotion ? undefined : FadeInDown.delay(index * 60).springify().damping(16)}>
+      <PressableScale
+        onPress={onPress}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingVertical: 14,
+          borderTopWidth: isFirst ? 0 : 1,
+          borderTopColor: colors.borderSubtle,
+        }}
+      >
+        <View style={{ flex: 1, gap: 2 }}>
+          <AppText style={{ fontSize: 11, color: colors.inkMuted }}>{PLATFORM_LABEL[group.sourcePlatform]}</AppText>
+          <AppText weight="medium" numberOfLines={1}>
+            {group.title ?? group.sourceUrl}
+          </AppText>
+          <AppText mono style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+            {placePreview(group.places)}
+          </AppText>
+        </View>
+        <Feather name="chevron-right" size={18} color={colors.inkMuted} />
+      </PressableScale>
+    </Animated.View>
   );
 }
 
 export function PlacesListScreen({ navigation }: Props) {
   const queryClient = useQueryClient();
+  const reducedMotion = useReducedMotion();
   const placesQuery = useQuery({ queryKey: ["places"], queryFn: getPlaces });
   const pendingQuery = useQuery({
     queryKey: ["pendingJobs"],
@@ -131,8 +148,10 @@ export function PlacesListScreen({ navigation }: Props) {
 
   if (placesQuery.isLoading || pendingQuery.isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <AppText>불러오는 중...</AppText>
+      <View style={{ padding: 16 }}>
+        <SkeletonRow />
+        <SkeletonRow />
+        <SkeletonRow />
       </View>
     );
   }
@@ -160,6 +179,8 @@ export function PlacesListScreen({ navigation }: Props) {
         <VideoGroupCard
           group={item}
           isFirst={index === 0}
+          index={index}
+          reducedMotion={reducedMotion}
           onPress={() => navigation.navigate("VideoGroup", { jobId: item.jobId })}
         />
       )}

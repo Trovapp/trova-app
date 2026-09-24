@@ -20,6 +20,7 @@ import { PlaceRow } from "@/components/PlaceRow";
 import { PlaceReviewSheet } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { RatingBadge } from "@/components/RatingBadge";
+import { Skeleton } from "@/components/Skeleton";
 import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
 import { getDayColor } from "@/lib/itinerary";
 import { parseTimeToDate, toTimeString } from "@/lib/date";
@@ -112,8 +113,11 @@ export function TripDetailScreen({ route, navigation }: Props) {
 
   if (tripQuery.isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <AppText>불러오는 중...</AppText>
+      <View style={{ flex: 1, padding: 16, gap: 12 }}>
+        <Skeleton style={{ width: "60%", height: 20 }} />
+        <Skeleton style={{ height: 180, borderRadius: 12 }} />
+        <Skeleton style={{ height: 64, borderRadius: 12 }} />
+        <Skeleton style={{ height: 64, borderRadius: 12 }} />
       </View>
     );
   }
