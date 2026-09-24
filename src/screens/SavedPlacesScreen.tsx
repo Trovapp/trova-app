@@ -11,7 +11,7 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
-import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
 import { InlineMap } from "@/components/InlineMap";
@@ -19,6 +19,8 @@ import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { RatingBadge } from "@/components/RatingBadge";
 import { Skeleton } from "@/components/Skeleton";
+import { useListEntrance } from "@/hooks/useListEntrance";
+import { haptics } from "@/lib/haptics";
 import {
   addBookmark,
   listBookmarks,
@@ -56,7 +58,7 @@ export function SavedPlacesScreen() {
   const [menuBookmarkId, setMenuBookmarkId] = useState<number | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
   const snapPoints = useMemo(() => ["18%", "55%", "90%"], []);
-  const reducedMotion = useReducedMotion();
+  const entranceFor = useListEntrance();
 
   // 북마크 메뉴 시트 — menuBookmarkId(원시 상태)로 여닫는다. menuBookmark(파생값)는
   // 이 아래 early return들 다음에 계산되므로, 훅 순서 규칙상 그걸 의존성으로 쓰는
@@ -146,6 +148,7 @@ export function SavedPlacesScreen() {
   const bookmarkedPlaceIds = new Set(bookmarks.map((b) => b.placeId));
 
   async function handleRemove(id: number) {
+    haptics.warning();
     setRemoveError(null);
     try {
       await removeBookmark(id);
@@ -269,7 +272,7 @@ export function SavedPlacesScreen() {
               </View>
             }
             renderItem={({ item, index }: { item: RecommendedPlace; index: number }) => (
-              <Animated.View entering={reducedMotion ? undefined : FadeInDown.delay(index * 60).springify().damping(16)}>
+              <Animated.View entering={entranceFor(item.id, index)}>
                 <View
                   style={{
                     padding: 12,
@@ -338,7 +341,7 @@ export function SavedPlacesScreen() {
               </View>
             }
             renderItem={({ item, index }: { item: BookmarkFolder; index: number }) => (
-              <Animated.View entering={reducedMotion ? undefined : FadeInDown.delay(index * 60).springify().damping(16)}>
+              <Animated.View entering={entranceFor(item.id, index)}>
                 <PressableScale
                   onPress={() => setActiveFolderId(item.id)}
                   style={{
@@ -391,7 +394,7 @@ export function SavedPlacesScreen() {
               </AppText>
             }
             renderItem={({ item, index }: { item: Bookmark; index: number }) => (
-              <Animated.View entering={reducedMotion ? undefined : FadeInDown.delay(index * 60).springify().damping(16)}>
+              <Animated.View entering={entranceFor(item.id, index)}>
                 <PressableScale
                   onPress={() => setReviewPlaceId(item.placeId)}
                   style={{
@@ -440,7 +443,10 @@ export function SavedPlacesScreen() {
       <BottomSheetModal
         ref={menuSheetRef}
         enableDynamicSizing
-        onDismiss={() => setMenuBookmarkId(null)}
+        onDismiss={() => {
+          haptics.light();
+          setMenuBookmarkId(null);
+        }}
         backdropComponent={(props: BottomSheetBackdropProps) => (
           <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
         )}

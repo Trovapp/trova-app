@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import { ProgressHero } from "@/components/ProgressHero";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
 import { Skeleton } from "@/components/Skeleton";
+import { haptics } from "@/lib/haptics";
 import { colors } from "@/lib/theme";
 import { getTrip, getTripReplanJob, optimizeTripRoute, replacePlace, type TripReplanResult } from "@/lib/api/trips";
 import { categoryLabel } from "@/lib/placeCategory";
@@ -89,6 +90,18 @@ export function TripReplanScreen({ route, navigation }: Props) {
   function handleSkip(tripPlaceId: number) {
     setCardStatus((s) => ({ ...s, [tripPlaceId]: "skipped" }));
   }
+
+  // 재구성은 폴링으로 진행되는 백그라운드 작업이라, 완료 알림은 사용자의 탭이 아니라
+  // 상태가 PENDING/PROCESSING → DONE으로 바뀌는 순간에 붙는다 — 그 전환을 한 번만
+  // 잡아내려고 이전 상태를 ref로 들고 비교한다.
+  const previousStatusRef = useRef<string | null>(null);
+  useEffect(() => {
+    const status = replanQuery.data?.status;
+    if (status && previousStatusRef.current && previousStatusRef.current !== "DONE" && status === "DONE") {
+      haptics.success();
+    }
+    if (status) previousStatusRef.current = status;
+  }, [replanQuery.data?.status]);
 
   if (replanQuery.isLoading || !job) {
     return (

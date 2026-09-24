@@ -5,6 +5,7 @@ import { Feather } from "@expo/vector-icons";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
+import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
@@ -146,7 +147,7 @@ export function HomeScreen({ navigation }: Props) {
                   key={trip.id}
                   entering={reducedMotion ? undefined : FadeInDown.delay(i * 60).springify().damping(16)}
                 >
-                  <PressableScale
+                  <PressableRow
                     onPress={() => navigation.navigate("TripDetail", { id: trip.id })}
                     style={{
                       flexDirection: "row",
@@ -168,7 +169,7 @@ export function HomeScreen({ navigation }: Props) {
                       )}
                     </View>
                     <Feather name="chevron-right" size={18} color={colors.inkMuted} />
-                  </PressableScale>
+                  </PressableRow>
                 </Animated.View>
               ))}
             </View>

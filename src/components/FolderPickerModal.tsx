@@ -14,6 +14,7 @@ import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { DISTINCT_COLORS } from "@/lib/colorPresets";
 import { createFolder, listFolders } from "@/lib/api/bookmarks";
+import { haptics } from "@/lib/haptics";
 import { colors } from "@/lib/theme";
 
 export function FolderPickerModal({
@@ -72,6 +73,7 @@ export function FolderPickerModal({
       ref={ref}
       snapPoints={["70%"]}
       onDismiss={() => {
+        haptics.light();
         reset();
         onClose();
       }}

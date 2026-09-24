@@ -11,6 +11,7 @@ import { PlaceReviewSheet } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
 import { haversineDistanceKm } from "@/lib/geo";
+import { haptics } from "@/lib/haptics";
 import { generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
 import { confirmTrip } from "@/lib/api/trips";
 import { toDateString } from "@/lib/date";
@@ -102,6 +103,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   // 상세 화면(TripDetailScreen)의 드래그 저장 방식과 동일하다.
   async function handleDragEnd({ data, from, to }: { data: Place[]; from: number; to: number }) {
     if (from === to || actionPending) return;
+    haptics.light();
     const previous = itineraryPlaces;
     setItineraryError(null);
     const orderById = new Map(data.map((p, i) => [p.id, i]));
@@ -134,6 +136,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     setTripError(null);
     try {
       const trip = await confirmTrip(group[0].jobId, tripTitle.trim() || title, toDateString(new Date()));
+      haptics.success();
       // replace는 아래에 깔린 여행 목록 화면을 unmount하지 않는다 — 무효화해두지 않으면
       // 뒤로 가기로 돌아왔을 때 방금 확정한 여행이 목록에 없다.
       await queryClient.invalidateQueries({ queryKey: ["trips"] });

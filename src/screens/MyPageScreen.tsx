@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Alert, Image, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
-import { PressableScale } from "@/components/PressableScale";
+import { PressableRow } from "@/components/PressableRow";
+import { haptics } from "@/lib/haptics";
 import { withdraw } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { colors } from "@/lib/theme";
@@ -37,6 +38,7 @@ export function MyPageScreen() {
 
   async function handleWithdraw() {
     if (withdrawing) return;
+    haptics.warning();
     setWithdrawing(true);
     try {
       await withdraw();
@@ -78,7 +80,7 @@ export function MyPageScreen() {
       </View>
 
       <View>
-        <PressableScale
+        <PressableRow
           onPress={confirmLogout}
           style={{
             flexDirection: "row",
@@ -91,8 +93,8 @@ export function MyPageScreen() {
         >
           <AppText>로그아웃</AppText>
           <Feather name="chevron-right" size={18} color={colors.inkMuted} />
-        </PressableScale>
-        <PressableScale
+        </PressableRow>
+        <PressableRow
           onPress={confirmWithdraw}
           disabled={withdrawing}
           style={{
@@ -107,7 +109,7 @@ export function MyPageScreen() {
         >
           <AppText style={{ color: colors.inkMuted }}>회원 탈퇴</AppText>
           <Feather name="chevron-right" size={18} color={colors.inkMuted} />
-        </PressableScale>
+        </PressableRow>
       </View>
     </View>
   );

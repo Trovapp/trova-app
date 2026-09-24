@@ -23,6 +23,7 @@ import { RatingBadge } from "@/components/RatingBadge";
 import { Skeleton } from "@/components/Skeleton";
 import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
 import { getDayColor } from "@/lib/itinerary";
+import { haptics } from "@/lib/haptics";
 import { parseTimeToDate, toTimeString } from "@/lib/date";
 import { colors } from "@/lib/theme";
 import { addBookmark, listBookmarks, listFolders, removeBookmark } from "@/lib/api/bookmarks";
@@ -199,6 +200,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
   }
 
   async function handleRemoveBookmark(bookmarkId: number) {
+    haptics.warning();
     try {
       await removeBookmark(bookmarkId);
       await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
@@ -232,6 +234,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
   // 서버 상태로 다시 맞춘다(reload).
   async function handleDragEnd({ data, from, to }: { data: TripPlace[]; from: number; to: number }) {
     if (from === to || !activeDayData) return;
+    haptics.light();
 
     queryClient.setQueryData<TripDetail>(["trip", id], (current) => {
       if (!current) return current;
@@ -260,6 +263,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
 
   async function handleRemove(placeId: number) {
     if (busy) return;
+    haptics.warning();
     setBusy(true);
     setError(null);
     try {

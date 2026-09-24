@@ -9,6 +9,7 @@ import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { PressableScale } from "@/components/PressableScale";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
+import { haptics } from "@/lib/haptics";
 import { categoryLabel } from "@/lib/placeCategory";
 import { colors } from "@/lib/theme";
 import { replacePlace, type AlternativeCandidate } from "@/lib/api/trips";
@@ -299,6 +300,7 @@ export function ConversationSheet({
   // 시트가 실제로 닫힐 때(사용자가 끌어내리거나 onClose 경로)만 세션을 정리한다 —
   // 열려있는 동안의 리렌더에서 매번 호출되면 안 되므로 onClose 콜백 쪽에서만 부른다.
   function handleSheetClose() {
+    haptics.light();
     if (sessionIdRef.current) {
       endConversationSession(sessionIdRef.current);
     }

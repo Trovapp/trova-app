@@ -4,6 +4,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
+import { haptics } from "@/lib/haptics";
 import { createTrip } from "@/lib/api/trips";
 import { toDateString } from "@/lib/date";
 import { colors } from "@/lib/theme";
@@ -28,6 +29,7 @@ export function NewTripScreen({ navigation }: Props) {
     setError(null);
     try {
       const trip = await createTrip(title.trim(), toDateString(startDate), toDateString(endDate));
+      haptics.success();
       // replace는 아래에 깔린 여행 목록 화면을 unmount하지 않는다 — 무효화해두지 않으면
       // 뒤로 가기로 돌아왔을 때 방금 만든 여행이 목록에 없다.
       await queryClient.invalidateQueries({ queryKey: ["trips"] });

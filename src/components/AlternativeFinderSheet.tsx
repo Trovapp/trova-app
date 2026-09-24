@@ -10,6 +10,7 @@ import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
+import { haptics } from "@/lib/haptics";
 import { categoryLabel } from "@/lib/placeCategory";
 import { colors } from "@/lib/theme";
 import {
@@ -216,7 +217,17 @@ export function AlternativeFinderSheet({
       .join(" · ") || "필터 설정 안 함";
 
   return (
-    <BottomSheet ref={sheetRef} index={-1} snapPoints={SNAP_POINTS} enableDynamicSizing={false} enablePanDownToClose onClose={onClose}>
+    <BottomSheet
+      ref={sheetRef}
+      index={-1}
+      snapPoints={SNAP_POINTS}
+      enableDynamicSizing={false}
+      enablePanDownToClose
+      onClose={() => {
+        haptics.light();
+        onClose();
+      }}
+    >
       <BottomSheetScrollView ref={scrollRef} contentContainerStyle={{ padding: 20, gap: 16 }}>
         {reviewCandidateId !== null ? (
           <>

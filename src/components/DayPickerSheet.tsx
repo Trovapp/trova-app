@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView, type BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
+import { haptics } from "@/lib/haptics";
 import { colors } from "@/lib/theme";
 
 type DayPickerSheetProps = {
@@ -32,7 +33,10 @@ export function DayPickerSheet({ visible, dayNumbers, currentDay, onSelect, onCl
     <BottomSheetModal
       ref={ref}
       enableDynamicSizing
-      onDismiss={onClose}
+      onDismiss={() => {
+        haptics.light();
+        onClose();
+      }}
       backdropComponent={(props: BottomSheetBackdropProps) => (
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
       )}

@@ -11,6 +11,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { RatingBadge } from "@/components/RatingBadge";
 import { getPlaceDetails } from "@/lib/api/recommendations";
 import { getTripPlaceDetails } from "@/lib/api/trips";
+import { haptics } from "@/lib/haptics";
 import { categoryLabel } from "@/lib/placeCategory";
 import { colors } from "@/lib/theme";
 
@@ -270,7 +271,10 @@ export function PlaceReviewSheet({
       snapPoints={SHEET_SNAP_POINTS}
       enableDynamicSizing={false}
       enablePanDownToClose
-      onClose={onClose}
+      onClose={() => {
+        haptics.light();
+        onClose();
+      }}
     >
       <BottomSheetScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
         <PlaceReviewContent placeId={placeId} tripPlaceId={tripPlaceId} />

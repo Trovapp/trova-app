@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { Alert, FlatList, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
-import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
+import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
 import { SkeletonRow } from "@/components/Skeleton";
+import { useListEntrance } from "@/hooks/useListEntrance";
+import { haptics } from "@/lib/haptics";
 import { colors } from "@/lib/theme";
 import { deletePendingJob, getPendingJobs, getPlaces, type PendingJob, type Place } from "@/lib/api/places";
 import type { MainTabScreenProps } from "@/navigation/types";
@@ -107,18 +110,16 @@ function VideoGroupCard({
   group,
   onPress,
   isFirst,
-  index,
-  reducedMotion,
+  entering,
 }: {
   group: VideoGroup;
   onPress: () => void;
   isFirst: boolean;
-  index: number;
-  reducedMotion: boolean;
+  entering: ComponentProps<typeof Animated.View>["entering"];
 }) {
   return (
-    <Animated.View entering={reducedMotion ? undefined : FadeInDown.delay(index * 60).springify().damping(16)}>
-      <PressableScale
+    <Animated.View entering={entering}>
+      <PressableRow
         onPress={onPress}
         style={{
           flexDirection: "row",
@@ -139,14 +140,14 @@ function VideoGroupCard({
           </AppText>
         </View>
         <Feather name="chevron-right" size={18} color={colors.inkMuted} />
-      </PressableScale>
+      </PressableRow>
     </Animated.View>
   );
 }
 
 export function PlacesListScreen({ navigation }: Props) {
   const queryClient = useQueryClient();
-  const reducedMotion = useReducedMotion();
+  const entranceFor = useListEntrance();
   const placesQuery = useQuery({ queryKey: ["places"], queryFn: getPlaces });
   const pendingQuery = useQuery({
     queryKey: ["pendingJobs"],
@@ -159,6 +160,7 @@ export function PlacesListScreen({ navigation }: Props) {
 
   async function handleDeleteJob(jobId: number) {
     if (deletingJobId !== null) return;
+    haptics.warning();
     setDeletingJobId(jobId);
     setDeleteError(null);
     try {
@@ -215,8 +217,7 @@ export function PlacesListScreen({ navigation }: Props) {
         <VideoGroupCard
           group={item}
           isFirst={index === 0}
-          index={index}
-          reducedMotion={reducedMotion}
+          entering={entranceFor(item.jobId, index)}
           onPress={() => navigation.navigate("VideoGroup", { jobId: item.jobId })}
         />
       )}
