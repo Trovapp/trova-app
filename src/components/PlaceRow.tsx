@@ -79,7 +79,7 @@ export function PlaceRow({
             alignItems: "center",
           }}
         >
-          <AppText weight="medium" style={{ color: "#fff", fontSize: 12 }}>
+          <AppText weight="medium" style={{ color: colors.onAccent, fontSize: 12 }}>
             {index + 1}
           </AppText>
         </View>

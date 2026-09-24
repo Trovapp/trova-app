@@ -237,7 +237,7 @@ export function SavedPlacesScreen() {
             opacity: searching || !query.trim() ? 0.6 : 1,
           }}
         >
-          <AppText weight="medium" style={{ color: "#fff" }}>
+          <AppText weight="medium" style={{ color: colors.onAccent }}>
             {searching ? "검색 중..." : "검색"}
           </AppText>
         </PressableScale>

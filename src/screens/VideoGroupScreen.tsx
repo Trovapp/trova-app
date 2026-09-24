@@ -259,7 +259,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             opacity: generating ? 0.6 : 1,
           }}
         >
-          <AppText weight="medium" style={{ color: "#fff" }}>
+          <AppText weight="medium" style={{ color: colors.onAccent }}>
             {generating ? "일정 생성 중..." : "일정 짜기"}
           </AppText>
         </PressableScale>
@@ -317,7 +317,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                   backgroundColor: day === currentActiveDay ? colors.accent : colors.bgMuted,
                 }}
               >
-                <AppText weight="medium" style={{ color: day === currentActiveDay ? "#fff" : colors.inkMuted, fontSize: 13 }}>
+                <AppText weight="medium" style={{ color: day === currentActiveDay ? colors.onAccent : colors.inkMuted, fontSize: 13 }}>
                   {day}일차
                 </AppText>
               </PressableScale>
@@ -369,7 +369,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                   opacity: confirmingTrip ? 0.6 : 1,
                 }}
               >
-                <AppText weight="medium" style={{ color: "#fff" }}>
+                <AppText weight="medium" style={{ color: colors.onAccent }}>
                   {confirmingTrip ? "확정 중..." : "확정"}
                 </AppText>
               </PressableScale>

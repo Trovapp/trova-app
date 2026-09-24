@@ -10,5 +10,8 @@ export const colors = {
   inkMuted: "#5F5E5A",
   accent: "#E14A2B",
   accentBg: "#FCECE6",
+  // accent 배경(버튼 등) 위에 얹는 흰 글씨/아이콘 — 여기저기 "#fff"로 흩어져
+  // 있던 걸 토큰 하나로 모음(시각적 변화 없음, 값은 동일).
+  onAccent: "#ffffff",
   kakao: "#FEE500",
 } as const;

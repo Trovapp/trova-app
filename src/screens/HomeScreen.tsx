@@ -98,7 +98,7 @@ export function HomeScreen({ navigation }: Props) {
                 opacity: submitting ? 0.6 : 1,
               }}
             >
-              <AppText weight="medium" style={{ color: "#fff", fontSize: 16 }}>
+              <AppText weight="medium" style={{ color: colors.onAccent, fontSize: 16 }}>
                 {submitting ? "추출 중..." : "장소 추출하기"}
               </AppText>
             </PressableScale>

@@ -171,7 +171,7 @@ export function FolderPickerModal({
                 opacity: !newName.trim() || busy ? 0.5 : 1,
               }}
             >
-              <AppText weight="medium" style={{ color: "#fff" }}>
+              <AppText weight="medium" style={{ color: colors.onAccent }}>
                 만들고 저장
               </AppText>
             </PressableScale>

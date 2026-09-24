@@ -62,7 +62,7 @@ export function TripsListScreen({ navigation }: Props) {
             alignItems: "center",
           }}
         >
-          <AppText weight="medium" style={{ color: "#fff" }}>
+          <AppText weight="medium" style={{ color: colors.onAccent }}>
             새 여행 만들기
           </AppText>
         </PressableScale>

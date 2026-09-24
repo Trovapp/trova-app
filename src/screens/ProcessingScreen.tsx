@@ -139,7 +139,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
             alignItems: "center",
           }}
         >
-          <AppText weight="medium" style={{ color: "#fff" }}>
+          <AppText weight="medium" style={{ color: colors.onAccent }}>
             홈으로 돌아가기
           </AppText>
         </PressableScale>

@@ -138,7 +138,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
             alignItems: "center",
           }}
         >
-          <AppText weight="medium" style={{ color: "#fff" }}>
+          <AppText weight="medium" style={{ color: colors.onAccent }}>
             여행으로 돌아가기
           </AppText>
         </PressableScale>
@@ -212,7 +212,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
             alignItems: "center",
           }}
         >
-          <AppText weight="medium" style={{ color: "#fff" }}>
+          <AppText weight="medium" style={{ color: colors.onAccent }}>
             여행으로 돌아가기
           </AppText>
         </PressableScale>
@@ -304,7 +304,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
                       opacity: status === "confirming" ? 0.6 : 1,
                     }}
                   >
-                    <AppText weight="medium" style={{ fontSize: 13, color: "#fff" }}>
+                    <AppText weight="medium" style={{ fontSize: 13, color: colors.onAccent }}>
                       {status === "confirming" ? "교체 중..." : "교체"}
                     </AppText>
                   </PressableScale>
@@ -338,7 +338,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
             alignItems: "center",
           }}
         >
-          <AppText weight="medium" style={{ color: "#fff" }}>
+          <AppText weight="medium" style={{ color: colors.onAccent }}>
             여행으로 돌아가기
           </AppText>
         </PressableScale>

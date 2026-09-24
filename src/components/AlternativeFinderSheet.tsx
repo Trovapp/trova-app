@@ -82,7 +82,7 @@ function Chip({
         backgroundColor: active ? colors.accent : colors.bgMuted,
       }}
     >
-      <AppText style={{ fontSize: 12, color: active ? "#fff" : colors.inkMuted }}>{label}</AppText>
+      <AppText style={{ fontSize: 12, color: active ? colors.onAccent : colors.inkMuted }}>{label}</AppText>
     </PressableScale>
   );
 }
@@ -334,7 +334,7 @@ export function AlternativeFinderSheet({
                   opacity: searching ? 0.8 : 1,
                 }}
               >
-                <AppText weight="medium" style={{ color: "#fff" }}>
+                <AppText weight="medium" style={{ color: colors.onAccent }}>
                   {searching ? `대안 찾는 중... ${searchPercent}%` : "대안 찾기"}
                 </AppText>
               </PressableScale>
@@ -420,7 +420,7 @@ export function AlternativeFinderSheet({
                               opacity: replacing ? 0.6 : 1,
                             }}
                           >
-                            <AppText weight="medium" style={{ color: "#fff" }}>
+                            <AppText weight="medium" style={{ color: colors.onAccent }}>
                               {replacing ? "교체 중..." : "이 장소로 확정"}
                             </AppText>
                           </PressableScale>

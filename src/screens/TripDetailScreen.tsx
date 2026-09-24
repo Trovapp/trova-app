@@ -463,7 +463,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                     backgroundColor: place.arrivalTransportMode === mode ? colors.accent : colors.bgMuted,
                   }}
                 >
-                  <AppText style={{ fontSize: 11, color: place.arrivalTransportMode === mode ? "#fff" : colors.inkMuted }}>
+                  <AppText style={{ fontSize: 11, color: place.arrivalTransportMode === mode ? colors.onAccent : colors.inkMuted }}>
                     {TRANSPORT_LABEL[mode]}
                   </AppText>
                 </PressableScale>
@@ -576,7 +576,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                     backgroundColor: d.day === currentActiveDay ? colors.accent : colors.bgMuted,
                   }}
                 >
-                  <AppText weight="medium" style={{ color: d.day === currentActiveDay ? "#fff" : colors.inkMuted, fontSize: 13 }}>
+                  <AppText weight="medium" style={{ color: d.day === currentActiveDay ? colors.onAccent : colors.inkMuted, fontSize: 13 }}>
                     {d.day}일차{d.date ? ` (${d.date.slice(5)})` : ""}
                   </AppText>
                 </PressableScale>
@@ -601,8 +601,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
               opacity: replanStarting || totalPlaceCount === 0 ? 0.5 : 1,
             }}
           >
-            {!replanStarting && <Feather name="refresh-cw" size={16} color="#fff" />}
-            <AppText weight="medium" style={{ color: "#fff" }}>
+            {!replanStarting && <Feather name="refresh-cw" size={16} color={colors.onAccent} />}
+            <AppText weight="medium" style={{ color: colors.onAccent }}>
               {replanStarting ? "시작하는 중..." : "전체 일정 재구성"}
             </AppText>
           </PressableScale>
@@ -687,7 +687,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                     opacity: searching || !query.trim() ? 0.6 : 1,
                   }}
                 >
-                  <AppText weight="medium" style={{ color: "#fff" }}>
+                  <AppText weight="medium" style={{ color: colors.onAccent }}>
                     {searching ? "검색 중..." : "검색"}
                   </AppText>
                 </PressableScale>
@@ -729,7 +729,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                         disabled={busy}
                         style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
                       >
-                        <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
+                        <AppText style={{ fontSize: 12, color: colors.onAccent }}>추가</AppText>
                       </PressableScale>
                     </View>
                   </View>
@@ -790,7 +790,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                           disabled={busy}
                           style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
                         >
-                          <AppText style={{ fontSize: 12, color: "#fff" }}>추가</AppText>
+                          <AppText style={{ fontSize: 12, color: colors.onAccent }}>추가</AppText>
                         </PressableScale>
                         <PressableScale onPress={() => handleRemoveBookmark(bookmark.id)}>
                           <AppText style={{ fontSize: 12, color: colors.inkMuted }}>제거</AppText>

@@ -149,7 +149,7 @@ export function NewTripScreen({ navigation }: Props) {
           opacity: !title.trim() || submitting ? 0.6 : 1,
         }}
       >
-        <AppText weight="medium" style={{ color: "#fff" }}>
+        <AppText weight="medium" style={{ color: colors.onAccent }}>
           {submitting ? "만드는 중..." : "여행 만들기"}
         </AppText>
       </PressableScale>

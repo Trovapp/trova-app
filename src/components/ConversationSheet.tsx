@@ -145,7 +145,7 @@ function ExpandedCandidateCard({
           opacity: confirming ? 0.6 : 1,
         }}
       >
-        <AppText weight="medium" style={{ color: "#fff" }}>
+        <AppText weight="medium" style={{ color: colors.onAccent }}>
           {confirming ? "교체 중..." : "이 장소로 확정"}
         </AppText>
       </PressableScale>
@@ -235,7 +235,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           backgroundColor: isUser ? colors.accent : colors.bgMuted,
         }}
       >
-        <AppText style={{ color: isUser ? "#fff" : colors.ink, fontSize: 14 }}>{message.text}</AppText>
+        <AppText style={{ color: isUser ? colors.onAccent : colors.ink, fontSize: 14 }}>{message.text}</AppText>
       </View>
     </View>
   );
@@ -441,7 +441,7 @@ export function ConversationSheet({
                   onPress={resetSession}
                   style={{ paddingVertical: 9, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.accent }}
                 >
-                  <AppText weight="medium" style={{ color: "#fff", fontSize: 13 }}>
+                  <AppText weight="medium" style={{ color: colors.onAccent, fontSize: 13 }}>
                     새로 시작하기
                   </AppText>
                 </PressableScale>
@@ -482,7 +482,7 @@ export function ConversationSheet({
                     opacity: sending || !input.trim() ? 0.5 : 1,
                   }}
                 >
-                  <Feather name="send" size={18} color="#fff" />
+                  <Feather name="send" size={18} color={colors.onAccent} />
                 </PressableScale>
               </View>
             )}
