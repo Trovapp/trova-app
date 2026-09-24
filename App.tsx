@@ -5,6 +5,7 @@ import { useFonts as useEmojiFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -50,9 +51,14 @@ export default function App() {
         <AuthProvider>
           <SafeAreaProvider>
             <StatusBar style="dark" />
-            <NavigationContainer>
-              <RootNavigator />
-            </NavigationContainer>
+            {/* BottomSheetModal(드래그로 닫히는 시트)을 화면 어디서든 present()로 띄우려면
+                루트에 한 번만 이 Provider가 있으면 된다 — SavedPlacesScreen의 상시 마운트된
+                BottomSheet와 달리, DayPickerSheet 등 필요할 때만 뜨는 시트들이 이걸 쓴다. */}
+            <BottomSheetModalProvider>
+              <NavigationContainer>
+                <RootNavigator />
+              </NavigationContainer>
+            </BottomSheetModalProvider>
           </SafeAreaProvider>
         </AuthProvider>
       </QueryClientProvider>
