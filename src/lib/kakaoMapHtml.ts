@@ -39,24 +39,35 @@ export function buildKakaoMapHtml(appKey: string): string {
       highlightOverlay.setMap(mapInstance);
     }
 
+    // 핀이 하나도 없을 때(풀스크린 지도의 빈 폴더 등) 처음 보여줄 위치 — 서울시청.
+    var DEFAULT_CENTER = { latitude: 37.5665, longitude: 126.978 };
+
+    function clearPins() {
+      overlays.forEach(function (overlay) { overlay.setMap(null); });
+      overlays = [];
+      if (polyline) {
+        polyline.setMap(null);
+        polyline = null;
+      }
+      positions = {};
+      if (highlightOverlay) highlightOverlay.setMap(null);
+    }
+
     function renderPins(pins, selectedId, showPath) {
-      if (!pins || pins.length === 0) return;
+      pins = pins || [];
       kakao.maps.load(function () {
         var container = document.getElementById('map');
-        var first = pins[0];
+        var first = pins.length > 0 ? pins[0] : DEFAULT_CENTER;
         var center = new kakao.maps.LatLng(first.latitude, first.longitude);
         if (mapInstance === null) {
-          mapInstance = new kakao.maps.Map(container, { center: center, level: 4 });
-        } else {
+          mapInstance = new kakao.maps.Map(container, { center: center, level: pins.length > 0 ? 4 : 7 });
+        } else if (pins.length > 0) {
           mapInstance.setCenter(center);
         }
 
-        overlays.forEach(function (overlay) { overlay.setMap(null); });
-        overlays = [];
-        if (polyline) {
-          polyline.setMap(null);
-          polyline = null;
-        }
+        // 핀이 비면 지도는 그대로 두고(보던 위치 유지) 이전 핀만 걷어낸다.
+        clearPins();
+        if (pins.length === 0) return;
 
         var path = pins.map(function (pin) {
           return new kakao.maps.LatLng(pin.latitude, pin.longitude);

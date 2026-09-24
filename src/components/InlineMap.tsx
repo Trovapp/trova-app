@@ -50,10 +50,11 @@ export function InlineMap({
   payloadRef.current = payload;
 
   useEffect(() => {
-    if (!isMapLoaded || mapError || pinsKey === "[]") return;
+    // 풀스크린(fill) 지도는 핀이 비어도 지도를 유지하므로 빈 목록도 보내서 이전 핀을 지우게 한다.
+    if (!isMapLoaded || mapError || (pinsKey === "[]" && !fill)) return;
     webviewRef.current?.postMessage(payload);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMapLoaded, mapError, pinsKey, selectedId, showPath]);
+  }, [isMapLoaded, mapError, pinsKey, selectedId, showPath, fill]);
 
   function handleMessage(event: WebViewMessageEvent) {
     try {
@@ -66,7 +67,9 @@ export function InlineMap({
     }
   }
 
-  if (pins.length === 0) return null;
+  // 작은 인라인 지도는 핀이 없으면 통째로 숨긴다. 풀스크린 지도는 화면의 배경이라
+  // 숨기면 빈 영역만 남으므로(예: 빈 찜 폴더) 지도를 그대로 두고 핀만 비운다.
+  if (pins.length === 0 && !fill) return null;
 
   const containerStyle = fill ? { flex: 1 as const } : { height, borderRadius: 12, overflow: "hidden" as const };
 
@@ -97,7 +100,7 @@ export function InlineMap({
         // 위 setIsMapLoaded(true)는 상태 변화가 없어 리렌더/effect 재발화가
         // 일어나지 않는다. 새로 로드된 이 WebView가 확실히 최신 pins를
         // 받도록 여기서 직접 한 번 더 보낸다(문서 로드가 끝난 뒤라 드롭되지 않음).
-        if (pins.length > 0) {
+        if (pins.length > 0 || fill) {
           webviewRef.current?.postMessage(payloadRef.current);
         }
       }}
