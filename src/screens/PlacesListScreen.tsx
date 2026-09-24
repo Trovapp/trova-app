@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { FlatList, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Alert, FlatList, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
@@ -8,7 +8,7 @@ import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
 import { SkeletonRow } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
-import { getPendingJobs, getPlaces, type PendingJob, type Place } from "@/lib/api/places";
+import { deletePendingJob, getPendingJobs, getPlaces, type PendingJob, type Place } from "@/lib/api/places";
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"PlacesList">;
@@ -58,7 +58,7 @@ function placePreview(places: Place[]): string {
 // 진행 중인 작업은 완료된 영상들과 시각적으로 구분되게(진행률 바가 있는
 // 살아있는 상태라) 옅은 배경 블록으로 남겨두고, 완료된 목록만 구분선 리스트로
 // 낮춘다(2026-09 디자인 — TripsListScreen과 동일한 원칙).
-function PendingJobCard({ job }: { job: PendingJob }) {
+function PendingJobCard({ job, onDelete }: { job: PendingJob; onDelete: (jobId: number) => void }) {
   const isFailed = job.status === "FAILED";
   // 백엔드가 진짜로 도달한 파이프라인 단계만 반영한다 — 아직 EXTRACTING도 시작 전(PENDING)이면
   // 지어낸 퍼센트 없이 0%로 둔다.
@@ -67,12 +67,30 @@ function PendingJobCard({ job }: { job: PendingJob }) {
 
   return (
     <View style={{ padding: 16, borderRadius: 12, backgroundColor: colors.bgMuted }}>
-      <AppText style={{ fontSize: 11, color: colors.inkMuted, marginBottom: 2 }}>
-        {PLATFORM_LABEL[job.sourcePlatform]}
-      </AppText>
-      <AppText weight="medium" numberOfLines={1}>
-        {job.title ?? job.sourceUrl}
-      </AppText>
+      <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <View style={{ flex: 1 }}>
+          <AppText style={{ fontSize: 11, color: colors.inkMuted, marginBottom: 2 }}>
+            {PLATFORM_LABEL[job.sourcePlatform]}
+          </AppText>
+          <AppText weight="medium" numberOfLines={1}>
+            {job.title ?? job.sourceUrl}
+          </AppText>
+        </View>
+        {isFailed && (
+          <PressableScale
+            onPress={() =>
+              Alert.alert("이 항목을 삭제할까요?", "실패한 처리 기록을 목록에서 지웁니다.", [
+                { text: "취소", style: "cancel" },
+                { text: "삭제", style: "destructive", onPress: () => onDelete(job.jobId) },
+              ])
+            }
+            hitSlop={10}
+            style={{ paddingLeft: 8 }}
+          >
+            <Feather name="trash-2" size={16} color={colors.inkMuted} />
+          </PressableScale>
+        )}
+      </View>
       <AppText style={{ marginTop: 4, fontSize: 12, color: isFailed ? colors.accent : colors.inkMuted }}>
         {message}
       </AppText>
@@ -136,6 +154,23 @@ export function PlacesListScreen({ navigation }: Props) {
     refetchInterval: (query) => ((query.state.data?.length ?? 0) > 0 ? 5000 : false),
   });
 
+  const [deletingJobId, setDeletingJobId] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function handleDeleteJob(jobId: number) {
+    if (deletingJobId !== null) return;
+    setDeletingJobId(jobId);
+    setDeleteError(null);
+    try {
+      await deletePendingJob(jobId);
+      await queryClient.invalidateQueries({ queryKey: ["pendingJobs"] });
+    } catch {
+      setDeleteError("삭제하지 못했어요. 다시 시도해주세요.");
+    } finally {
+      setDeletingJobId(null);
+    }
+  }
+
   const previousPendingCountRef = useRef<number | null>(null);
   useEffect(() => {
     const currentCount = pendingQuery.data?.length ?? 0;
@@ -169,8 +204,9 @@ export function PlacesListScreen({ navigation }: Props) {
         pendingJobs.length > 0 ? (
           <View style={{ gap: 12, marginBottom: 20 }}>
             {pendingJobs.map((job) => (
-              <PendingJobCard key={job.jobId} job={job} />
+              <PendingJobCard key={job.jobId} job={job} onDelete={handleDeleteJob} />
             ))}
+            {deleteError && <AppText style={{ color: colors.accent, fontSize: 12 }}>{deleteError}</AppText>}
           </View>
         ) : null
       }

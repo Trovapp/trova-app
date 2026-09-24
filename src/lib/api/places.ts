@@ -60,6 +60,13 @@ export async function getPendingJobs(): Promise<PendingJob[]> {
   return res.json();
 }
 
+export async function deletePendingJob(jobId: number): Promise<void> {
+  const res = await apiFetch(`/api/places/pending/${jobId}`, { method: "DELETE" });
+  if (!res.ok) {
+    throw new Error(`DELETE /api/places/pending/${jobId} failed: ${res.status}`);
+  }
+}
+
 export async function getPlaces(): Promise<Place[]> {
   const res = await apiFetch("/api/places");
   if (!res.ok) {
