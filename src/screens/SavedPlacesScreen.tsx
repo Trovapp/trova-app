@@ -402,7 +402,7 @@ export function SavedPlacesScreen() {
             }
             ListEmptyComponent={
               <AppText style={{ color: colors.inkMuted, textAlign: "center", padding: 16 }}>
-                이 폴더엔 아직 저장한 장소가 없어요.
+                이 폴더엔 아직 저장한 장소가 없어요.{"\n"}위 검색창에서 장소를 찾아 ☆를 눌러 저장해보세요.
               </AppText>
             }
             renderItem={({ item, index }: { item: Bookmark; index: number }) => (

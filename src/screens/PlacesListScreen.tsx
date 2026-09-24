@@ -224,7 +224,37 @@ export function PlacesListScreen({ navigation }: Props) {
           </View>
         ) : null
       }
-      ListEmptyComponent={<AppText style={{ textAlign: "center", marginTop: 32 }}>아직 저장한 영상이 없어요.</AppText>}
+      ListEmptyComponent={
+        // 처리 중인 영상이 있으면 "링크 넣으러 가기"는 어색하다 — 곧 여기에 나타난다고만 안내.
+        pendingJobs.length > 0 ? (
+          <AppText style={{ textAlign: "center", marginTop: 16, color: colors.inkMuted }}>
+            처리가 끝나면 영상이 여기에 표시돼요.
+          </AppText>
+        ) : (
+          <View style={{ alignItems: "center", gap: 16, marginTop: 32 }}>
+            <AppText style={{ textAlign: "center" }}>
+              아직 저장한 영상이 없어요.{"\n"}
+              <AppText style={{ color: colors.inkMuted }}>여행 영상 링크를 넣으면 장소를 뽑아 정리해드려요.</AppText>
+            </AppText>
+            <PressableScale
+              onPress={() => navigation.navigate("Home")}
+              style={{
+                height: 44,
+                paddingHorizontal: 20,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: colors.accent,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <AppText weight="medium" style={{ color: colors.accent, fontSize: 14 }}>
+                링크 넣으러 가기
+              </AppText>
+            </PressableScale>
+          </View>
+        )
+      }
       renderItem={({ item, index }) => (
         <VideoGroupCard
           group={item}

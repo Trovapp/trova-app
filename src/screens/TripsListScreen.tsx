@@ -67,7 +67,13 @@ export function TripsListScreen({ navigation }: Props) {
           </AppText>
         </PressableScale>
       }
-      ListEmptyComponent={<AppText style={{ textAlign: "center", marginTop: 32 }}>아직 만든 여행이 없어요.</AppText>}
+      ListEmptyComponent={
+        // 바로 위에 "새 여행 만들기" 버튼이 있으니 버튼을 또 두지 않고, 다른 경로(영상 기록)만 알려준다.
+        <AppText style={{ textAlign: "center", marginTop: 32 }}>
+          아직 만든 여행이 없어요.{"\n"}
+          <AppText style={{ color: colors.inkMuted }}>영상 기록에서 영상 속 장소로 바로 여행을 만들 수도 있어요.</AppText>
+        </AppText>
+      }
       renderItem={({ item, index }) => (
         <Animated.View entering={entranceFor(item.id, index)}>
           <PressableRow
