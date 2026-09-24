@@ -39,6 +39,9 @@ const UNSORTED_ID = -1; // "미분류" 가상 폴더 id — 실제 폴더 id는 
 
 // FolderPickerModal은 "어디에 저장할지" 하나만 고르는 UI라, 찜 추가(add)와
 // 폴더 이동(move)에 그대로 재사용한다 — onPick 콜백에서 이 target으로 분기한다.
+// 바텀시트 기본 높이(지도 영역 대비 %). 지도는 이만큼 가려진다고 보고 핀을 그 위쪽에 배치한다.
+const SHEET_DEFAULT_PERCENT = 55;
+
 type FolderPickerTarget =
   | { mode: "add"; placeId: number }
   | { mode: "move"; bookmarkId: number }
@@ -61,7 +64,7 @@ export function SavedPlacesScreen() {
   const [reviewPlaceId, setReviewPlaceId] = useState<number | null>(null);
   const [menuBookmarkId, setMenuBookmarkId] = useState<number | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
-  const snapPoints = useMemo(() => ["18%", "55%", "90%"], []);
+  const snapPoints = useMemo(() => ["18%", `${SHEET_DEFAULT_PERCENT}%`, "90%"], []);
   const entranceFor = useListEntrance();
 
   // 북마크 메뉴 시트 — menuBookmarkId(원시 상태)로 여닫는다. menuBookmark(파생값)는
@@ -253,7 +256,12 @@ export function SavedPlacesScreen() {
       </View>
 
       <View style={{ flex: 1 }}>
-        <InlineMap pins={pins} fill showPath={false} selectedId={reviewPlaceId !== null ? String(reviewPlaceId) : null} />
+        <InlineMap
+          pins={pins}
+          fill
+          showPath={false}
+          bottomInsetRatio={SHEET_DEFAULT_PERCENT / 100}
+          selectedId={reviewPlaceId !== null ? String(reviewPlaceId) : null} />
 
         <BottomSheet index={1} snapPoints={snapPoints} enableDynamicSizing={false}>
         {reviewPlaceId !== null ? (

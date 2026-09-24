@@ -15,6 +15,7 @@ export function InlineMap({
   selectedId = null,
   showPath = true,
   fill = false,
+  bottomInsetRatio = 0,
 }: {
   pins: Pin[];
   height?: number;
@@ -24,6 +25,8 @@ export function InlineMap({
   showPath?: boolean;
   // true면 고정 높이 대신 부모를 꽉 채운다(풀스크린 지도 화면용).
   fill?: boolean;
+  // 지도 아래쪽이 바텀시트 등으로 가려지는 비율(0~1). 핀을 가려지지 않는 영역 안에 배치한다.
+  bottomInsetRatio?: number;
 }) {
   const webviewRef = useRef<WebView>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -37,7 +40,7 @@ export function InlineMap({
   const pinsKey = JSON.stringify(
     pins.map((pin) => ({ id: pin.id, latitude: pin.latitude, longitude: pin.longitude, color: pin.color ?? null }))
   );
-  const payload = JSON.stringify({ pins: pins.length > 0 ? JSON.parse(pinsKey) : [], selectedId, showPath });
+  const payload = JSON.stringify({ pins: pins.length > 0 ? JSON.parse(pinsKey) : [], selectedId, showPath, bottomInsetRatio });
 
   // pins가 []이 되면 아래 early return으로 WebView가 언마운트된다. 이 컴포넌트
   // 자체(그리고 isMapLoaded state)는 살아있으니, 이후 pins가 다시 채워지면

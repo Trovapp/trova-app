@@ -21,6 +21,23 @@ export function buildKakaoMapHtml(appKey: string): string {
     var polyline = null;
     var positions = {};
     var highlightOverlay = null;
+    // 지도 아래쪽을 가리는 바텀시트 높이(지도 높이 대비 비율). 0이면 가림 없음.
+    var bottomInsetRatio = 0;
+
+    function bottomInsetPx() {
+      return window.innerHeight * bottomInsetRatio;
+    }
+
+    // position이 "보이는 영역"(바텀시트 위)의 가운데에 오도록 하는 지도 중심 좌표.
+    // 지도 중심을 핀보다 (가림 높이 / 2)만큼 아래로 내리면 핀이 그만큼 위로 올라간다.
+    function centerForVisible(position) {
+      var inset = bottomInsetPx();
+      if (inset <= 0) return position;
+      mapInstance.setCenter(position);
+      var projection = mapInstance.getProjection();
+      var point = projection.containerPointFromCoords(position);
+      return projection.coordsFromContainerPoint(new kakao.maps.Point(point.x, point.y + inset / 2));
+    }
 
     // 웹(KakaoMap.tsx)의 선택 하이라이트를 그대로 이식 — 반투명 배경 + 테두리 링.
     function buildHighlightHtml() {
@@ -34,7 +51,7 @@ export function buildKakaoMapHtml(appKey: string): string {
         highlightOverlay.setMap(null);
         return;
       }
-      mapInstance.panTo(position);
+      mapInstance.panTo(centerForVisible(position));
       highlightOverlay.setPosition(position);
       highlightOverlay.setMap(mapInstance);
     }
@@ -61,8 +78,6 @@ export function buildKakaoMapHtml(appKey: string): string {
         var center = new kakao.maps.LatLng(first.latitude, first.longitude);
         if (mapInstance === null) {
           mapInstance = new kakao.maps.Map(container, { center: center, level: pins.length > 0 ? 4 : 7 });
-        } else if (pins.length > 0) {
-          mapInstance.setCenter(center);
         }
 
         // 핀이 비면 지도는 그대로 두고(보던 위치 유지) 이전 핀만 걷어낸다.
@@ -72,6 +87,19 @@ export function buildKakaoMapHtml(appKey: string): string {
         var path = pins.map(function (pin) {
           return new kakao.maps.LatLng(pin.latitude, pin.longitude);
         });
+
+        if (bottomInsetRatio > 0 && path.length > 1) {
+          // 가려지는 영역이 있는 풀스크린 지도: 첫 핀만 가운데 두면 나머지 핀이 화면 밖이나
+          // 시트 뒤로 숨는다 — 전체 핀을 보이는 영역 안에 맞춘다.
+          var bounds = new kakao.maps.LatLngBounds();
+          path.forEach(function (latLng) { bounds.extend(latLng); });
+          mapInstance.setBounds(bounds, 48, 32, bottomInsetPx() + 32, 32);
+        } else {
+          // 풀스크린 지도에서 핀이 하나면 "핀에 맞추기"와 같게 기본 확대 수준으로 돌린다
+          // (빈 폴더에서 넓게 보던 수준 7이 그대로 남지 않도록).
+          if (bottomInsetRatio > 0) mapInstance.setLevel(4);
+          mapInstance.setCenter(centerForVisible(center));
+        }
 
         positions = {};
         pins.forEach(function (pin, index) {
@@ -119,6 +147,7 @@ export function buildKakaoMapHtml(appKey: string): string {
         return;
       }
       try {
+        bottomInsetRatio = payload.bottomInsetRatio || 0;
         renderPins(payload.pins, payload.selectedId, payload.showPath !== false);
       } catch (e) {
         window.ReactNativeWebView && window.ReactNativeWebView.postMessage(
