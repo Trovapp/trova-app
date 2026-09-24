@@ -2,8 +2,11 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
+import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
 import { InlineMap } from "@/components/InlineMap";
+import { PressableScale } from "@/components/PressableScale";
+import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
 import { createShare } from "@/lib/api/places";
 import { listBookmarks } from "@/lib/api/bookmarks";
@@ -22,11 +25,18 @@ type Props = MainTabScreenProps<"Home">;
 // 입력을 하나의 히어로로 묶고(인사말만 bold), 최근 여행/찜한 장소는 카드+그림자
 // 없이 구분선만 있는 가벼운 리스트로 낮춰서 위계를 명확히 한다. 모든 블록에
 // 같은 테두리+radius+그림자를 반복하던 걸 걷어냈다.
+//
+// 생동감(2026-09, 토스 스타일 파일럿 — 이 화면에만 우선 적용):
+// - 누르는 요소는 PressableScale로 살짝 눌리는 피드백
+// - "최근 여행" 행은 로드되면 순차적으로 스프링 등장(FadeInDown, staggered)
+// - 로딩 중엔 섹션이 안 보이는 대신 스켈레톤으로 자리 표시
+// - useReducedMotion으로 "동작 줄이기" 켜져 있으면 등장 애니메이션 생략
 export function HomeScreen({ navigation }: Props) {
   const { user, logout } = useAuth();
   const [url, setUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const reducedMotion = useReducedMotion();
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: listTrips });
@@ -75,7 +85,7 @@ export function HomeScreen({ navigation }: Props) {
                 color: colors.ink,
               }}
             />
-            <Pressable
+            <PressableScale
               onPress={handleSubmit}
               disabled={submitting}
               style={{
@@ -90,7 +100,7 @@ export function HomeScreen({ navigation }: Props) {
               <AppText weight="medium" style={{ color: "#fff", fontSize: 16 }}>
                 {submitting ? "추출 중..." : "장소 추출하기"}
               </AppText>
-            </Pressable>
+            </PressableScale>
             {error && <AppText style={{ color: colors.accent, fontSize: 13 }}>{error}</AppText>}
           </View>
         </View>
@@ -99,51 +109,70 @@ export function HomeScreen({ navigation }: Props) {
           onOpenAlternative={(tripId) => navigation.navigate("TripDetail", { id: tripId })}
         />
 
-        {pins.length > 0 && (
+        {bookmarksQuery.isLoading ? (
           <View style={{ gap: 10 }}>
-            <Pressable
-              onPress={() => navigation.navigate("SavedPlaces")}
-              style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
-            >
-              <AppText weight="medium">찜한 장소</AppText>
-              <Feather name="chevron-right" size={18} color={colors.inkMuted} />
-            </Pressable>
-            <InlineMap pins={pins} height={160} showPath={false} />
+            <Skeleton style={{ width: 100, height: 17 }} />
+            <Skeleton style={{ width: "100%", height: 160, borderRadius: 12 }} />
           </View>
+        ) : (
+          pins.length > 0 && (
+            <View style={{ gap: 10 }}>
+              <PressableScale
+                onPress={() => navigation.navigate("SavedPlaces")}
+                style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+              >
+                <AppText weight="medium">찜한 장소</AppText>
+                <Feather name="chevron-right" size={18} color={colors.inkMuted} />
+              </PressableScale>
+              <InlineMap pins={pins} height={160} showPath={false} />
+            </View>
+          )
         )}
 
-        {recentTrips.length > 0 && (
+        {tripsQuery.isLoading ? (
           <View>
-            <AppText weight="medium" style={{ marginBottom: 10 }}>
-              최근 여행
-            </AppText>
-            {recentTrips.map((trip, i) => (
-              <Pressable
-                key={trip.id}
-                onPress={() => navigation.navigate("TripDetail", { id: trip.id })}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingVertical: 14,
-                  borderTopWidth: i === 0 ? 0 : 1,
-                  borderTopColor: colors.borderSubtle,
-                }}
-              >
-                <View style={{ flex: 1, gap: 2 }}>
-                  <AppText weight="medium" numberOfLines={1}>
-                    {trip.title}
-                  </AppText>
-                  {trip.startDate && (
-                    <AppText mono style={{ fontSize: 12, color: colors.inkMuted }}>
-                      {trip.startDate} ~ {trip.endDate}
-                    </AppText>
-                  )}
-                </View>
-                <Feather name="chevron-right" size={18} color={colors.inkMuted} />
-              </Pressable>
-            ))}
+            <Skeleton style={{ width: 80, height: 17, marginBottom: 10 }} />
+            <SkeletonRow />
+            <SkeletonRow />
           </View>
+        ) : (
+          recentTrips.length > 0 && (
+            <View>
+              <AppText weight="medium" style={{ marginBottom: 10 }}>
+                최근 여행
+              </AppText>
+              {recentTrips.map((trip, i) => (
+                <Animated.View
+                  key={trip.id}
+                  entering={reducedMotion ? undefined : FadeInDown.delay(i * 60).springify().damping(16)}
+                >
+                  <PressableScale
+                    onPress={() => navigation.navigate("TripDetail", { id: trip.id })}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      paddingVertical: 14,
+                      borderTopWidth: i === 0 ? 0 : 1,
+                      borderTopColor: colors.borderSubtle,
+                    }}
+                  >
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <AppText weight="medium" numberOfLines={1}>
+                        {trip.title}
+                      </AppText>
+                      {trip.startDate && (
+                        <AppText mono style={{ fontSize: 12, color: colors.inkMuted }}>
+                          {trip.startDate} ~ {trip.endDate}
+                        </AppText>
+                      )}
+                    </View>
+                    <Feather name="chevron-right" size={18} color={colors.inkMuted} />
+                  </PressableScale>
+                </Animated.View>
+              ))}
+            </View>
+          )
         )}
 
         <Pressable onPress={() => logout()} style={{ alignItems: "center" }}>

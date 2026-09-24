@@ -39,8 +39,9 @@ export function LoginScreen() {
     <View style={{ flex: 1, justifyContent: "center", padding: 24 }}>
       <View style={{ alignItems: "center", marginBottom: 40 }}>
         <Image
-          source={require("../../assets/icon.png")}
-          style={{ width: 88, height: 88, borderRadius: 20, marginBottom: 20 }}
+          source={require("../../assets/splash-icon.png")}
+          resizeMode="contain"
+          style={{ width: 96, height: 96, marginBottom: 20 }}
         />
         <AppText weight="bold" style={{ fontSize: 32 }}>
           Trova
