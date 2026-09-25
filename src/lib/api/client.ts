@@ -6,6 +6,9 @@ import { API_BASE_URL } from "@/lib/api/config";
 // 전환되게 한다. 모듈 스코프 변수로 두는 이유는 apiFetch가 훅이 아니라
 // 어디서든 호출되는 평범한 함수라 React context를 직접 구독할 수 없기
 // 때문.
+// 오류 타입/판단 함수는 네이티브 모듈 의존이 없는 errors.ts에 두고(단위 테스트 가능) 여기서 다시 내보낸다.
+export { ApiError, shouldRetryQuery, toUserMessage } from "@/lib/api/errors";
+
 let unauthorizedHandler: (() => void) | null = null;
 
 export function setUnauthorizedHandler(handler: () => void): void {

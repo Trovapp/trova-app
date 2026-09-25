@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch } from "@/lib/api/client";
 import { API_BASE_URL } from "@/lib/api/config";
 
 export type CurrentUser = {
@@ -13,7 +13,7 @@ export async function getMe(): Promise<CurrentUser | null> {
     return null;
   }
   if (!res.ok) {
-    throw new Error(`GET /api/auth/me failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/auth/me failed: ${res.status}`);
   }
   return res.json();
 }
@@ -25,6 +25,6 @@ export function oauthUrl(provider: "kakao" | "google"): string {
 export async function withdraw(): Promise<void> {
   const res = await apiFetch("/api/users/me", { method: "DELETE" });
   if (!res.ok) {
-    throw new Error(`DELETE /api/users/me failed: ${res.status}`);
+    throw new ApiError(res.status, `DELETE /api/users/me failed: ${res.status}`);
   }
 }

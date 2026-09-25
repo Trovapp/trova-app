@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch } from "@/lib/api/client";
 
 export type Notification = {
   id: number;
@@ -14,7 +14,7 @@ export type Notification = {
 export async function listNotifications(): Promise<Notification[]> {
   const res = await apiFetch("/api/notifications");
   if (!res.ok) {
-    throw new Error(`GET /api/notifications failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/notifications failed: ${res.status}`);
   }
   return res.json();
 }
@@ -22,6 +22,6 @@ export async function listNotifications(): Promise<Notification[]> {
 export async function dismissNotification(id: number): Promise<void> {
   const res = await apiFetch(`/api/notifications/${id}/dismiss`, { method: "POST" });
   if (!res.ok) {
-    throw new Error(`POST /api/notifications/${id}/dismiss failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/notifications/${id}/dismiss failed: ${res.status}`);
   }
 }

@@ -11,6 +11,7 @@ import { ProgressHero } from "@/components/ProgressHero";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
 import { describeSourceUrl } from "@/lib/shareUrl";
+import { toUserMessage } from "@/lib/api/client";
 import { colors } from "@/lib/theme";
 import { getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob } from "@/lib/api/places";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -105,7 +106,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
       const { jobId: newJobId } = await resubmitFailedJob(job);
       navigation.replace("Processing", { jobId: newJobId });
     } catch (err) {
-      setRetryError(err instanceof Error ? err.message : "다시 시도하지 못했어요.");
+      setRetryError(toUserMessage(err, "다시 시도하지 못했어요. 잠시 후 다시 시도해주세요."));
       setRetrying(false);
     }
   }

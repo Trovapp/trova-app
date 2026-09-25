@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch } from "@/lib/api/client";
 
 export type RecommendedPlace = {
   id: number;
@@ -18,7 +18,7 @@ export type RecommendedPlace = {
 export async function searchPlaces(query: string): Promise<RecommendedPlace[]> {
   const res = await apiFetch(`/api/places/search?query=${encodeURIComponent(query)}`);
   if (!res.ok) {
-    throw new Error(`GET /api/places/search failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/places/search failed: ${res.status}`);
   }
   return res.json();
 }
@@ -37,7 +37,7 @@ export type PlaceReviewSummary = Omit<RecommendedPlace, "mood" | "space"> & {
 export async function getPlaceDetails(id: number): Promise<PlaceReviewSummary> {
   const res = await apiFetch(`/api/places/${id}/details`);
   if (!res.ok) {
-    throw new Error(`GET /api/places/${id}/details failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/places/${id}/details failed: ${res.status}`);
   }
   return res.json();
 }

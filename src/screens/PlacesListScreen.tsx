@@ -15,6 +15,7 @@ import { useListEntrance } from "@/hooks/useListEntrance";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { haptics } from "@/lib/haptics";
 import { describeSourceUrl } from "@/lib/shareUrl";
+import { toUserMessage } from "@/lib/api/client";
 import { colors } from "@/lib/theme";
 import { deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob, type Place } from "@/lib/api/places";
 import type { MainTabScreenProps } from "@/navigation/types";
@@ -213,7 +214,7 @@ export function PlacesListScreen({ navigation }: Props) {
       await queryClient.invalidateQueries({ queryKey: ["pendingJobs"] });
       navigation.navigate("Processing", { jobId: newJobId });
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : "다시 시도하지 못했어요.");
+      setDeleteError(toUserMessage(err, "다시 시도하지 못했어요. 잠시 후 다시 시도해주세요."));
     } finally {
       setRetryingJobId(null);
     }

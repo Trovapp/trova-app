@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch } from "@/lib/api/client";
 
 export type Trip = { id: number; title: string; startDate: string | null; endDate: string | null };
 
@@ -47,7 +47,7 @@ export type TripPlaceReviewSummary = {
 export async function getTripPlaceDetails(id: number): Promise<TripPlaceReviewSummary> {
   const res = await apiFetch(`/api/trip-places/${id}/details`);
   if (!res.ok) {
-    throw new Error(`GET /api/trip-places/${id}/details failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/trip-places/${id}/details failed: ${res.status}`);
   }
   return res.json();
 }
@@ -63,7 +63,7 @@ export async function confirmTrip(jobId: number, title: string, startDate: strin
     body: JSON.stringify({ title, startDate }),
   });
   if (!res.ok) {
-    throw new Error(`POST /api/places/videos/${jobId}/confirm-trip failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/places/videos/${jobId}/confirm-trip failed: ${res.status}`);
   }
   return res.json();
 }
@@ -75,7 +75,7 @@ export async function createTrip(title: string, startDate: string, endDate: stri
     body: JSON.stringify({ title, startDate, endDate }),
   });
   if (!res.ok) {
-    throw new Error(`POST /api/trips failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/trips failed: ${res.status}`);
   }
   return res.json();
 }
@@ -83,7 +83,7 @@ export async function createTrip(title: string, startDate: string, endDate: stri
 export async function listTrips(): Promise<Trip[]> {
   const res = await apiFetch(`/api/trips`);
   if (!res.ok) {
-    throw new Error(`GET /api/trips failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/trips failed: ${res.status}`);
   }
   return res.json();
 }
@@ -91,7 +91,7 @@ export async function listTrips(): Promise<Trip[]> {
 export async function getTrip(id: number): Promise<TripDetail> {
   const res = await apiFetch(`/api/trips/${id}`);
   if (!res.ok) {
-    throw new Error(`GET /api/trips/${id} failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/trips/${id} failed: ${res.status}`);
   }
   return res.json();
 }
@@ -99,7 +99,7 @@ export async function getTrip(id: number): Promise<TripDetail> {
 export async function deleteTrip(id: number): Promise<void> {
   const res = await apiFetch(`/api/trips/${id}`, { method: "DELETE" });
   if (!res.ok) {
-    throw new Error(`DELETE /api/trips/${id} failed: ${res.status}`);
+    throw new ApiError(res.status, `DELETE /api/trips/${id} failed: ${res.status}`);
   }
 }
 
@@ -110,7 +110,7 @@ export async function addTripPlace(tripId: number, day: number, googlePlaceId: s
     body: JSON.stringify({ googlePlaceId }),
   });
   if (!res.ok) {
-    throw new Error(`POST /api/trips/${tripId}/days/${day}/places failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/trips/${tripId}/days/${day}/places failed: ${res.status}`);
   }
   return res.json();
 }
@@ -118,7 +118,7 @@ export async function addTripPlace(tripId: number, day: number, googlePlaceId: s
 export async function removeTripPlace(id: number): Promise<void> {
   const res = await apiFetch(`/api/trip-places/${id}`, { method: "DELETE" });
   if (!res.ok) {
-    throw new Error(`DELETE /api/trip-places/${id} failed: ${res.status}`);
+    throw new ApiError(res.status, `DELETE /api/trip-places/${id} failed: ${res.status}`);
   }
 }
 
@@ -129,7 +129,7 @@ export async function reorderTripPlace(id: number, direction: "UP" | "DOWN"): Pr
     body: JSON.stringify({ direction }),
   });
   if (!res.ok) {
-    throw new Error(`PATCH /api/trip-places/${id}/order failed: ${res.status}`);
+    throw new ApiError(res.status, `PATCH /api/trip-places/${id}/order failed: ${res.status}`);
   }
   return res.json();
 }
@@ -137,7 +137,7 @@ export async function reorderTripPlace(id: number, direction: "UP" | "DOWN"): Pr
 export async function optimizeTripRoute(tripId: number, day: number): Promise<TripPlace[]> {
   const res = await apiFetch(`/api/trips/${tripId}/days/${day}/optimize-route`, { method: "POST" });
   if (!res.ok) {
-    throw new Error(`POST /api/trips/${tripId}/days/${day}/optimize-route failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/trips/${tripId}/days/${day}/optimize-route failed: ${res.status}`);
   }
   return res.json();
 }
@@ -145,7 +145,7 @@ export async function optimizeTripRoute(tripId: number, day: number): Promise<Tr
 export async function checkWeather(tripId: number, day: number): Promise<{ notified: boolean; message: string }> {
   const res = await apiFetch(`/api/trips/${tripId}/days/${day}/weather-check`, { method: "POST" });
   if (!res.ok) {
-    throw new Error(`POST /api/trips/${tripId}/days/${day}/weather-check failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/trips/${tripId}/days/${day}/weather-check failed: ${res.status}`);
   }
   return res.json();
 }
@@ -165,7 +165,7 @@ export async function updateTripPlaceDetails(
     body: JSON.stringify(patch),
   });
   if (!res.ok) {
-    throw new Error(`PATCH /api/trip-places/${id}/details failed: ${res.status}`);
+    throw new ApiError(res.status, `PATCH /api/trip-places/${id}/details failed: ${res.status}`);
   }
   return res.json();
 }
@@ -212,7 +212,7 @@ export async function getAlternatives(tripPlaceId: number, filter: AlternativeFi
 
   const res = await apiFetch(`/api/trip-places/${tripPlaceId}/alternatives?${params.toString()}`);
   if (!res.ok) {
-    throw new Error(`GET /api/trip-places/${tripPlaceId}/alternatives failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/trip-places/${tripPlaceId}/alternatives failed: ${res.status}`);
   }
   return res.json();
 }
@@ -224,7 +224,7 @@ export async function replacePlace(tripPlaceId: number, googlePlaceId: string): 
     body: JSON.stringify({ googlePlaceId }),
   });
   if (!res.ok) {
-    throw new Error(`POST /api/trip-places/${tripPlaceId}/replace failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/trip-places/${tripPlaceId}/replace failed: ${res.status}`);
   }
   return res.json();
 }
@@ -232,7 +232,7 @@ export async function replacePlace(tripPlaceId: number, googlePlaceId: string): 
 export async function getGapRecommendations(tripId: number, day: number): Promise<Gap[]> {
   const res = await apiFetch(`/api/trips/${tripId}/days/${day}/gap-recommendations`);
   if (!res.ok) {
-    throw new Error(`GET /api/trips/${tripId}/days/${day}/gap-recommendations failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/trips/${tripId}/days/${day}/gap-recommendations failed: ${res.status}`);
   }
   return res.json();
 }
@@ -244,7 +244,7 @@ export async function insertPlaceAfter(afterTripPlaceId: number, googlePlaceId: 
     body: JSON.stringify({ afterTripPlaceId, googlePlaceId }),
   });
   if (!res.ok) {
-    throw new Error(`POST /api/trip-places/insert failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/trip-places/insert failed: ${res.status}`);
   }
   return res.json();
 }
@@ -272,7 +272,7 @@ export async function startTripReplan(tripId: number, indoorOnly = false): Promi
     body: JSON.stringify({ allPlaces: true, indoorOnly }),
   });
   if (!res.ok) {
-    throw new Error(`POST /api/trips/${tripId}/replan failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/trips/${tripId}/replan failed: ${res.status}`);
   }
   return res.json();
 }
@@ -280,7 +280,7 @@ export async function startTripReplan(tripId: number, indoorOnly = false): Promi
 export async function getTripReplanJob(tripId: number, jobId: number): Promise<TripReplanJob> {
   const res = await apiFetch(`/api/trips/${tripId}/replan/${jobId}`);
   if (!res.ok) {
-    throw new Error(`GET /api/trips/${tripId}/replan/${jobId} failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/trips/${tripId}/replan/${jobId} failed: ${res.status}`);
   }
   return res.json();
 }

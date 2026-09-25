@@ -11,12 +11,22 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
+import { shouldRetryQuery } from "@/lib/api/client";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { RootNavigator } from "@/navigation/RootNavigator";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-const queryClient = new QueryClient();
+// 조회 재시도: 기본값(3번, 1·2·4초 대기)이면 네트워크가 끊겼을 때 오류 안내까지 ~7초 스켈레톤만 보이고,
+// 로그인 만료(401)·없는 데이터(404)처럼 다시 해도 같은 4xx까지 재시도한다.
+// 4xx는 바로 실패로, 네트워크/서버 오류(5xx)만 1번 재시도한다. (쓰기 요청은 기본값대로 재시도하지 않음)
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: shouldRetryQuery,
+    },
+  },
+});
 
 // React Query의 "창 포커스 시 재조회"는 웹 이벤트 기준이라 RN에선 동작하지 않는다.
 // 앱이 백그라운드에서 돌아오면(active) 포커스로 알려서 오래된 목록을 자동으로 다시 불러온다.

@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch } from "@/lib/api/client";
 
 export type Bookmark = {
   id: number;
@@ -25,7 +25,7 @@ export type BookmarkFolder = {
 export async function listBookmarks(): Promise<Bookmark[]> {
   const res = await apiFetch(`/api/bookmarks`);
   if (!res.ok) {
-    throw new Error(`GET /api/bookmarks failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/bookmarks failed: ${res.status}`);
   }
   return res.json();
 }
@@ -37,7 +37,7 @@ export async function addBookmark(placeId: number, folderId?: number | null): Pr
     body: JSON.stringify({ placeId, folderId: folderId ?? null }),
   });
   if (!res.ok) {
-    throw new Error(`POST /api/bookmarks failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/bookmarks failed: ${res.status}`);
   }
   return res.json();
 }
@@ -45,7 +45,7 @@ export async function addBookmark(placeId: number, folderId?: number | null): Pr
 export async function removeBookmark(id: number): Promise<void> {
   const res = await apiFetch(`/api/bookmarks/${id}`, { method: "DELETE" });
   if (!res.ok) {
-    throw new Error(`DELETE /api/bookmarks/${id} failed: ${res.status}`);
+    throw new ApiError(res.status, `DELETE /api/bookmarks/${id} failed: ${res.status}`);
   }
 }
 
@@ -56,7 +56,7 @@ export async function moveBookmarkToFolder(bookmarkId: number, folderId: number 
     body: JSON.stringify({ folderId }),
   });
   if (!res.ok) {
-    throw new Error(`PATCH /api/bookmarks/${bookmarkId} failed: ${res.status}`);
+    throw new ApiError(res.status, `PATCH /api/bookmarks/${bookmarkId} failed: ${res.status}`);
   }
   return res.json();
 }
@@ -64,7 +64,7 @@ export async function moveBookmarkToFolder(bookmarkId: number, folderId: number 
 export async function listFolders(): Promise<BookmarkFolder[]> {
   const res = await apiFetch(`/api/bookmarks/folders`);
   if (!res.ok) {
-    throw new Error(`GET /api/bookmarks/folders failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/bookmarks/folders failed: ${res.status}`);
   }
   return res.json();
 }
@@ -79,7 +79,7 @@ export async function createFolder(name: string, color: string): Promise<Bookmar
     body: JSON.stringify({ name, color }),
   });
   if (!res.ok) {
-    throw new Error(`POST /api/bookmarks/folders failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/bookmarks/folders failed: ${res.status}`);
   }
   return res.json();
 }
@@ -87,6 +87,6 @@ export async function createFolder(name: string, color: string): Promise<Bookmar
 export async function deleteFolder(id: number): Promise<void> {
   const res = await apiFetch(`/api/bookmarks/folders/${id}`, { method: "DELETE" });
   if (!res.ok) {
-    throw new Error(`DELETE /api/bookmarks/folders/${id} failed: ${res.status}`);
+    throw new ApiError(res.status, `DELETE /api/bookmarks/folders/${id} failed: ${res.status}`);
   }
 }

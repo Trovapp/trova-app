@@ -18,6 +18,7 @@ import { listTrips } from "@/lib/api/trips";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { formatTripDates } from "@/lib/date";
+import { toUserMessage } from "@/lib/api/client";
 import { colors } from "@/lib/theme";
 import { isSupportedShareUrl, sourceVideoKey } from "@/lib/shareUrl";
 import type { MainTabScreenProps } from "@/navigation/types";
@@ -73,7 +74,7 @@ export function HomeScreen({ navigation }: Props) {
       const { jobId } = await createShare(sourceUrl);
       navigation.navigate("Processing", { jobId });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "요청에 실패했어요.");
+      setError(toUserMessage(err, "요청에 실패했어요. 잠시 후 다시 시도해주세요."));
     } finally {
       setSubmitting(false);
     }
@@ -125,7 +126,7 @@ export function HomeScreen({ navigation }: Props) {
       const { jobId } = await createShare(trimmed);
       navigation.navigate("Processing", { jobId });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "요청에 실패했어요.");
+      setError(toUserMessage(err, "요청에 실패했어요. 잠시 후 다시 시도해주세요."));
     } finally {
       setSubmitting(false);
     }

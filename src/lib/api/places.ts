@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch } from "@/lib/api/client";
 
 export type Place = {
   id: number;
@@ -56,7 +56,7 @@ export async function createShare(url: string): Promise<{ jobId: number }> {
 export async function getPendingJobs(): Promise<PendingJob[]> {
   const res = await apiFetch("/api/places/pending");
   if (!res.ok) {
-    throw new Error(`GET /api/places/pending failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/places/pending failed: ${res.status}`);
   }
   return res.json();
 }
@@ -64,7 +64,7 @@ export async function getPendingJobs(): Promise<PendingJob[]> {
 export async function deletePendingJob(jobId: number): Promise<void> {
   const res = await apiFetch(`/api/places/pending/${jobId}`, { method: "DELETE" });
   if (!res.ok) {
-    throw new Error(`DELETE /api/places/pending/${jobId} failed: ${res.status}`);
+    throw new ApiError(res.status, `DELETE /api/places/pending/${jobId} failed: ${res.status}`);
   }
 }
 
@@ -80,7 +80,7 @@ export async function resubmitFailedJob(job: PendingJob): Promise<{ jobId: numbe
 export async function deletePlace(id: number): Promise<void> {
   const res = await apiFetch(`/api/places/${id}`, { method: "DELETE" });
   if (!res.ok) {
-    throw new Error(`DELETE /api/places/${id} failed: ${res.status}`);
+    throw new ApiError(res.status, `DELETE /api/places/${id} failed: ${res.status}`);
   }
 }
 
@@ -95,7 +95,7 @@ export async function deleteVideoPlaces(placeIds: number[]): Promise<number> {
 export async function getPlaces(): Promise<Place[]> {
   const res = await apiFetch("/api/places");
   if (!res.ok) {
-    throw new Error(`GET /api/places failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/places failed: ${res.status}`);
   }
   return res.json();
 }
@@ -106,7 +106,7 @@ export async function getPlace(id: number): Promise<Place | null> {
     return null;
   }
   if (!res.ok) {
-    throw new Error(`GET /api/places/${id} failed: ${res.status}`);
+    throw new ApiError(res.status, `GET /api/places/${id} failed: ${res.status}`);
   }
   return res.json();
 }
@@ -114,7 +114,7 @@ export async function getPlace(id: number): Promise<Place | null> {
 export async function generateItinerary(jobId: number): Promise<void> {
   const res = await apiFetch(`/api/places/videos/${jobId}/itinerary`, { method: "POST" });
   if (!res.ok) {
-    throw new Error(`POST /api/places/videos/${jobId}/itinerary failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/places/videos/${jobId}/itinerary failed: ${res.status}`);
   }
 }
 
@@ -125,7 +125,7 @@ export async function moveToDay(placeId: number, dayNumber: number): Promise<Pla
     body: JSON.stringify({ dayNumber }),
   });
   if (!res.ok) {
-    throw new Error(`PATCH /api/places/${placeId}/day failed: ${res.status}`);
+    throw new ApiError(res.status, `PATCH /api/places/${placeId}/day failed: ${res.status}`);
   }
   return res.json();
 }
@@ -137,7 +137,7 @@ export async function reorderPlace(placeId: number, direction: "UP" | "DOWN"): P
     body: JSON.stringify({ direction }),
   });
   if (!res.ok) {
-    throw new Error(`PATCH /api/places/${placeId}/order failed: ${res.status}`);
+    throw new ApiError(res.status, `PATCH /api/places/${placeId}/order failed: ${res.status}`);
   }
   return res.json();
 }
@@ -145,7 +145,7 @@ export async function reorderPlace(placeId: number, direction: "UP" | "DOWN"): P
 export async function optimizeRoute(jobId: number, day: number): Promise<Place[]> {
   const res = await apiFetch(`/api/places/videos/${jobId}/days/${day}/optimize-route`, { method: "POST" });
   if (!res.ok) {
-    throw new Error(`POST /api/places/videos/${jobId}/days/${day}/optimize-route failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/places/videos/${jobId}/days/${day}/optimize-route failed: ${res.status}`);
   }
   return res.json();
 }

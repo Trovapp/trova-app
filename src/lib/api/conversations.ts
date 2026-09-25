@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch } from "@/lib/api/client";
 import type { AlternativeCandidate } from "@/lib/api/trips";
 
 export type ConversationMessageRequest = {
@@ -26,7 +26,7 @@ export async function sendConversationMessage(
     body: JSON.stringify(request),
   });
   if (!res.ok) {
-    throw new Error(`POST /api/conversations/${sessionId}/messages failed: ${res.status}`);
+    throw new ApiError(res.status, `POST /api/conversations/${sessionId}/messages failed: ${res.status}`);
   }
   return res.json();
 }
