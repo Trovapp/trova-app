@@ -245,11 +245,17 @@ export function TripReplanScreen({ route, navigation }: Props) {
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <BackButton onPress={goBackToTrip} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: topClearance, gap: 16 }}>
+        {/* 교체 추천이 0개이고 "대안을 찾지 못한 장소"만 있는 결과도 이 화면으로 온다 —
+            그때 "새로운 추천을 찾았어요"는 사실과 다르므로 문구를 나눈다. */}
         <AppText weight="medium" style={{ fontSize: 18 }}>
-          새로운 추천을 찾았어요
+          {result.replaced.length > 0
+            ? `새로운 추천을 ${result.replaced.length}곳 찾았어요`
+            : "바꿀 만한 장소를 찾지 못했어요"}
         </AppText>
         <AppText style={{ fontSize: 13, color: colors.inkMuted }}>
-          장소마다 확인하고 교체하거나 건너뛸 수 있어요. 확정하면 동선도 자동으로 다시 정리돼요.
+          {result.replaced.length > 0
+            ? "장소마다 확인하고 교체하거나 건너뛸 수 있어요. 확정하면 동선도 자동으로 다시 정리돼요."
+            : "아래 장소는 비슷한 대안을 찾지 못해 일정에 그대로 남겨둬요."}
         </AppText>
 
         {confirmError && <ErrorText>{confirmError}</ErrorText>}
