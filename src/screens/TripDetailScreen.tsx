@@ -742,55 +742,66 @@ export function TripDetailScreen({ route, navigation }: Props) {
                 </AppText>
               )}
 
-              {searchResults.map((place) => (
-                <View key={place.id} style={{ padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 12, gap: 6 }}>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
-                    <View style={{ flex: 1 }}>
-                      <AppText weight="medium" numberOfLines={1}>
-                        {place.name}
-                      </AppText>
-                      {place.address && (
-                        <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
-                          {place.address}
-                        </AppText>
-                      )}
-                      {place.rating !== null && (
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-                          <RatingBadge rating={place.rating} />
-                          {place.userRatingCount !== null && (
-                            <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                              (리뷰 {formatCount(place.userRatingCount)}개)
-                            </AppText>
-                          )}
-                        </View>
-                      )}
-                    </View>
-                    <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
-                      <PressableScale onPress={() => handleToggleBookmark(place.id)} hitSlop={{ top: 13, bottom: 13, left: 13, right: 4 }}>
-                        <Feather
-                          name="star"
-                          size={18}
-                          color={bookmarkedPlaceIds.has(place.id) ? colors.accent : colors.border}
-                        />
-                      </PressableScale>
-                      <AddToDayButton
-                        added={addedGooglePlaceIds.has(place.googlePlaceId)}
-                        disabled={busy}
-                        onPress={() => handleAddPlace(place.googlePlaceId)}
-                      />
-                    </View>
-                  </View>
-                  <PressableScale
-                    onPress={() => {
-                      setAlternativeTargetId(null);
-                      setReviewTarget({ kind: "place", id: place.id });
+              {/* 위쪽 일정 목록과 같은 구분선 리스트(테두리 카드 X) — 한 화면 안에서 스타일이 섞이지 않게. */}
+              <View>
+                {searchResults.map((place, index) => (
+                  <View
+                    key={place.id}
+                    style={{
+                      paddingVertical: 12,
+                      gap: 6,
+                      borderTopWidth: index === 0 ? 0 : 1,
+                      borderTopColor: colors.borderSubtle,
                     }}
-                    hitSlop={{ top: 10, bottom: 10, right: 10 }}
                   >
-                    <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
-                  </PressableScale>
-                </View>
-              ))}
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
+                      <View style={{ flex: 1 }}>
+                        <AppText weight="medium" numberOfLines={1}>
+                          {place.name}
+                        </AppText>
+                        {place.address && (
+                          <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+                            {place.address}
+                          </AppText>
+                        )}
+                        {place.rating !== null && (
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                            <RatingBadge rating={place.rating} />
+                            {place.userRatingCount !== null && (
+                              <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                                (리뷰 {formatCount(place.userRatingCount)}개)
+                              </AppText>
+                            )}
+                          </View>
+                        )}
+                      </View>
+                      <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+                        <PressableScale onPress={() => handleToggleBookmark(place.id)} hitSlop={{ top: 13, bottom: 13, left: 13, right: 4 }}>
+                          <Feather
+                            name="star"
+                            size={18}
+                            color={bookmarkedPlaceIds.has(place.id) ? colors.accent : colors.border}
+                          />
+                        </PressableScale>
+                        <AddToDayButton
+                          added={addedGooglePlaceIds.has(place.googlePlaceId)}
+                          disabled={busy}
+                          onPress={() => handleAddPlace(place.googlePlaceId)}
+                        />
+                      </View>
+                    </View>
+                    <PressableScale
+                      onPress={() => {
+                        setAlternativeTargetId(null);
+                        setReviewTarget({ kind: "place", id: place.id });
+                      }}
+                      hitSlop={{ top: 10, bottom: 10, right: 10 }}
+                    >
+                      <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
+                    </PressableScale>
+                  </View>
+                ))}
+              </View>
             </View>
           ) : (
             <View style={{ gap: 12 }}>
@@ -808,49 +819,50 @@ export function TripDetailScreen({ route, navigation }: Props) {
                       {section.name}
                     </AppText>
                   </View>
-                  {section.bookmarks.map((bookmark) => (
-                    <View
-                      key={bookmark.id}
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: 12,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                        borderRadius: 12,
-                      }}
-                    >
-                      <PressableScale
-                        style={{ flex: 1 }}
-                        onPress={() => {
-                          setAlternativeTargetId(null);
-                          setReviewTarget({ kind: "place", id: bookmark.placeId });
+                  <View>
+                    {section.bookmarks.map((bookmark, index) => (
+                      <View
+                        key={bookmark.id}
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          paddingVertical: 12,
+                          borderTopWidth: index === 0 ? 0 : 1,
+                          borderTopColor: colors.borderSubtle,
                         }}
                       >
-                        <AppText weight="medium" numberOfLines={1}>
-                          {bookmark.placeName}
-                        </AppText>
-                      </PressableScale>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                        <AddToDayButton
-                          added={addedGooglePlaceIds.has(bookmark.googlePlaceId)}
-                          disabled={busy}
-                          onPress={() => handleAddPlace(bookmark.googlePlaceId)}
-                        />
                         <PressableScale
-                          onPress={() =>
-                            Alert.alert("찜을 해제할까요?", `"${bookmark.placeName}"을(를) 찜한 장소에서 뺍니다.`, [
-                              { text: "취소", style: "cancel" },
-                              { text: "해제", style: "destructive", onPress: () => handleRemoveBookmark(bookmark.id) },
-                            ])
-                          }
-                          hitSlop={{ top: 12, bottom: 12, left: 4, right: 12 }}>
-                          <AppText style={{ fontSize: 12, color: colors.inkMuted }}>찜 해제</AppText>
+                          style={{ flex: 1 }}
+                          onPress={() => {
+                            setAlternativeTargetId(null);
+                            setReviewTarget({ kind: "place", id: bookmark.placeId });
+                          }}
+                        >
+                          <AppText weight="medium" numberOfLines={1}>
+                            {bookmark.placeName}
+                          </AppText>
                         </PressableScale>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                          <AddToDayButton
+                            added={addedGooglePlaceIds.has(bookmark.googlePlaceId)}
+                            disabled={busy}
+                            onPress={() => handleAddPlace(bookmark.googlePlaceId)}
+                          />
+                          <PressableScale
+                            onPress={() =>
+                              Alert.alert("찜을 해제할까요?", `"${bookmark.placeName}"을(를) 찜한 장소에서 뺍니다.`, [
+                                { text: "취소", style: "cancel" },
+                                { text: "해제", style: "destructive", onPress: () => handleRemoveBookmark(bookmark.id) },
+                              ])
+                            }
+                            hitSlop={{ top: 12, bottom: 12, left: 4, right: 12 }}>
+                            <AppText style={{ fontSize: 12, color: colors.inkMuted }}>찜 해제</AppText>
+                          </PressableScale>
+                        </View>
                       </View>
-                    </View>
-                  ))}
+                    ))}
+                  </View>
                 </View>
               ))}
             </View>
