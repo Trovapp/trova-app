@@ -41,3 +41,11 @@ export function formatTripDates(startDate: string, endDate: string | null, now: 
   if (nights <= 0) return `${label(start)} · 당일`;
   return `${label(start)} ~ ${label(end)} · ${nights}박 ${nights + 1}일`;
 }
+
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+// 날짜 선택 버튼용 표시: "9월 25일 (금)". 올해가 아니면 연도를 붙인다.
+export function formatDateLabel(date: Date, now: Date = new Date()): string {
+  const year = date.getFullYear() !== now.getFullYear() ? `${date.getFullYear()}년 ` : "";
+  return `${year}${date.getMonth() + 1}월 ${date.getDate()}일 (${WEEKDAYS[date.getDay()]})`;
+}

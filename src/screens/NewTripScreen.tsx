@@ -7,7 +7,7 @@ import { ErrorText } from "@/components/ErrorText";
 import { PressableScale } from "@/components/PressableScale";
 import { haptics } from "@/lib/haptics";
 import { createTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
-import { toDateString } from "@/lib/date";
+import { formatDateLabel, toDateString } from "@/lib/date";
 import { colors } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
@@ -74,7 +74,7 @@ export function NewTripScreen({ navigation }: Props) {
             }}
             style={{ height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 12, justifyContent: "center", paddingHorizontal: 12 }}
           >
-            <AppText>{toDateString(startDate)}</AppText>
+            <AppText>{formatDateLabel(startDate)}</AppText>
           </PressableScale>
         </View>
         <View style={{ flex: 1, gap: 4 }}>
@@ -86,7 +86,7 @@ export function NewTripScreen({ navigation }: Props) {
             }}
             style={{ height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 12, justifyContent: "center", paddingHorizontal: 12 }}
           >
-            <AppText>{toDateString(endDate)}</AppText>
+            <AppText>{formatDateLabel(endDate)}</AppText>
           </PressableScale>
         </View>
       </View>
