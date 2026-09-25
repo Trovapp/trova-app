@@ -4,6 +4,7 @@ import { Feather } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { ErrorText } from "@/components/ErrorText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { PressableScale } from "@/components/PressableScale";
@@ -346,7 +347,7 @@ export function AlternativeFinderSheet({
               )}
             </View>
 
-            {searchError && <AppText style={{ color: colors.accent }}>{searchError}</AppText>}
+            {searchError && <ErrorText>{searchError}</ErrorText>}
 
             {candidates !== null && candidates.length === 0 && (
               <AppText style={{ color: colors.inkMuted, textAlign: "center", padding: 12 }}>
@@ -407,7 +408,7 @@ export function AlternativeFinderSheet({
                             height={120}
                             showPath={false}
                           />
-                          {searchError && <AppText style={{ color: colors.accent }}>{searchError}</AppText>}
+                          {searchError && <ErrorText>{searchError}</ErrorText>}
                           <PressableScale
                             onPress={handleReplace}
                             disabled={replacing}

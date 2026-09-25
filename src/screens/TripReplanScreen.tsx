@@ -4,6 +4,7 @@ import { PressableScale } from "@/components/PressableScale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
+import { ErrorText } from "@/components/ErrorText";
 import { BackButton } from "@/components/BackButton";
 import { Emoji } from "@/components/Emoji";
 import { ProgressHero } from "@/components/ProgressHero";
@@ -250,7 +251,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
           장소마다 확인하고 교체하거나 건너뛸 수 있어요. 확정하면 동선도 자동으로 다시 정리돼요.
         </AppText>
 
-        {confirmError && <AppText style={{ color: colors.accent }}>{confirmError}</AppText>}
+        {confirmError && <ErrorText>{confirmError}</ErrorText>}
 
         {result.replaced.map(({ tripPlaceId, originalName, candidate }) => {
           const status = cardStatus[tripPlaceId];

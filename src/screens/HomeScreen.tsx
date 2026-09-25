@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
+import { ErrorText } from "@/components/ErrorText";
 import { InlineMap } from "@/components/InlineMap";
 import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
@@ -129,7 +130,7 @@ export function HomeScreen({ navigation }: Props) {
                 {submitting ? "추출 중..." : "장소 추출하기"}
               </AppText>
             </PressableScale>
-            {error && <AppText style={{ color: colors.accent, fontSize: 13 }}>{error}</AppText>}
+            {error && <ErrorText>{error}</ErrorText>}
           </View>
         </View>
 

@@ -4,6 +4,7 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { ErrorText } from "@/components/ErrorText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { PressableScale } from "@/components/PressableScale";
@@ -132,7 +133,7 @@ function ExpandedCandidateCard({
         <AppText style={{ fontSize: 12, color: colors.accent }}>리뷰 보기</AppText>
         <Feather name="chevron-right" size={12} color={colors.accent} />
       </PressableScale>
-      {error && <AppText style={{ color: colors.accent, fontSize: 12 }}>{error}</AppText>}
+      {error && <ErrorText>{error}</ErrorText>}
       <PressableScale
         onPress={onConfirm}
         disabled={confirming}
@@ -430,7 +431,7 @@ export function ConversationSheet({
               </View>
             )}
 
-            {sendError && <AppText style={{ color: colors.accent, fontSize: 12 }}>{sendError}</AppText>}
+            {sendError && <ErrorText>{sendError}</ErrorText>}
 
             {turnLimitReached ? (
               <View style={{ alignItems: "center", gap: 8, padding: 8 }}>

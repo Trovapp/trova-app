@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
+import { ErrorText } from "@/components/ErrorText";
 import { BackButton } from "@/components/BackButton";
 import { Emoji } from "@/components/Emoji";
 import { PressableScale } from "@/components/PressableScale";
@@ -187,7 +188,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
             <PressableScale onPress={() => navigation.replace("MainTabs")} hitSlop={10} disabled={retrying}>
               <AppText style={{ color: colors.inkMuted }}>홈으로 돌아가기</AppText>
             </PressableScale>
-            {retryError && <AppText style={{ color: colors.accent, fontSize: 13 }}>{retryError}</AppText>}
+            {retryError && <ErrorText>{retryError}</ErrorText>}
           </>
         ) : (
           <PressableScale

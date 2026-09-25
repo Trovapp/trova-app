@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
+import { ErrorText } from "@/components/ErrorText";
 import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -270,7 +271,7 @@ export function PlacesListScreen({ navigation }: Props) {
                 onRetry={places.some((place) => place.jobId === job.jobId) ? undefined : handleRetryJob}
               />
             ))}
-            {deleteError && <AppText style={{ color: colors.accent, fontSize: 12 }}>{deleteError}</AppText>}
+            {deleteError && <ErrorText>{deleteError}</ErrorText>}
           </View>
         ) : null
       }

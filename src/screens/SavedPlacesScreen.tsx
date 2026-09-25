@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
+import { ErrorText } from "@/components/ErrorText";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
@@ -285,7 +286,7 @@ export function SavedPlacesScreen() {
                   <Feather name="x" size={14} color={colors.accent} />
                   <AppText style={{ color: colors.accent }}>검색 결과 닫기</AppText>
                 </PressableScale>
-                {searchError && <AppText style={{ color: colors.accent }}>{searchError}</AppText>}
+                {searchError && <ErrorText>{searchError}</ErrorText>}
               </View>
             }
             ListEmptyComponent={
@@ -404,8 +405,8 @@ export function SavedPlacesScreen() {
                     <Feather name="x" size={18} color={colors.inkMuted} />
                   </PressableScale>
                 </View>
-                {removeError && <AppText style={{ color: colors.accent }}>{removeError}</AppText>}
-                {moveError && <AppText style={{ color: colors.accent }}>{moveError}</AppText>}
+                {removeError && <ErrorText>{removeError}</ErrorText>}
+                {moveError && <ErrorText>{moveError}</ErrorText>}
               </View>
             }
             ListEmptyComponent={

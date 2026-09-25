@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "rea
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { ErrorText } from "@/components/ErrorText";
 import { PressableScale } from "@/components/PressableScale";
 import { haptics } from "@/lib/haptics";
 import { createTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
@@ -137,7 +138,7 @@ export function NewTripScreen({ navigation }: Props) {
         </View>
       )}
 
-      {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
+      {error && <ErrorText>{error}</ErrorText>}
 
       <PressableScale
         onPress={handleSubmit}

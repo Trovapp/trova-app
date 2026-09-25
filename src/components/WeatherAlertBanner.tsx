@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
+import { ErrorText } from "@/components/ErrorText";
 import { PressableScale } from "@/components/PressableScale";
 import { colors } from "@/lib/theme";
 import { dismissNotification, listNotifications } from "@/lib/api/notifications";
@@ -55,7 +56,7 @@ export function WeatherAlertBanner({
           {target.body}
         </AppText>
         {dismissError && (
-          <AppText style={{ fontSize: 12, color: colors.accent }}>{dismissError}</AppText>
+          <ErrorText>{dismissError}</ErrorText>
         )}
       </View>
       <PressableScale onPress={handleDismiss} hitSlop={10}>

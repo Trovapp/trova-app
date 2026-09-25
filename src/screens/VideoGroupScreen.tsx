@@ -4,6 +4,7 @@ import { PressableScale } from "@/components/PressableScale";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
+import { ErrorText } from "@/components/ErrorText";
 import { DayPickerSheet } from "@/components/DayPickerSheet";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
@@ -263,7 +264,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             {generating ? "일정 생성 중..." : "일정 짜기"}
           </AppText>
         </PressableScale>
-        {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
+        {error && <ErrorText>{error}</ErrorText>}
         <View>
           {group.map((place, index) => {
             const isLast = index === group.length - 1;
@@ -373,7 +374,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                   {confirmingTrip ? "확정 중..." : "확정"}
                 </AppText>
               </PressableScale>
-              {tripError && <AppText style={{ color: colors.accent }}>{tripError}</AppText>}
+              {tripError && <ErrorText>{tripError}</ErrorText>}
             </View>
           )}
 
@@ -391,7 +392,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             <AppText style={{ fontSize: 13, color: colors.accent }}>동선 최적화</AppText>
           </PressableScale>
 
-          {itineraryError && <AppText style={{ color: colors.accent }}>{itineraryError}</AppText>}
+          {itineraryError && <ErrorText>{itineraryError}</ErrorText>}
 
           <InlineMap
             pins={activePlaces

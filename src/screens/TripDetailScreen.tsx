@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AlternativeFinderSheet } from "@/components/AlternativeFinderSheet";
 import { AppText } from "@/components/AppText";
+import { ErrorText } from "@/components/ErrorText";
 import { ConversationSheet } from "@/components/ConversationSheet";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
 import { InlineMap } from "@/components/InlineMap";
@@ -626,7 +627,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             </AppText>
           </PressableScale>
 
-          {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
+          {error && <ErrorText>{error}</ErrorText>}
 
           <InlineMap
             pins={places
@@ -917,7 +918,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
     >
       <BottomSheetView style={{ padding: 16, paddingBottom: 32, gap: 10 }}>
         <AppText weight="medium">이 사이 갈 만한 곳</AppText>
-        {error && <AppText style={{ color: colors.accent }}>{error}</AppText>}
+        {error && <ErrorText>{error}</ErrorText>}
         {gapCardFor?.recommendations.map((r) => (
           <PressableScale
             key={r.placeId}
