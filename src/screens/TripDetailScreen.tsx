@@ -538,19 +538,16 @@ export function TripDetailScreen({ route, navigation }: Props) {
                 value={timeDraft ?? parseTimeToDate(place.visitStartTime)}
                 mode="time"
                 display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={(event, selected) => {
+                onValueChange={(_, selected) => {
                   if (Platform.OS === "ios") {
                     // 드래그 중간값 — 저장하지 않고 담아만 둔다.
-                    if (selected) setTimeDraft(selected);
+                    setTimeDraft(selected);
                     return;
                   }
-                  // Android는 모달이라 확인/취소 시 한 번만 발생한다.
-                  if (event.type !== "set" || !selected) {
-                    closeTimePicker();
-                    return;
-                  }
+                  // Android는 모달이라 "확인"을 눌렀을 때만 온다(취소는 onDismiss).
                   commitTime(place, selected);
                 }}
+                onDismiss={closeTimePicker}
               />
               {Platform.OS === "ios" && (
                 <View style={{ flexDirection: "row", gap: 16, justifyContent: "flex-end" }}>

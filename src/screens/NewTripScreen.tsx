@@ -107,15 +107,17 @@ export function NewTripScreen({ navigation }: Props) {
           <DateTimePicker
             value={startDate}
             mode="date"
+            locale="ko-KR"
             display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={(event, selected) => {
+            // onChange는 라이브러리 9.x에서 deprecated(개발 빌드 경고) — 선택은 onValueChange, 취소는 onDismiss.
+            onValueChange={(_, selected) => {
               // iOS 인라인 스피너는 스스로 닫히지 않는다 — 아래 "확인"으로만 닫는다.
               if (Platform.OS !== "ios") setShowStartPicker(false);
-              if (event.type !== "set" || !selected) return;
               setStartDate(selected);
               // 출발일이 도착일보다 늦어지면 도착일도 함께 밀어준다(웹과 동일한 보정).
               if (selected > endDate) setEndDate(selected);
             }}
+            onDismiss={() => setShowStartPicker(false)}
           />
           {Platform.OS === "ios" && (
             <PressableScale onPress={() => setShowStartPicker(false)} style={{ alignSelf: "flex-end" }}>
@@ -131,13 +133,14 @@ export function NewTripScreen({ navigation }: Props) {
           <DateTimePicker
             value={endDate}
             mode="date"
+            locale="ko-KR"
             minimumDate={startDate}
             display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={(event, selected) => {
+            onValueChange={(_, selected) => {
               if (Platform.OS !== "ios") setShowEndPicker(false);
-              if (event.type !== "set" || !selected) return;
               setEndDate(selected);
             }}
+            onDismiss={() => setShowEndPicker(false)}
           />
           {Platform.OS === "ios" && (
             <PressableScale onPress={() => setShowEndPicker(false)} style={{ alignSelf: "flex-end" }}>
