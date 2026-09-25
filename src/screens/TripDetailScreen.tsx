@@ -27,6 +27,7 @@ import { getDayColor } from "@/lib/itinerary";
 import { haptics } from "@/lib/haptics";
 import { parseTimeToDate, toTimeString } from "@/lib/date";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { formatCount } from "@/lib/number";
 import { colors } from "@/lib/theme";
 import { addBookmark, listBookmarks, listFolders, removeBookmark } from "@/lib/api/bookmarks";
 import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
@@ -719,7 +720,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                           <RatingBadge rating={place.rating} />
                           {place.userRatingCount !== null && (
                             <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                              (리뷰 {place.userRatingCount}개)
+                              (리뷰 {formatCount(place.userRatingCount)}개)
                             </AppText>
                           )}
                         </View>

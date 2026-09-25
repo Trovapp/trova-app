@@ -34,6 +34,7 @@ import {
 } from "@/lib/api/bookmarks";
 import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
 import { categoryLabel } from "@/lib/placeCategory";
+import { formatCount } from "@/lib/number";
 import { colors } from "@/lib/theme";
 
 const UNSORTED_ID = -1; // "미분류" 가상 폴더 id — 실제 폴더 id는 항상 양수(DB IDENTITY)라 겹치지 않는다.
@@ -322,7 +323,7 @@ export function SavedPlacesScreen() {
                           <RatingBadge rating={item.rating} />
                           {item.userRatingCount !== null && (
                             <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
-                              (리뷰 {item.userRatingCount}개)
+                              (리뷰 {formatCount(item.userRatingCount)}개)
                             </AppText>
                           )}
                         </View>

@@ -13,6 +13,7 @@ import { getPlaceDetails } from "@/lib/api/recommendations";
 import { getTripPlaceDetails } from "@/lib/api/trips";
 import { haptics } from "@/lib/haptics";
 import { categoryLabel } from "@/lib/placeCategory";
+import { formatCount } from "@/lib/number";
 import { colors } from "@/lib/theme";
 
 const SHEET_SNAP_POINTS = ["32%", "60%"];
@@ -122,7 +123,7 @@ export function PlaceReviewContent({
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <RatingBadge rating={detail.rating} />
               {detail.userRatingCount !== null && (
-                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>(리뷰 {detail.userRatingCount}개)</AppText>
+                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>(리뷰 {formatCount(detail.userRatingCount)}개)</AppText>
               )}
             </View>
           )}
