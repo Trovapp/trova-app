@@ -100,7 +100,7 @@ export function SavedPlacesScreen() {
     return (
       <QueryErrorView
         fullScreen
-        message="저장 장소를 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요."
+        message="찜한 장소를 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요."
         onRetry={() => {
           if (bookmarksQuery.isError) bookmarksQuery.refetch();
           if (foldersQuery.isError) foldersQuery.refetch();
@@ -162,7 +162,7 @@ export function SavedPlacesScreen() {
       await removeBookmark(id);
       await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
     } catch {
-      setRemoveError("장소를 제거하지 못했어요.");
+      setRemoveError("찜을 해제하지 못했어요.");
     }
   }
 
@@ -412,7 +412,7 @@ export function SavedPlacesScreen() {
             }
             ListEmptyComponent={
               <AppText style={{ color: colors.inkMuted, textAlign: "center", padding: 16 }}>
-                이 폴더엔 아직 저장한 장소가 없어요.{"\n"}위 검색창에서 장소를 찾아 ☆를 눌러 저장해보세요.
+                이 폴더엔 아직 저장한 장소가 없어요.{"\n"}위 검색창에서 장소를 찾아 ☆를 눌러 찜해보세요.
               </AppText>
             }
             renderItem={({ item, index }: { item: Bookmark; index: number }) => (
@@ -495,7 +495,7 @@ export function SavedPlacesScreen() {
               menuSheetRef.current?.dismiss();
               if (!target) return;
               // 일정 장소 삭제와 같은 확인 흐름 — 폴더 분류까지 함께 사라지고 되돌릴 수 없다.
-              Alert.alert("찜을 해제할까요?", `"${target.placeName}"을(를) 저장 장소에서 뺍니다.`, [
+              Alert.alert("찜을 해제할까요?", `"${target.placeName}"을(를) 찜한 장소에서 뺍니다.`, [
                 { text: "취소", style: "cancel" },
                 { text: "해제", style: "destructive", onPress: () => handleRemove(target.id) },
               ]);

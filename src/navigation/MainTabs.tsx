@@ -37,7 +37,7 @@ export function MainTabs() {
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: "Trova", tabBarLabel: "홈" }} />
       <Tab.Screen name="PlacesList" component={PlacesListScreen} options={{ title: "영상 기록", tabBarLabel: "영상 기록" }} />
       <Tab.Screen name="TripsList" component={TripsListScreen} options={{ title: "내 여행", tabBarLabel: "내 여행" }} />
-      <Tab.Screen name="SavedPlaces" component={SavedPlacesScreen} options={{ title: "저장 장소", tabBarLabel: "저장 장소" }} />
+      <Tab.Screen name="SavedPlaces" component={SavedPlacesScreen} options={{ title: "찜한 장소", tabBarLabel: "찜한 장소" }} />
       <Tab.Screen name="MyPage" component={MyPageScreen} options={{ title: "마이페이지", tabBarLabel: "마이페이지" }} />
     </Tab.Navigator>
   );
