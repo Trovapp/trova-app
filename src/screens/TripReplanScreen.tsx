@@ -68,7 +68,11 @@ export function TripReplanScreen({ route, navigation }: Props) {
       }
       await Promise.allSettled([...affectedDays].map((day) => optimizeTripRoute(tripId, day)));
     }
-    navigation.replace("TripDetail", { id: tripId });
+    // 이 화면은 여행 상세에서 push되므로 replace하면 스택에 여행 상세가 두 개 쌓여
+    // 뒤로가기 시 같은 화면이 또 나온다. 기존 여행 상세로 되돌아가고(없으면 새로 추가),
+    // 그 화면은 마운트된 채라 동선이 바뀐 여행 데이터를 여기서 다시 불러오게 한다.
+    await queryClient.invalidateQueries({ queryKey: ["trip", tripId] });
+    navigation.popTo("TripDetail", { id: tripId });
   }
 
   async function handleConfirm(tripPlaceId: number, googlePlaceId: string) {
