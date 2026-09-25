@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { Alert, Image, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
@@ -7,11 +8,14 @@ import { haptics } from "@/lib/haptics";
 import { withdraw } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { colors } from "@/lib/theme";
+import type { RootStackParamList } from "@/navigation/types";
+import appConfig from "../../app.json";
 
 // 마이페이지(2026-09 신규): 로그아웃이 홈 화면 맨 아래 묻혀 있던 걸 계정 관리
 // 전용 화면으로 분리했다. 회원 탈퇴(DELETE /api/users/me)는 백엔드에 이미
 // 구현돼 있었는데 앱에서 아직 안 쓰고 있던 걸 여기서 연결한다.
 export function MyPageScreen() {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { user, logout } = useAuth();
   const [withdrawing, setWithdrawing] = useState(false);
   // 카카오/구글 프로필 이미지 URL이 있어도 로드에 실패할 수 있다(만료된 URL,
@@ -81,6 +85,20 @@ export function MyPageScreen() {
 
       <View>
         <PressableRow
+          onPress={() => navigation.navigate("Licenses")}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingVertical: 16,
+            borderTopWidth: 1,
+            borderTopColor: colors.borderSubtle,
+          }}
+        >
+          <AppText>오픈소스 라이선스</AppText>
+          <Feather name="chevron-right" size={18} color={colors.inkMuted} />
+        </PressableRow>
+        <PressableRow
           onPress={confirmLogout}
           style={{
             flexDirection: "row",
@@ -111,6 +129,10 @@ export function MyPageScreen() {
           <Feather name="chevron-right" size={18} color={colors.inkMuted} />
         </PressableRow>
       </View>
+
+      <AppText style={{ marginTop: "auto", textAlign: "center", fontSize: 12, color: colors.inkMuted }}>
+        버전 {appConfig.expo.version}
+      </AppText>
     </View>
   );
 }

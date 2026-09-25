@@ -7,6 +7,7 @@ import { VideoGroupScreen } from "@/screens/VideoGroupScreen";
 import { NewTripScreen } from "@/screens/NewTripScreen";
 import { TripDetailScreen } from "@/screens/TripDetailScreen";
 import { TripReplanScreen } from "@/screens/TripReplanScreen";
+import { LicensesScreen } from "@/screens/LicensesScreen";
 import { AppText } from "@/components/AppText";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { View } from "react-native";
@@ -52,6 +53,7 @@ export function RootNavigator() {
           <Stack.Screen name="NewTrip" component={NewTripScreen} options={{ title: "새 여행" }} />
           <Stack.Screen name="TripDetail" component={TripDetailScreen} options={{ title: "여행 상세" }} />
           <Stack.Screen name="TripReplan" component={TripReplanScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Licenses" component={LicensesScreen} options={{ title: "오픈소스 라이선스" }} />
         </>
       )}
     </Stack.Navigator>
