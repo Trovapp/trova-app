@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
-import { BackButton } from "@/components/BackButton";
+import { BackButton, useBackButtonClearance } from "@/components/BackButton";
 import { Emoji } from "@/components/Emoji";
 import { PressableScale } from "@/components/PressableScale";
 import { ProgressHero } from "@/components/ProgressHero";
@@ -80,6 +80,7 @@ const STAGE_ANALYSIS: Record<Stage, { title: string; description: string }> = {
 
 export function ProcessingScreen({ route, navigation }: Props) {
   const { jobId } = route.params;
+  const topClearance = useBackButtonClearance();
 
   const pendingQuery = useQuery({
     queryKey: ["pendingJobs"],
@@ -218,7 +219,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
   const analysis = STAGE_ANALYSIS[stage];
 
   return (
-    <View style={{ flex: 1, padding: 24, paddingTop: 72, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, padding: 24, paddingTop: topClearance, backgroundColor: colors.bg }}>
       <BackButton onPress={handleBack} />
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
         <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={STAGE_CREEP_MS[stage]} />

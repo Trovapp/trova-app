@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
-import { BackButton } from "@/components/BackButton";
+import { BackButton, useBackButtonClearance } from "@/components/BackButton";
 import { Emoji } from "@/components/Emoji";
 import { ProgressHero } from "@/components/ProgressHero";
 import { QueryErrorView } from "@/components/QueryErrorView";
@@ -25,6 +25,7 @@ type CardStatus = "confirming" | "confirmed" | "skipped";
 
 export function TripReplanScreen({ route, navigation }: Props) {
   const { tripId, jobId } = route.params;
+  const topClearance = useBackButtonClearance();
   const queryClient = useQueryClient();
 
   const [cardStatus, setCardStatus] = useState<Record<number, CardStatus>>({});
@@ -177,7 +178,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
       total === null ? 15 : total === 0 ? 100 : Math.round(((job.completedTargets + 1) / total) * 100);
     const ceiling = Math.min(nextTargetPercent - 2, 99);
     return (
-      <View style={{ flex: 1, padding: 24, paddingTop: 72, backgroundColor: colors.bg }}>
+      <View style={{ flex: 1, padding: 24, paddingTop: topClearance, backgroundColor: colors.bg }}>
         <BackButton onPress={goBackToTrip} />
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
           <ProgressHero percent={percent} ceiling={ceiling} creepMs={AVG_TARGET_MS} />
@@ -243,7 +244,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <BackButton onPress={goBackToTrip} />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 64, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: topClearance, gap: 16 }}>
         <AppText weight="medium" style={{ fontSize: 18 }}>
           새로운 추천을 찾았어요
         </AppText>
