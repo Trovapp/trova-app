@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Alert, Platform, RefreshControl, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import {
@@ -34,6 +34,7 @@ import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
 import {
   addTripPlace,
   checkWeather,
+  deleteTrip,
   getGapRecommendations,
   getTrip,
   insertPlaceAfter,
@@ -66,6 +67,40 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const queryClient = useQueryClient();
   const tripQuery = useQuery({ queryKey: ["trip", id], queryFn: () => getTrip(id) });
   const { refreshing, onRefresh } = usePullToRefresh(tripQuery.refetch);
+  const tripTitle = tripQuery.data?.title;
+
+  // 여행 삭제 — 한번 만든 여행을 지울 방법이 없어 테스트/중복 여행이 계속 쌓이던 문제.
+  // 되돌릴 수 없으니 확인을 받고, 성공하면 목록을 새로 받고 이 여행 캐시는 버린 뒤 뒤로 간다.
+  useLayoutEffect(() => {
+    function confirmDeleteTrip() {
+      Alert.alert("여행을 삭제할까요?", `"${tripTitle ?? "이 여행"}"의 일정과 장소가 모두 사라지고 되돌릴 수 없어요.`, [
+        { text: "취소", style: "cancel" },
+        {
+          text: "삭제",
+          style: "destructive",
+          onPress: async () => {
+            haptics.warning();
+            try {
+              await deleteTrip(id);
+              await queryClient.invalidateQueries({ queryKey: ["trips"] });
+              queryClient.removeQueries({ queryKey: ["trip", id] });
+              if (navigation.canGoBack()) navigation.goBack();
+              else navigation.replace("MainTabs");
+            } catch {
+              Alert.alert("삭제하지 못했어요", "잠시 후 다시 시도해주세요.");
+            }
+          },
+        },
+      ]);
+    }
+    navigation.setOptions({
+      headerRight: () => (
+        <PressableScale onPress={confirmDeleteTrip} hitSlop={10} disabled={!tripTitle}>
+          <Feather name="trash-2" size={19} color={colors.inkMuted} />
+        </PressableScale>
+      ),
+    });
+  }, [navigation, id, tripTitle, queryClient]);
 
   const [activeDay, setActiveDay] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"search" | "bookmarks">("search");
