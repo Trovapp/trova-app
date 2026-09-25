@@ -9,9 +9,10 @@ import { API_BASE_URL } from "@/lib/api/config";
 // 오류 타입/판단 함수는 네이티브 모듈 의존이 없는 errors.ts에 두고(단위 테스트 가능) 여기서 다시 내보낸다.
 export { ApiError, shouldRetryQuery, toUserMessage } from "@/lib/api/errors";
 
-let unauthorizedHandler: (() => void) | null = null;
+// hadToken: 토큰을 보냈는데 401이면 "세션 만료", 토큰 없이 401이면 원래 비로그인(첫 실행 등)이다.
+let unauthorizedHandler: ((info: { hadToken: boolean }) => void) | null = null;
 
-export function setUnauthorizedHandler(handler: () => void): void {
+export function setUnauthorizedHandler(handler: (info: { hadToken: boolean }) => void): void {
   unauthorizedHandler = handler;
 }
 
@@ -24,7 +25,7 @@ export async function apiFetch(path: string, options: RequestInit = {}): Promise
   const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
   if (res.status === 401) {
     await clearToken();
-    unauthorizedHandler?.();
+    unauthorizedHandler?.({ hadToken: Boolean(token) });
   }
   return res;
 }

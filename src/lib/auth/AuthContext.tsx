@@ -13,6 +13,9 @@ type AuthState = {
   // 진짜 "로그인 안 됨"(401 → null)과 구분해서, 오프라인일 때 로그인 화면으로
   // 잘못 떨어지지 않고 재시도할 수 있게 한다.
   authError: boolean;
+  // 로그인해 둔 세션이 만료(401)돼서 로그인 화면으로 돌아온 경우에만 true — 로그인 화면에서 이유를 알려준다.
+  // 첫 실행(토큰 없음)이나 직접 로그아웃은 해당하지 않는다.
+  sessionExpired: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
   handleAuthCallback: (url: string) => Promise<void>;
@@ -24,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const queryClient = useQueryClient();
 
   const refresh = useCallback(async () => {
@@ -43,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     await clearToken();
+    setSessionExpired(false);
     setUser(null);
     queryClient.clear();
   }, [queryClient]);
@@ -58,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { queryParams } = Linking.parse(url);
       const token = queryParams?.token;
       if (typeof token === "string") {
+        setSessionExpired(false);
         await setToken(token);
         await refresh();
         return;
@@ -75,7 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refresh]);
 
   useEffect(() => {
-    setUnauthorizedHandler(() => {
+    setUnauthorizedHandler(({ hadToken }) => {
+      if (hadToken) setSessionExpired(true);
       setUser(null);
       queryClient.clear();
     });
@@ -89,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [handleAuthCallback]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, authError, refresh, logout, handleAuthCallback }}>
+    <AuthContext.Provider value={{ user, loading, authError, sessionExpired, refresh, logout, handleAuthCallback }}>
       {children}
     </AuthContext.Provider>
   );

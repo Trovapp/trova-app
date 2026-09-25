@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Image, View } from "react-native";
 import * as WebBrowser from "expo-web-browser";
+import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { oauthUrl } from "@/lib/api/auth";
@@ -13,7 +14,7 @@ import { colors } from "@/lib/theme";
 // 제공자 브랜드 색(카카오 노랑)/아웃라인(구글)을 그대로 유지 — 이건
 // OAuth 버튼의 정석 관례라 바꿀 이유가 없다.
 export function LoginScreen() {
-  const { handleAuthCallback } = useAuth();
+  const { handleAuthCallback, sessionExpired } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   async function handleLogin(provider: "kakao" | "google") {
@@ -51,6 +52,26 @@ export function LoginScreen() {
           여행 영상 속 장소를 지도로 옮겨드려요
         </AppText>
       </View>
+
+      {/* 세션 만료로 튕겨 나온 경우 이유 없이 로그인 화면만 보이면 앱이 초기화된 것처럼 느껴진다. */}
+      {sessionExpired && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            padding: 12,
+            marginBottom: 16,
+            borderRadius: 12,
+            backgroundColor: colors.bgMuted,
+          }}
+        >
+          <Feather name="info" size={15} color={colors.inkMuted} />
+          <AppText style={{ flexShrink: 1, fontSize: 13, color: colors.inkMuted }}>
+            로그인이 만료됐어요. 다시 로그인해주세요.
+          </AppText>
+        </View>
+      )}
 
       <View style={{ gap: 12 }}>
         <PressableScale
