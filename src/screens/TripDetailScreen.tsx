@@ -64,7 +64,7 @@ const UNSORTED_ID = -1; // "미분류" 가상 폴더 id — 저장 장소 화면
 type EditingField = { placeId: number; field: "time" | "transport" | "memo" } | null;
 
 export function TripDetailScreen({ route, navigation }: Props) {
-  const { id } = route.params;
+  const { id, weatherAlertTripPlaceId } = route.params;
   const queryClient = useQueryClient();
   const tripQuery = useQuery({ queryKey: ["trip", id], queryFn: () => getTrip(id) });
   const { refreshing, onRefresh } = usePullToRefresh(tripQuery.refetch);
@@ -125,6 +125,21 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const [folderPickerPlaceId, setFolderPickerPlaceId] = useState<number | null>(null);
   const [alternativeTargetId, setAlternativeTargetId] = useState<number | null>(null);
   const [alternativeInitialIndoor, setAlternativeInitialIndoor] = useState(false);
+  // 홈의 날씨 알림("○○ 근처 실내 대안을 확인해보세요")에서 들어온 경우 — 예전엔 장소 정보를 버리고
+  // 여행 상세 1일차 맨 위로만 와서, 비 오는 날짜와 장소를 직접 찾아 대안 찾기를 열어야 했다.
+  // 이 화면 안의 날씨 배너와 똑같이 해당 날짜로 옮기고 실내 대안 찾기를 한 번만 연다.
+  const handledWeatherAlertRef = useRef(false);
+  useEffect(() => {
+    const days = tripQuery.data?.days;
+    if (!weatherAlertTripPlaceId || !days || handledWeatherAlertRef.current) return;
+    handledWeatherAlertRef.current = true;
+    const day = days.find((d) => d.places.some((p) => p.id === weatherAlertTripPlaceId));
+    if (!day) return; // 그 사이 장소가 삭제된 경우엔 여행 상세만 보여준다.
+    setActiveDay(day.day);
+    setReviewTarget(null);
+    setAlternativeInitialIndoor(true);
+    setAlternativeTargetId(weatherAlertTripPlaceId);
+  }, [weatherAlertTripPlaceId, tripQuery.data]);
   const [assistantTargetId, setAssistantTargetId] = useState<number | null>(null);
   const [gapCardFor, setGapCardFor] = useState<Gap | null>(null);
   const [replanStarting, setReplanStarting] = useState(false);

@@ -19,7 +19,8 @@ export type RootStackParamList = {
   Processing: { jobId: number };
   VideoGroup: { jobId: number };
   NewTrip: undefined;
-  TripDetail: { id: number };
+  // weatherAlertTripPlaceId: 홈의 날씨 알림에서 들어올 때 — 해당 장소의 날짜로 이동해 실내 대안 찾기를 바로 연다.
+  TripDetail: { id: number; weatherAlertTripPlaceId?: number };
   TripReplan: { tripId: number; jobId: number };
   Licenses: undefined;
 };

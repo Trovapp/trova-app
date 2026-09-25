@@ -143,9 +143,6 @@ export function AlternativeFinderSheet({
       setReviewCandidateId(null);
       setSearchError(null);
       setFiltersExpanded(false);
-      sheetRef.current?.snapToIndex(0);
-    } else {
-      sheetRef.current?.close();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripPlaceId]);
@@ -224,10 +221,15 @@ export function AlternativeFinderSheet({
       .filter((label): label is string => Boolean(label))
       .join(" · ") || "필터 설정 안 함";
 
+  // 열려 있을 때만 시트를 마운트하고 처음부터 열린 상태(index 0)로 그린다. 예전처럼 항상 마운트해 두고
+  // snapToIndex(0)로 열면, 시트가 막 마운트돼 첫 레이아웃을 마치기 전에 온 열기 요청(예: 홈의 날씨 알림에서
+  // 여행 상세로 들어오자마자 여는 경우)이 무시됐다 — 같은 요청을 3초 늦게 보내면 열리는 것으로 원인을 확인했다.
+  if (!isOpen) return null;
+
   return (
     <BottomSheet
       ref={sheetRef}
-      index={-1}
+      index={0}
       snapPoints={SNAP_POINTS}
       enableDynamicSizing={false}
       enablePanDownToClose

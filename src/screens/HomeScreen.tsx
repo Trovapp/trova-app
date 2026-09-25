@@ -189,7 +189,9 @@ export function HomeScreen({ navigation }: Props) {
         </View>
 
         <WeatherAlertBanner
-          onOpenAlternative={(tripId) => navigation.navigate("TripDetail", { id: tripId })}
+          onOpenAlternative={(tripId, tripPlaceId) =>
+            navigation.navigate("TripDetail", { id: tripId, weatherAlertTripPlaceId: tripPlaceId })
+          }
         />
 
         {isFirstVisit && <FirstVisitGuide />}
