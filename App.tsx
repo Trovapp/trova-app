@@ -10,6 +10,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { RootNavigator } from "@/navigation/RootNavigator";
 
@@ -61,11 +62,13 @@ export default function App() {
             {/* BottomSheetModal(드래그로 닫히는 시트)을 화면 어디서든 present()로 띄우려면
                 루트에 한 번만 이 Provider가 있으면 된다 — SavedPlacesScreen의 상시 마운트된
                 BottomSheet와 달리, DayPickerSheet 등 필요할 때만 뜨는 시트들이 이걸 쓴다. */}
-            <BottomSheetModalProvider>
-              <NavigationContainer>
-                <RootNavigator />
-              </NavigationContainer>
-            </BottomSheetModalProvider>
+            <AppErrorBoundary>
+              <BottomSheetModalProvider>
+                <NavigationContainer>
+                  <RootNavigator />
+                </NavigationContainer>
+              </BottomSheetModalProvider>
+            </AppErrorBoundary>
           </SafeAreaProvider>
         </AuthProvider>
       </QueryClientProvider>
