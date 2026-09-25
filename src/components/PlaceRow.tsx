@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { View } from "react-native";
+import { Linking, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
@@ -14,7 +14,18 @@ type PlaceRowItem = {
   // 보이게 되는 걸 막는다. 실제로 지오코딩이 실패한 장소만(값이 null) 뱃지가 뜬다.
   latitude?: number | null;
   longitude?: number | null;
+  // 영상에서 뽑은 장소(Place)는 둘 다, 여행 장소(TripPlace)는 phone만 내려온다.
+  phone?: string | null;
+  kakaoPlaceUrl?: string | null;
 };
+
+// 카카오 장소 페이지가 있으면 그걸, 없으면 좌표로 카카오맵 공식 링크(/link/map/이름,위도,경도)를 만든다.
+// 둘 다 https라 카카오맵 앱이 있으면 앱으로, 없으면 웹으로 열린다.
+function kakaoMapUrl(place: PlaceRowItem): string | null {
+  if (place.kakaoPlaceUrl) return place.kakaoPlaceUrl;
+  if (place.latitude == null || place.longitude == null) return null;
+  return `https://map.kakao.com/link/map/${encodeURIComponent(place.placeName)},${place.latitude},${place.longitude}`;
+}
 
 type PlaceRowProps = {
   place: PlaceRowItem;
@@ -36,6 +47,10 @@ type PlaceRowProps = {
   children?: ReactNode;
 };
 
+function openUrl(url: string) {
+  Linking.openURL(url).catch(() => {});
+}
+
 export function PlaceRow({
   place,
   index,
@@ -50,6 +65,9 @@ export function PlaceRow({
   color = colors.accent,
   children,
 }: PlaceRowProps) {
+  const mapUrl = kakaoMapUrl(place);
+  const phoneDigits = place.phone?.replace(/[^0-9+]/g, "") || null;
+  const showDayPicker = editable && !!onOpenDayPicker;
   return (
     <View style={{ gap: 4 }}>
       <View
@@ -92,11 +110,31 @@ export function PlaceRow({
               </View>
             )}
           </PressableScale>
-          {editable && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              {onOpenDayPicker && (
-                <PressableScale onPress={onOpenDayPicker} disabled={disabled}>
+          {(showDayPicker || mapUrl || phoneDigits) && (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+              {showDayPicker && (
+                <PressableScale onPress={onOpenDayPicker} disabled={disabled} hitSlop={{ top: 8, bottom: 8 }}>
                   <AppText style={{ fontSize: 13, color: colors.inkMuted }}>다른 날로 이동</AppText>
+                </PressableScale>
+              )}
+              {mapUrl && (
+                <PressableScale
+                  onPress={() => openUrl(mapUrl)}
+                  hitSlop={{ top: 8, bottom: 8 }}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
+                >
+                  <Feather name="map" size={12} color={colors.inkMuted} />
+                  <AppText style={{ fontSize: 13, color: colors.inkMuted }}>카카오맵</AppText>
+                </PressableScale>
+              )}
+              {phoneDigits && (
+                <PressableScale
+                  onPress={() => openUrl(`tel:${phoneDigits}`)}
+                  hitSlop={{ top: 8, bottom: 8 }}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
+                >
+                  <Feather name="phone" size={12} color={colors.inkMuted} />
+                  <AppText style={{ fontSize: 13, color: colors.inkMuted }}>전화</AppText>
                 </PressableScale>
               )}
             </View>
