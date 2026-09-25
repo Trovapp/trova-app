@@ -28,6 +28,7 @@ import { haptics } from "@/lib/haptics";
 import { parseTimeToDate, toTimeString } from "@/lib/date";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { formatCount } from "@/lib/number";
+import { kakaoMapUrl, openExternal, phoneUrl } from "@/lib/placeLinks";
 import { colors } from "@/lib/theme";
 import { addBookmark, listBookmarks, listFolders, removeBookmark } from "@/lib/api/bookmarks";
 import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
@@ -448,6 +449,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             setReviewTarget({ kind: "tripPlace", id: place.id });
           }}
           onOpenMenu={() => setMenuPlaceId(place.id)}
+          showLinks={false}
         >
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: 4 }}>
             <PressableScale
@@ -939,6 +941,31 @@ export function TripDetailScreen({ route, navigation }: Props) {
         >
           <AppText>비서에게 물어보기</AppText>
         </PressableScale>
+        {/* 행에 링크 줄까지 붙으면 장소 하나가 네 줄이 돼서, 가끔 쓰는 외부 링크는 메뉴로 옮겼다. */}
+        {menuPlace && kakaoMapUrl(menuPlace) && (
+          <PressableScale
+            onPress={() => {
+              const url = kakaoMapUrl(menuPlace);
+              menuSheetRef.current?.dismiss();
+              if (url) openExternal(url);
+            }}
+            style={{ padding: 14 }}
+          >
+            <AppText>카카오맵에서 보기</AppText>
+          </PressableScale>
+        )}
+        {menuPlace && phoneUrl(menuPlace) && (
+          <PressableScale
+            onPress={() => {
+              const url = phoneUrl(menuPlace);
+              menuSheetRef.current?.dismiss();
+              if (url) openExternal(url);
+            }}
+            style={{ padding: 14 }}
+          >
+            <AppText>전화 걸기</AppText>
+          </PressableScale>
+        )}
         <PressableScale
           onPress={() => {
             const target = menuPlace;
