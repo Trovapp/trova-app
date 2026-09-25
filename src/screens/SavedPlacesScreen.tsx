@@ -25,6 +25,7 @@ import { useListEntrance } from "@/hooks/useListEntrance";
 import { haptics } from "@/lib/haptics";
 import {
   addBookmark,
+  deleteFolder,
   listBookmarks,
   listFolders,
   moveBookmarkToFolder,
@@ -165,6 +166,34 @@ export function SavedPlacesScreen() {
     } catch {
       setRemoveError("찜을 해제하지 못했어요.");
     }
+  }
+
+  // 폴더를 지워도 안의 찜은 지워지지 않고 미분류로 옮겨진다(백엔드 BookmarkService.deleteFolder).
+  function confirmDeleteFolder() {
+    if (activeFolderId === null || activeFolderId === UNSORTED_ID || !activeFolder) return;
+    const folderId = activeFolderId;
+    const countNote = visibleBookmarks.length > 0 ? ` 안에 있던 찜 ${visibleBookmarks.length}곳은 미분류로 옮겨져요.` : "";
+    Alert.alert("폴더를 삭제할까요?", `"${activeFolder.name}" 폴더를 삭제해요.${countNote}`, [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: async () => {
+          haptics.warning();
+          setRemoveError(null);
+          try {
+            await deleteFolder(folderId);
+            setActiveFolderId(null);
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ["bookmarkFolders"] }),
+              queryClient.invalidateQueries({ queryKey: ["bookmarks"] }),
+            ]);
+          } catch {
+            setRemoveError("폴더를 삭제하지 못했어요.");
+          }
+        },
+      },
+    ]);
   }
 
   async function handleSearch() {
@@ -403,6 +432,11 @@ export function SavedPlacesScreen() {
                   <AppText weight="medium" style={{ fontSize: 16, flex: 1 }} numberOfLines={1}>
                     {activeFolder?.name ?? "미분류"}
                   </AppText>
+                  {activeFolderId !== UNSORTED_ID && (
+                    <PressableScale onPress={confirmDeleteFolder} hitSlop={8}>
+                      <Feather name="trash-2" size={17} color={colors.inkMuted} />
+                    </PressableScale>
+                  )}
                   <PressableScale onPress={() => setActiveFolderId(null)} hitSlop={8}>
                     <Feather name="x" size={18} color={colors.inkMuted} />
                   </PressableScale>
