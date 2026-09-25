@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
+import { usePreventRemove } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
@@ -23,6 +24,15 @@ export function NewTripScreen({ navigation }: Props) {
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 이름을 입력한 채로 뒤로 가면(버튼·스와이프 모두) 입력이 말없이 사라지므로 한 번 확인한다.
+  // 제출에 성공하면 submitting이 true인 채로 replace되므로 그때는 막지 않는다.
+  usePreventRemove(title.trim() !== "" && !submitting, ({ data }) => {
+    Alert.alert("작성을 그만둘까요?", "입력한 여행 이름이 사라져요.", [
+      { text: "계속 작성", style: "cancel" },
+      { text: "나가기", style: "destructive", onPress: () => navigation.dispatch(data.action) },
+    ]);
+  });
 
   async function handleSubmit() {
     if (!title.trim() || submitting) return;
