@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
@@ -83,6 +84,8 @@ const STAGE_ANALYSIS: Record<Stage, { title: string; description: string }> = {
 export function ProcessingScreen({ route, navigation }: Props) {
   const { jobId } = route.params;
   const topClearance = useBackButtonClearance();
+  // 헤더를 끈 화면이라 하단 홈 인디케이터 영역도 직접 비워야 맨 아래 안내 문구가 겹치지 않는다.
+  const bottomInset = useSafeAreaInsets().bottom;
 
   const pendingQuery = useQuery({
     queryKey: ["pendingJobs"],
@@ -221,7 +224,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
   const analysis = STAGE_ANALYSIS[stage];
 
   return (
-    <View style={{ flex: 1, padding: 24, paddingTop: topClearance, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, padding: 24, paddingTop: topClearance, paddingBottom: Math.max(24, bottomInset + 8), backgroundColor: colors.bg }}>
       <BackButton onPress={handleBack} />
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
         <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={STAGE_CREEP_MS[stage]} />
@@ -260,6 +263,11 @@ export function ProcessingScreen({ route, navigation }: Props) {
         </AppText>
         <AppText style={{ fontSize: 13, color: colors.inkMuted, lineHeight: 19 }}>{analysis.description}</AppText>
       </View>
+
+      {/* 처리는 서버에서 비동기로 도는데, 안내가 없으면 12~40초(실측) 동안 이 화면을 지켜봐야 한다고 느끼기 쉽다. */}
+      <AppText style={{ marginTop: 16, fontSize: 12, lineHeight: 18, color: colors.inkMuted, textAlign: "center" }}>
+        다른 화면으로 가도 분석은 계속돼요.{"\n"}결과는 영상 기록 탭에서 확인할 수 있어요.
+      </AppText>
     </View>
   );
 }
