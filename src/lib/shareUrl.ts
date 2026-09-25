@@ -17,3 +17,21 @@ export function isSupportedShareUrl(url: string): boolean {
   if (!match) return false;
   return SUPPORTED_HOSTS.has(match[1].toLowerCase().replace(/\.$/, ""));
 }
+
+// 제목을 못 얻은 영상(주로 추출 실패)은 긴 URL 대신 "쇼츠 · CXdphBD0"처럼 종류와 영상 ID만 보여준다.
+// 플랫폼 이름(유튜브/인스타그램)은 카드 위에 따로 표시되므로 여기엔 넣지 않는다.
+const SOURCE_PATTERNS: [RegExp, string][] = [
+  [/youtube(?:-nocookie)?\.com\/shorts\/([\w-]+)/i, "쇼츠"],
+  [/youtube(?:-nocookie)?\.com\/watch\?(?:.*&)?v=([\w-]+)/i, "영상"],
+  [/youtu\.be\/([\w-]+)/i, "영상"],
+  [/instagram\.com\/(?:reels?|tv)\/([\w-]+)/i, "릴스"],
+  [/instagram\.com\/p\/([\w-]+)/i, "게시물"],
+];
+
+export function describeSourceUrl(url: string): string {
+  for (const [pattern, kind] of SOURCE_PATTERNS) {
+    const match = pattern.exec(url);
+    if (match) return `${kind} · ${match[1]}`;
+  }
+  return url;
+}

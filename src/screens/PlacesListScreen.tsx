@@ -14,6 +14,7 @@ import { SkeletonRow } from "@/components/Skeleton";
 import { useListEntrance } from "@/hooks/useListEntrance";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { haptics } from "@/lib/haptics";
+import { describeSourceUrl } from "@/lib/shareUrl";
 import { colors } from "@/lib/theme";
 import { deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob, type Place } from "@/lib/api/places";
 import type { MainTabScreenProps } from "@/navigation/types";
@@ -89,7 +90,7 @@ function PendingJobCard({
             {PLATFORM_LABEL[job.sourcePlatform]}
           </AppText>
           <AppText weight="medium" numberOfLines={1}>
-            {job.title ?? job.sourceUrl}
+            {job.title ?? describeSourceUrl(job.sourceUrl)}
           </AppText>
         </View>
         {isFailed && (
@@ -153,7 +154,7 @@ function VideoGroupCard({
         <View style={{ flex: 1, gap: 2 }}>
           <AppText style={{ fontSize: 11, color: colors.inkMuted }}>{PLATFORM_LABEL[group.sourcePlatform]}</AppText>
           <AppText weight="medium" numberOfLines={1}>
-            {group.title ?? group.sourceUrl}
+            {group.title ?? describeSourceUrl(group.sourceUrl)}
           </AppText>
           <AppText mono style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
             {placePreview(group.places)}

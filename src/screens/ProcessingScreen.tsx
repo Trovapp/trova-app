@@ -10,6 +10,7 @@ import { PressableScale } from "@/components/PressableScale";
 import { ProgressHero } from "@/components/ProgressHero";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
+import { describeSourceUrl } from "@/lib/shareUrl";
 import { colors } from "@/lib/theme";
 import { getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob } from "@/lib/api/places";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -164,7 +165,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
           처리에 실패했어요
         </AppText>
         <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>
-          {job.title ?? job.sourceUrl}
+          {job.title ?? describeSourceUrl(job.sourceUrl)}
         </AppText>
         {canRetry ? (
           <>
