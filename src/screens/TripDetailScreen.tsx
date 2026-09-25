@@ -537,6 +537,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
               <DateTimePicker
                 value={timeDraft ?? parseTimeToDate(place.visitStartTime)}
                 mode="time"
+                locale="ko-KR"
                 display={Platform.OS === "ios" ? "spinner" : "default"}
                 onValueChange={(_, selected) => {
                   if (Platform.OS === "ios") {
