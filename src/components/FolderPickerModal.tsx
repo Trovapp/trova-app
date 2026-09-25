@@ -83,7 +83,7 @@ export function FolderPickerModal({
       backgroundStyle={{ backgroundColor: colors.bg }}
       handleIndicatorStyle={{ backgroundColor: colors.border }}
     >
-      <BottomSheetScrollView contentContainerStyle={{ padding: 20, gap: 12, paddingBottom: 32 }}>
+      <BottomSheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 12, paddingBottom: 32 }}>
         <AppText weight="medium" style={{ fontSize: 16 }}>
           어느 폴더에 저장할까요?
         </AppText>

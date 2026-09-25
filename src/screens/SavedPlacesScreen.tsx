@@ -268,14 +268,14 @@ export function SavedPlacesScreen() {
           // 네이버 지도처럼: 장소 정보를 별도 모달이 아니라 이 바텀시트 안에서 보여준다 —
           // 그래야 시트 밖(지도) 영역이 계속 터치되고, 시트를 살짝 내려도(스냅포인트만
           // 바뀔 뿐) 선택 상태(reviewPlaceId)와 지도 하이라이트가 그대로 유지된다.
-          <BottomSheetScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
+          <BottomSheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 12 }}>
             <PressableScale onPress={() => setReviewPlaceId(null)} hitSlop={8} style={{ alignSelf: "flex-end" }}>
               <Feather name="x" size={18} color={colors.inkMuted} />
             </PressableScale>
             <PlaceReviewContent placeId={reviewPlaceId} showMiniMap={false} />
           </BottomSheetScrollView>
         ) : searchedQuery !== null ? (
-          <BottomSheetFlatList
+          <BottomSheetFlatList keyboardShouldPersistTaps="handled"
             data={searchResults}
             keyExtractor={(item: RecommendedPlace) => String(item.id)}
             contentContainerStyle={{ padding: 16 }}
@@ -342,7 +342,7 @@ export function SavedPlacesScreen() {
             )}
           />
         ) : activeFolderId === null ? (
-          <BottomSheetFlatList
+          <BottomSheetFlatList keyboardShouldPersistTaps="handled"
             data={[{ id: UNSORTED_ID, name: "미분류", color: colors.inkMuted, placeCount: unsortedCount }, ...folders]}
             keyExtractor={(item: BookmarkFolder) => String(item.id)}
             contentContainerStyle={{ padding: 16 }}
@@ -382,7 +382,7 @@ export function SavedPlacesScreen() {
             )}
           />
         ) : (
-          <BottomSheetFlatList
+          <BottomSheetFlatList keyboardShouldPersistTaps="handled"
             data={visibleBookmarks}
             keyExtractor={(item: Bookmark) => String(item.id)}
             contentContainerStyle={{ padding: 16 }}

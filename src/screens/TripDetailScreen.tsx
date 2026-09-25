@@ -550,7 +550,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
 
   return (
     <View style={{ flex: 1 }}>
-    <DraggableFlatList
+    <DraggableFlatList keyboardShouldPersistTaps="handled"
       data={places}
       keyExtractor={(item) => String(item.id)}
       onDragEnd={handleDragEnd}

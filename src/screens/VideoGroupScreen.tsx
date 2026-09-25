@@ -292,7 +292,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
 
   return (
     <View style={{ flex: 1 }}>
-    <DraggableFlatList
+    <DraggableFlatList keyboardShouldPersistTaps="handled"
       data={activePlaces}
       keyExtractor={(item) => String(item.id)}
       onDragEnd={handleDragEnd}

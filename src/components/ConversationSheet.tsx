@@ -173,7 +173,7 @@ function CandidateRow({
   const expanded = candidates.find((c) => c.placeId === expandedPlaceId) ?? null;
   return (
     <View style={{ gap: 10 }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
         {candidates.map((candidate) => (
           <CompactCandidateCard
             key={candidate.placeId}
@@ -360,7 +360,7 @@ export function ConversationSheet({
       enablePanDownToClose
       onClose={handleSheetClose}
     >
-      <BottomSheetScrollView ref={scrollRef} contentContainerStyle={{ padding: 20, gap: 14 }}>
+      <BottomSheetScrollView keyboardShouldPersistTaps="handled" ref={scrollRef} contentContainerStyle={{ padding: 20, gap: 14 }}>
         {reviewCandidateId !== null ? (
           <>
             <PressableScale
