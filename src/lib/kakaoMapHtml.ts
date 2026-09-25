@@ -88,12 +88,18 @@ export function buildKakaoMapHtml(appKey: string): string {
           return new kakao.maps.LatLng(pin.latitude, pin.longitude);
         });
 
-        if (bottomInsetRatio > 0 && path.length > 1) {
-          // 가려지는 영역이 있는 풀스크린 지도: 첫 핀만 가운데 두면 나머지 핀이 화면 밖이나
-          // 시트 뒤로 숨는다 — 전체 핀을 보이는 영역 안에 맞춘다.
+        if (path.length > 1) {
+          // 핀이 여러 개면 전부 화면 안에 들어오게 맞춘다 — 첫 핀만 가운데 두면 나머지 핀과
+          // 동선이 화면 밖으로 나간다(영상 속 장소/여행 상세의 작은 지도에서도 마찬가지).
+          // 풀스크린 지도는 바텀시트가 가리는 만큼 아래 여백을 더 준다.
           var bounds = new kakao.maps.LatLngBounds();
           path.forEach(function (latLng) { bounds.extend(latLng); });
-          mapInstance.setBounds(bounds, 48, 32, bottomInsetPx() + 32, 32);
+          if (bottomInsetRatio > 0) {
+            mapInstance.setBounds(bounds, 48, 32, bottomInsetPx() + 32, 32);
+          } else {
+            // 핀(26px)이 가장자리에서 잘리지 않을 만큼만 여백.
+            mapInstance.setBounds(bounds, 28, 28, 28, 28);
+          }
         } else {
           // 풀스크린 지도에서 핀이 하나면 "핀에 맞추기"와 같게 기본 확대 수준으로 돌린다
           // (빈 폴더에서 넓게 보던 수준 7이 그대로 남지 않도록).
