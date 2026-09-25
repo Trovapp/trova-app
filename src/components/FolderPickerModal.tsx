@@ -9,7 +9,7 @@ import {
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AppText } from "@/components/AppText";
+import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
@@ -131,6 +131,7 @@ export function FolderPickerModal({
         {creating ? (
           <View style={{ gap: 10, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}>
             <BottomSheetTextInput
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
               autoFocus
               value={newName}
               onChangeText={setNewName}

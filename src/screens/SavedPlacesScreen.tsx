@@ -12,7 +12,7 @@ import BottomSheet, {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
-import { AppText } from "@/components/AppText";
+import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
 import { InlineMap } from "@/components/InlineMap";
@@ -222,6 +222,7 @@ export function SavedPlacesScreen() {
     <View style={{ flex: 1 }}>
       <View style={{ flexDirection: "row", gap: 8, padding: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
         <TextInput
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
           value={query}
           onChangeText={setQuery}
           placeholder="장소 이름으로 검색 (예: 경복궁)"

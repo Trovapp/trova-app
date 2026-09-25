@@ -3,7 +3,7 @@ import { ScrollView, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AppText } from "@/components/AppText";
+import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { DayPickerSheet } from "@/components/DayPickerSheet";
 import { InlineMap } from "@/components/InlineMap";
@@ -345,6 +345,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
           ) : (
             <View style={{ gap: 8, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 12 }}>
               <TextInput
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
                 value={tripTitle}
                 onChangeText={setTripTitle}
                 placeholder="여행 이름"

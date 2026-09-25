@@ -2,7 +2,7 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
-import { AppText } from "@/components/AppText";
+import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { PressableScale } from "@/components/PressableScale";
 import { haptics } from "@/lib/haptics";
@@ -49,6 +49,7 @@ export function NewTripScreen({ navigation }: Props) {
         keyboardShouldPersistTaps="handled"
       >
       <TextInput
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         value={title}
         onChangeText={setTitle}
         placeholder="예: 김해 당일치기"

@@ -3,7 +3,7 @@ import { ActivityIndicator, ScrollView, View } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
-import { AppText } from "@/components/AppText";
+import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
@@ -450,6 +450,7 @@ export function ConversationSheet({
             ) : (
               <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 8 }}>
                 <BottomSheetTextInput
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
                   value={input}
                   onChangeText={setInput}
                   placeholder="메시지 입력"

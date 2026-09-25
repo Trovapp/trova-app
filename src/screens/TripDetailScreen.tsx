@@ -12,7 +12,7 @@ import DraggableFlatList, { type RenderItemParams } from "react-native-draggable
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AlternativeFinderSheet } from "@/components/AlternativeFinderSheet";
-import { AppText } from "@/components/AppText";
+import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { ConversationSheet } from "@/components/ConversationSheet";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
@@ -471,6 +471,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
 
           {editingField?.placeId === place.id && editingField.field === "memo" && (
             <TextInput
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
               autoFocus
               defaultValue={memoDraft}
               onChangeText={setMemoDraft}
@@ -660,6 +661,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             <View style={{ gap: 12 }}>
               <View style={{ flexDirection: "row", gap: 8 }}>
                 <TextInput
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
                   value={query}
                   onChangeText={setQuery}
                   placeholder="장소 이름으로 검색 (예: 경복궁)"

@@ -4,7 +4,7 @@ import { useScrollToTop } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
-import { AppText } from "@/components/AppText";
+import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { InlineMap } from "@/components/InlineMap";
 import { PressableRow } from "@/components/PressableRow";
@@ -93,6 +93,7 @@ export function HomeScreen({ navigation }: Props) {
 
           <View style={{ gap: 10 }}>
             <TextInput
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
               value={url}
               onChangeText={(text) => {
                 setUrl(text);

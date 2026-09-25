@@ -25,6 +25,9 @@ export function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerTitleAlign: "center",
+        // 헤더 높이는 고정이라 제목이 글자 크기 설정을 따라 커지면 잘린다(최대 크기에서 실측).
+        // iOS 기본 내비게이션 바 제목처럼 크기를 고정한다 — 본문은 AppText에서 1.4배까지 커진다.
+        headerTitleAllowFontScaling: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.inkMuted,
         tabBarStyle: { borderTopColor: colors.border },
