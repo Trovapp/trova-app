@@ -1,3 +1,4 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { ApiError, apiFetch } from "@/lib/api/client";
 
 export type Bookmark = {
@@ -89,4 +90,13 @@ export async function deleteFolder(id: number): Promise<void> {
   if (!res.ok) {
     throw new ApiError(res.status, `DELETE /api/bookmarks/folders/${id} failed: ${res.status}`);
   }
+}
+
+// 찜을 추가·해제·이동한 뒤 호출. 폴더 옆 "N개"는 폴더 목록 응답(placeCount)에서 오므로 찜 목록만
+// 새로 받으면 개수가 예전 값으로 남는다 — 두 목록을 함께 새로 받는다.
+export function invalidateBookmarkQueries(queryClient: QueryClient) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["bookmarks"] }),
+    queryClient.invalidateQueries({ queryKey: ["bookmarkFolders"] }),
+  ]);
 }

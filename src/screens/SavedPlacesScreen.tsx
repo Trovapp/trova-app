@@ -26,6 +26,7 @@ import { haptics } from "@/lib/haptics";
 import {
   addBookmark,
   deleteFolder,
+  invalidateBookmarkQueries,
   listBookmarks,
   listFolders,
   moveBookmarkToFolder,
@@ -162,7 +163,7 @@ export function SavedPlacesScreen() {
     setRemoveError(null);
     try {
       await removeBookmark(id);
-      await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      await invalidateBookmarkQueries(queryClient);
     } catch {
       setRemoveError("찜을 해제하지 못했어요.");
     }
@@ -184,10 +185,7 @@ export function SavedPlacesScreen() {
           try {
             await deleteFolder(folderId);
             setActiveFolderId(null);
-            await Promise.all([
-              queryClient.invalidateQueries({ queryKey: ["bookmarkFolders"] }),
-              queryClient.invalidateQueries({ queryKey: ["bookmarks"] }),
-            ]);
+            await invalidateBookmarkQueries(queryClient);
           } catch {
             setRemoveError("폴더를 삭제하지 못했어요.");
           }
@@ -238,7 +236,7 @@ export function SavedPlacesScreen() {
       } else {
         await moveBookmarkToFolder(target.bookmarkId, folderId);
       }
-      await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      await invalidateBookmarkQueries(queryClient);
     } catch {
       if (target.mode === "add") {
         setSearchError("찜하기에 실패했어요.");

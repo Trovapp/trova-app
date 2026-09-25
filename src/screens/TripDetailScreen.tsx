@@ -30,7 +30,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { formatCount } from "@/lib/number";
 import { kakaoMapUrl, openExternal, phoneUrl } from "@/lib/placeLinks";
 import { colors } from "@/lib/theme";
-import { addBookmark, listBookmarks, listFolders, removeBookmark } from "@/lib/api/bookmarks";
+import { addBookmark, invalidateBookmarkQueries, listBookmarks, listFolders, removeBookmark } from "@/lib/api/bookmarks";
 import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
 import {
   addTripPlace,
@@ -254,7 +254,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
     setFolderPickerPlaceId(null);
     try {
       await addBookmark(placeId, folderId);
-      await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      await invalidateBookmarkQueries(queryClient);
     } catch {
       setError("찜하기에 실패했어요.");
     }
@@ -264,7 +264,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
     haptics.warning();
     try {
       await removeBookmark(bookmarkId);
-      await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      await invalidateBookmarkQueries(queryClient);
     } catch {
       setError("찜을 해제하지 못했어요.");
     }
