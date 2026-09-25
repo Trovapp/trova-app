@@ -101,7 +101,7 @@ export function LoginScreen() {
             opacity: isLoggingIn ? 0.6 : 1,
           }}
         >
-          <AppText weight="medium">Google로 계속하기</AppText>
+          <AppText weight="medium">Google로 시작하기</AppText>
         </PressableScale>
       </View>
     </View>
