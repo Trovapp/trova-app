@@ -1,5 +1,6 @@
 import { useLayoutEffect, useState } from "react";
-import { Alert, ScrollView, TextInput, View } from "react-native";
+import { Alert, Platform, ScrollView, TextInput, View } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
 import { PressableScale } from "@/components/PressableScale";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
@@ -17,7 +18,7 @@ import { haversineDistanceKm } from "@/lib/geo";
 import { haptics } from "@/lib/haptics";
 import { deleteVideoPlaces, generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
 import { confirmTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
-import { toDateString } from "@/lib/date";
+import { formatDateLabel, formatTripDates, toDateString } from "@/lib/date";
 import { groupByDay, isItineraryGroup } from "@/lib/itinerary";
 import { colors } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -39,6 +40,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const [dayPickerFor, setDayPickerFor] = useState<Place | null>(null);
   const [activeDay, setActiveDay] = useState<number | null>(null);
   const [showTripForm, setShowTripForm] = useState(false);
+  // 예전엔 시작일이 항상 "오늘"로 들어가서 다음 달 여행도 오늘 날짜가 됐고, 날짜 수정 API도 없어 고칠 수 없었다.
+  const [tripStartDate, setTripStartDate] = useState(new Date());
+  const [showTripDatePicker, setShowTripDatePicker] = useState(false);
   const [tripTitle, setTripTitle] = useState("");
   const [confirmingTrip, setConfirmingTrip] = useState(false);
   const [tripError, setTripError] = useState<string | null>(null);
@@ -89,6 +93,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const hasItinerary = isItineraryGroup(itineraryPlaces);
   const days = groupByDay(itineraryPlaces);
   const dayNumbers = Array.from(new Set([...days.keys(), ...emptyDayNumbers])).sort((a, b) => a - b);
+  // 백엔드(confirmVideoPlacesIntoTrip)와 같은 기준 — 장소가 있는 날짜 중 가장 큰 일차로 도착일을 정한다.
+  const tripDayCount = Math.max(1, ...days.keys());
+  const tripEndDate = new Date(tripStartDate.getFullYear(), tripStartDate.getMonth(), tripStartDate.getDate() + tripDayCount - 1);
   const currentActiveDay = activeDay ?? dayNumbers[0] ?? null;
   const activePlaces = currentActiveDay !== null ? days.get(currentActiveDay) ?? [] : [];
   const unassignedPlaces = itineraryPlaces.filter((p) => p.dayNumber === null);
@@ -177,7 +184,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     setConfirmingTrip(true);
     setTripError(null);
     try {
-      const trip = await confirmTrip(group[0].jobId, tripTitle.trim() || title.slice(0, TRIP_TITLE_MAX_LENGTH), toDateString(new Date()));
+      const trip = await confirmTrip(group[0].jobId, tripTitle.trim() || title.slice(0, TRIP_TITLE_MAX_LENGTH), toDateString(tripStartDate));
       haptics.success();
       // replace는 아래에 깔린 여행 목록 화면을 unmount하지 않는다 — 무효화해두지 않으면
       // 뒤로 가기로 돌아왔을 때 방금 확정한 여행이 목록에 없다.
@@ -406,6 +413,49 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                   fontFamily: "NotoSansKR_400Regular",
                 }}
               />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <AppText style={{ fontSize: 13, color: colors.inkMuted }}>출발일</AppText>
+                <PressableScale
+                  onPress={() => setShowTripDatePicker((v) => !v)}
+                  style={{
+                    flex: 1,
+                    height: 40,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: 8,
+                    paddingHorizontal: 10,
+                    justifyContent: "center",
+                  }}
+                >
+                  <AppText>{formatDateLabel(tripStartDate)}</AppText>
+                </PressableScale>
+              </View>
+              {showTripDatePicker && (
+                <View style={{ gap: 4 }}>
+                  <DateTimePicker
+                    value={tripStartDate}
+                    mode="date"
+                    locale="ko-KR"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onValueChange={(_, selected) => {
+                      // iOS 스피너는 스스로 닫히지 않아 아래 "확인"으로 닫는다(새 여행 화면과 동일).
+                      if (Platform.OS !== "ios") setShowTripDatePicker(false);
+                      setTripStartDate(selected);
+                    }}
+                    onDismiss={() => setShowTripDatePicker(false)}
+                  />
+                  {Platform.OS === "ios" && (
+                    <PressableScale onPress={() => setShowTripDatePicker(false)} style={{ alignSelf: "flex-end" }}>
+                      <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
+                        확인
+                      </AppText>
+                    </PressableScale>
+                  )}
+                </View>
+              )}
+              <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                {formatTripDates(toDateString(tripStartDate), toDateString(tripEndDate))}
+              </AppText>
               <PressableScale
                 onPress={handleConfirmTrip}
                 disabled={confirmingTrip}
