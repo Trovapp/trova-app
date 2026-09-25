@@ -11,6 +11,7 @@ import { PlaceRow } from "@/components/PlaceRow";
 import { PlaceReviewSheet } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
+import { SourceVideoLink } from "@/components/SourceVideoLink";
 import { haversineDistanceKm } from "@/lib/geo";
 import { haptics } from "@/lib/haptics";
 import { generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
@@ -240,9 +241,12 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     return (
       <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-        <AppText weight="medium" style={{ fontSize: 18 }} numberOfLines={2}>
-          {title}
-        </AppText>
+        <View style={{ gap: 4 }}>
+          <AppText weight="medium" style={{ fontSize: 18 }} numberOfLines={2}>
+            {title}
+          </AppText>
+          <SourceVideoLink url={group[0].sourceUrl} platform={group[0].sourcePlatform} />
+        </View>
         <InlineMap
           pins={group
             .filter((p) => p.latitude !== null && p.longitude !== null)
@@ -302,9 +306,12 @@ export function VideoGroupScreen({ route, navigation }: Props) {
       contentContainerStyle={{ padding: 16 }}
       ListHeaderComponent={
         <View style={{ gap: 12, marginBottom: 12 }}>
-          <AppText weight="medium" style={{ fontSize: 18 }} numberOfLines={2}>
-            {title}
-          </AppText>
+          <View style={{ gap: 4 }}>
+            <AppText weight="medium" style={{ fontSize: 18 }} numberOfLines={2}>
+              {title}
+            </AppText>
+            <SourceVideoLink url={group[0].sourceUrl} platform={group[0].sourcePlatform} />
+          </View>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {dayNumbers.map((day) => (
               <PressableScale
