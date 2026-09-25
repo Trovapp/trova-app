@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, RefreshControl, ScrollView, TextInput, View } from "react-native";
 import { useScrollToTop } from "@react-navigation/native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
@@ -12,14 +12,14 @@ import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
-import { createShare } from "@/lib/api/places";
+import { createShare, deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob } from "@/lib/api/places";
 import { listBookmarks } from "@/lib/api/bookmarks";
 import { listTrips } from "@/lib/api/trips";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { formatTripDates } from "@/lib/date";
 import { colors } from "@/lib/theme";
-import { isSupportedShareUrl } from "@/lib/shareUrl";
+import { isSupportedShareUrl, sourceVideoKey } from "@/lib/shareUrl";
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"Home">;
@@ -47,6 +47,7 @@ export function HomeScreen({ navigation }: Props) {
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: listTrips });
+  const queryClient = useQueryClient();
   const refetchAll = useCallback(
     () => Promise.all([bookmarksQuery.refetch(), tripsQuery.refetch()]),
     [bookmarksQuery.refetch, tripsQuery.refetch]
@@ -61,16 +62,63 @@ export function HomeScreen({ navigation }: Props) {
     .map((b) => ({ id: String(b.id), latitude: b.latitude as number, longitude: b.longitude as number }));
   const recentTrips = (tripsQuery.data ?? []).slice(0, 3);
 
+  async function submitNewShare(sourceUrl: string) {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const { jobId } = await createShare(sourceUrl);
+      navigation.navigate("Processing", { jobId });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "요청에 실패했어요.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function handleSubmit() {
-    if (!url.trim() || submitting) return;
-    if (!isSupportedShareUrl(url)) {
+    const trimmed = url.trim();
+    if (!trimmed || submitting) return;
+    if (!isSupportedShareUrl(trimmed)) {
       setError("인스타그램 또는 유튜브 링크만 넣을 수 있어요.");
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
-      const { jobId } = await createShare(url.trim());
+      // 같은 영상을 다시 넣으면 새 작업이 또 만들어져 기록이 중복되던 문제 — 제출 전에 영상 ID로 비교한다
+      // (쇼츠/watch/youtu.be처럼 주소 모양이 달라도 같은 영상이면 같은 키).
+      const key = sourceVideoKey(trimmed);
+      const [pendingJobs, places] = await Promise.all([
+        queryClient.fetchQuery({ queryKey: ["pendingJobs"], queryFn: getPendingJobs }),
+        queryClient.fetchQuery({ queryKey: ["places"], queryFn: getPlaces }),
+      ]);
+      const sameJob = pendingJobs.find((job) => sourceVideoKey(job.sourceUrl) === key);
+      const savedPlace = places.find((place) => sourceVideoKey(place.sourceUrl) === key);
+
+      // 1) 아직 분석 중 → 새로 만들지 않고 그 진행 화면으로.
+      if (sameJob && sameJob.status !== "FAILED") {
+        navigation.navigate("Processing", { jobId: sameJob.jobId });
+        return;
+      }
+      // 2) 이미 장소가 저장된 영상 → 보러 갈지, 그래도 새로 분석할지 묻는다.
+      if (savedPlace) {
+        Alert.alert("이미 저장한 영상이에요", "이 영상에서 뽑은 장소가 영상 기록에 있어요.", [
+          { text: "취소", style: "cancel" },
+          { text: "새로 분석", onPress: () => submitNewShare(trimmed) },
+          { text: "보러 가기", onPress: () => navigation.navigate("VideoGroup", { jobId: savedPlace.jobId }) },
+        ]);
+        return;
+      }
+      // 3) 추출에 실패했던 영상 → 다시 시도로 처리해 이전 실패 기록을 정리한다. 같은 영상의 실패 기록이
+      //    여러 개 쌓여 있으면(이 확인이 생기기 전 중복 제출분) 나머지도 함께 지운다.
+      const failedSame = pendingJobs.filter((job) => job.status === "FAILED" && sourceVideoKey(job.sourceUrl) === key);
+      if (failedSame.length > 0) {
+        const { jobId } = await resubmitFailedJob(failedSame[0]);
+        await Promise.allSettled(failedSame.slice(1).map((job) => deletePendingJob(job.jobId)));
+        navigation.navigate("Processing", { jobId });
+        return;
+      }
+      const { jobId } = await createShare(trimmed);
       navigation.navigate("Processing", { jobId });
     } catch (err) {
       setError(err instanceof Error ? err.message : "요청에 실패했어요.");
