@@ -108,7 +108,7 @@ export function PlaceReviewContent({
   return (
     <>
       <View style={{ gap: 4 }}>
-        <AppText weight="medium" style={{ fontSize: 17 }}>
+        <AppText weight="medium" style={{ fontSize: 16 }}>
           {detail.name}
         </AppText>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

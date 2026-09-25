@@ -44,7 +44,7 @@ export function DayPickerSheet({ visible, dayNumbers, currentDay, onSelect, onCl
       handleIndicatorStyle={{ backgroundColor: colors.border }}
     >
       <BottomSheetView style={{ padding: 16, paddingBottom: 32, gap: 4 }}>
-        <AppText weight="medium" style={{ fontSize: 15, marginBottom: 8 }}>
+        <AppText weight="medium" style={{ fontSize: 16, marginBottom: 8 }}>
           어느 날로 옮길까요?
         </AppText>
         {dayNumbers.map((day) => (
