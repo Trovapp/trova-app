@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, type ComponentProps } from "react";
 import { Alert, KeyboardAvoidingView, Platform, RefreshControl, ScrollView, TextInput, View } from "react-native";
 import { useScrollToTop } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -61,6 +61,10 @@ export function HomeScreen({ navigation }: Props) {
     .filter((b) => b.latitude !== null && b.longitude !== null)
     .map((b) => ({ id: String(b.id), latitude: b.latitude as number, longitude: b.longitude as number }));
   const recentTrips = (tripsQuery.data ?? []).slice(0, 3);
+  // 찜도 여행도 없는 처음 사용자는 "찜한 장소"·"최근 여행" 섹션이 모두 사라져 입력창만 남는다 —
+  // 이 앱이 뭘 해주는지, 링크를 어디서 가져오는지 알려준다(둘 다 불러오기에 성공했을 때만).
+  const isFirstVisit =
+    bookmarksQuery.isSuccess && tripsQuery.isSuccess && bookmarksQuery.data.length === 0 && tripsQuery.data.length === 0;
 
   async function submitNewShare(sourceUrl: string) {
     setSubmitting(true);
@@ -187,6 +191,8 @@ export function HomeScreen({ navigation }: Props) {
           onOpenAlternative={(tripId) => navigation.navigate("TripDetail", { id: tripId })}
         />
 
+        {isFirstVisit && <FirstVisitGuide />}
+
         {bookmarksQuery.isLoading ? (
           <View style={{ gap: 10 }}>
             <Skeleton style={{ width: 100, height: 17 }} />
@@ -259,5 +265,41 @@ export function HomeScreen({ navigation }: Props) {
 
       </ScrollView>
     </KeyboardAvoidingView>
+  );
+}
+
+const GUIDE_STEPS: { icon: ComponentProps<typeof Feather>["name"]; title: string; body: string }[] = [
+  { icon: "copy", title: "링크 복사", body: "인스타 릴스·유튜브 쇼츠에서 공유 → 링크 복사" },
+  { icon: "clipboard", title: "여기에 붙여넣기", body: "위 입력창에 붙여넣고 장소 추출하기" },
+  { icon: "map-pin", title: "지도에 정리", body: "영상 속 장소를 찾아 지도와 일정으로 정리해드려요" },
+];
+
+function FirstVisitGuide() {
+  return (
+    <View style={{ gap: 14, padding: 18, borderRadius: 14, backgroundColor: colors.bgMuted }}>
+      <AppText weight="medium">이렇게 시작해보세요</AppText>
+      {GUIDE_STEPS.map((step, index) => (
+        <View key={step.title} style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
+          <View
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 15,
+              backgroundColor: colors.accentBg,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Feather name={step.icon} size={15} color={colors.accent} />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <AppText weight="medium" style={{ fontSize: 14 }}>
+              {index + 1}. {step.title}
+            </AppText>
+            <AppText style={{ fontSize: 13, color: colors.inkMuted }}>{step.body}</AppText>
+          </View>
+        </View>
+      ))}
+    </View>
   );
 }
