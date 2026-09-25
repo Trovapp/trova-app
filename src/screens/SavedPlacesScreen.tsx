@@ -467,7 +467,6 @@ export function SavedPlacesScreen() {
         ref={menuSheetRef}
         enableDynamicSizing
         onDismiss={() => {
-          haptics.light();
           setMenuBookmarkId(null);
         }}
         backdropComponent={(props: BottomSheetBackdropProps) => (

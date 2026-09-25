@@ -11,7 +11,6 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { RatingBadge } from "@/components/RatingBadge";
 import { getPlaceDetails } from "@/lib/api/recommendations";
 import { getTripPlaceDetails } from "@/lib/api/trips";
-import { haptics } from "@/lib/haptics";
 import { categoryLabel } from "@/lib/placeCategory";
 import { formatCount } from "@/lib/number";
 import { colors } from "@/lib/theme";
@@ -287,7 +286,6 @@ export function PlaceReviewSheet({
       enableDynamicSizing={false}
       enablePanDownToClose
       onClose={() => {
-        haptics.light();
         onClose();
       }}
     >

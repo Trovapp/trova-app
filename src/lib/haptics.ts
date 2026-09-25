@@ -13,7 +13,8 @@ export const haptics = {
   selection: () => {
     if (enabled) Haptics.selectionAsync();
   },
-  // 뭔가 제자리에 스냅될 때 — 바텀시트 닫힘, 드래그 순서 변경 확정
+  // 뭔가 제자리에 스냅될 때 — 드래그 순서 변경 확정. 바텀시트 닫힘에는 쓰지 않는다(iOS 기본 시트도
+  // 닫힐 때 진동이 없고, 메뉴 선택 → 시트 닫힘 → 삭제 경고로 이어지면 연달아 두 번 울려 의미가 흐려짐).
   light: () => {
     if (enabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   },

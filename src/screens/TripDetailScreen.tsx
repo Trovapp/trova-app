@@ -856,7 +856,6 @@ export function TripDetailScreen({ route, navigation }: Props) {
       ref={menuSheetRef}
       enableDynamicSizing
       onDismiss={() => {
-        haptics.light();
         setMenuPlaceId(null);
       }}
       backdropComponent={(props: BottomSheetBackdropProps) => (

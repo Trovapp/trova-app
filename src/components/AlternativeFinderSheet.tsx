@@ -11,7 +11,6 @@ import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
-import { haptics } from "@/lib/haptics";
 import { categoryLabel } from "@/lib/placeCategory";
 import { colors } from "@/lib/theme";
 import {
@@ -233,7 +232,6 @@ export function AlternativeFinderSheet({
       enableDynamicSizing={false}
       enablePanDownToClose
       onClose={() => {
-        haptics.light();
         onClose();
       }}
     >
