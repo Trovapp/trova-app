@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { ScrollView, TextInput, View } from "react-native";
+import { useLayoutEffect, useState } from "react";
+import { Alert, ScrollView, TextInput, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { PressableScale } from "@/components/PressableScale";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,7 +15,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { SourceVideoLink } from "@/components/SourceVideoLink";
 import { haversineDistanceKm } from "@/lib/geo";
 import { haptics } from "@/lib/haptics";
-import { generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
+import { deleteVideoPlaces, generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
 import { confirmTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
 import { toDateString } from "@/lib/date";
 import { groupByDay, isItineraryGroup } from "@/lib/itinerary";
@@ -44,6 +45,45 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const [reviewPlaceId, setReviewPlaceId] = useState<number | null>(null);
 
   const group = (placesQuery.data ?? []).filter((p) => p.jobId === jobId);
+  const placeIdsKey = group.map((p) => p.id).join(",");
+
+  // 완료된 영상 기록은 지울 방법이 없던 문제 — 여행 상세와 같은 위치(헤더 오른쪽)에 삭제를 둔다.
+  useLayoutEffect(() => {
+    const placeIds = placeIdsKey ? placeIdsKey.split(",").map(Number) : [];
+    function confirmDeleteVideo() {
+      Alert.alert(
+        "영상 기록을 삭제할까요?",
+        `이 영상에서 찾은 장소 ${placeIds.length}곳이 영상 기록에서 사라져요. 이 영상으로 만든 여행은 그대로 남아요.`,
+        [
+          { text: "취소", style: "cancel" },
+          {
+            text: "삭제",
+            style: "destructive",
+            onPress: async () => {
+              haptics.warning();
+              const failed = await deleteVideoPlaces(placeIds);
+              if (failed > 0) {
+                await queryClient.invalidateQueries({ queryKey: ["places"] });
+                Alert.alert("일부를 삭제하지 못했어요", `${failed}곳이 남았어요. 잠시 후 다시 시도해주세요.`);
+                return;
+              }
+              // 목록을 먼저 새로 받으면 이 화면이 잠깐 "영상을 찾을 수 없어요"로 바뀌므로 먼저 떠난다.
+              if (navigation.canGoBack()) navigation.goBack();
+              else navigation.replace("MainTabs");
+              await queryClient.invalidateQueries({ queryKey: ["places"] });
+            },
+          },
+        ],
+      );
+    }
+    navigation.setOptions({
+      headerRight: () => (
+        <PressableScale onPress={confirmDeleteVideo} hitSlop={10} disabled={placeIds.length === 0}>
+          <Feather name="trash-2" size={19} color={colors.inkMuted} />
+        </PressableScale>
+      ),
+    });
+  }, [navigation, placeIdsKey, queryClient]);
 
   const itineraryPlaces = localPlaces ?? group;
   const hasItinerary = isItineraryGroup(itineraryPlaces);

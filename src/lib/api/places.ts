@@ -77,6 +77,21 @@ export async function resubmitFailedJob(job: PendingJob): Promise<{ jobId: numbe
   return created;
 }
 
+export async function deletePlace(id: number): Promise<void> {
+  const res = await apiFetch(`/api/places/${id}`, { method: "DELETE" });
+  if (!res.ok) {
+    throw new Error(`DELETE /api/places/${id} failed: ${res.status}`);
+  }
+}
+
+// 완료된 영상 기록 삭제 — 백엔드엔 장소 단건 삭제만 있어서 이 영상에서 뽑은 장소를 모두 지운다.
+// 이 영상으로 만든 여행의 장소(TripPlace)는 saved_place_id를 FK가 아닌 추적용 값으로만 들고 있어 영향이 없다.
+// 반환값은 삭제에 실패한 개수.
+export async function deleteVideoPlaces(placeIds: number[]): Promise<number> {
+  const results = await Promise.allSettled(placeIds.map((id) => deletePlace(id)));
+  return results.filter((r) => r.status === "rejected").length;
+}
+
 export async function getPlaces(): Promise<Place[]> {
   const res = await apiFetch("/api/places");
   if (!res.ok) {
