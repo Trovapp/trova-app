@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
@@ -10,7 +10,7 @@ import { ProgressHero } from "@/components/ProgressHero";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
-import { getPendingJobs, type PendingJob } from "@/lib/api/places";
+import { getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob } from "@/lib/api/places";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
 
@@ -87,6 +87,25 @@ export function ProcessingScreen({ route, navigation }: Props) {
   });
 
   const job = pendingQuery.data?.find((item) => item.jobId === jobId);
+  // 실패한 작업에 이미 저장된 장소가 있으면 "일정 생성" 단계 실패다 — 그땐 링크 재제출이 맞지 않아
+  // 다시 시도를 보여주지 않는다. 장소 조회가 끝나기 전엔 판단을 미룬다.
+  const placesQuery = useQuery({ queryKey: ["places"], queryFn: getPlaces, enabled: job?.status === "FAILED" });
+  const canRetry = placesQuery.isSuccess && !placesQuery.data.some((place) => place.jobId === jobId);
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState<string | null>(null);
+
+  async function handleRetry() {
+    if (!job || retrying) return;
+    setRetrying(true);
+    setRetryError(null);
+    try {
+      const { jobId: newJobId } = await resubmitFailedJob(job);
+      navigation.replace("Processing", { jobId: newJobId });
+    } catch (err) {
+      setRetryError(err instanceof Error ? err.message : "다시 시도하지 못했어요.");
+      setRetrying(false);
+    }
+  }
 
   function handleBack() {
     if (navigation.canGoBack()) {
@@ -101,10 +120,13 @@ export function ProcessingScreen({ route, navigation }: Props) {
     // 것은 처리가 끝나 저장까지 완료됐다는 뜻이다. 완료 후에는 항상 이 영상의
     // 그룹 화면으로 이동한다 — 최초 추출과 일정 생성 재요청 둘 다 같은 화면을
     // 거치므로 분기 없이 이 한 줄이면 충분하다.
-    if (pendingQuery.isSuccess && !job) {
+    // 단, 캐시에 남아있던 예전 목록(이 작업이 만들어지기 전 데이터)으로 판단하면 방금 만든
+    // 작업도 "없음 = 완료"로 오인해 바로 넘어가 버린다 — 이 화면에서 새로 받아온 목록으로만 판단한다.
+    // 다시 시도 중엔 이전 실패 기록을 지우므로 그 사이의 "없음"도 무시한다.
+    if (pendingQuery.isSuccess && pendingQuery.isFetchedAfterMount && !job && !retrying) {
       navigation.replace("VideoGroup", { jobId });
     }
-  }, [pendingQuery.isSuccess, job, jobId, navigation]);
+  }, [pendingQuery.isSuccess, pendingQuery.isFetchedAfterMount, job, jobId, navigation, retrying]);
 
   // 폴링이 계속 실패하면 로딩 스켈레톤에 영원히 멈춰 보인다 — 재시도 수단을 준다.
   if (pendingQuery.isError) {
@@ -142,22 +164,49 @@ export function ProcessingScreen({ route, navigation }: Props) {
         <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>
           {job.title ?? job.sourceUrl}
         </AppText>
-        <PressableScale
-          onPress={() => navigation.replace("MainTabs")}
-          style={{
-            marginTop: 12,
-            height: 48,
-            paddingHorizontal: 24,
-            borderRadius: 12,
-            backgroundColor: colors.accent,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <AppText weight="medium" style={{ color: colors.onAccent }}>
-            홈으로 돌아가기
-          </AppText>
-        </PressableScale>
+        {canRetry ? (
+          <>
+            <PressableScale
+              onPress={handleRetry}
+              disabled={retrying}
+              style={{
+                marginTop: 12,
+                height: 48,
+                paddingHorizontal: 24,
+                borderRadius: 12,
+                backgroundColor: colors.accent,
+                justifyContent: "center",
+                alignItems: "center",
+                opacity: retrying ? 0.6 : 1,
+              }}
+            >
+              <AppText weight="medium" style={{ color: colors.onAccent }}>
+                {retrying ? "다시 요청하는 중..." : "다시 시도"}
+              </AppText>
+            </PressableScale>
+            <PressableScale onPress={() => navigation.replace("MainTabs")} hitSlop={10} disabled={retrying}>
+              <AppText style={{ color: colors.inkMuted }}>홈으로 돌아가기</AppText>
+            </PressableScale>
+            {retryError && <AppText style={{ color: colors.accent, fontSize: 13 }}>{retryError}</AppText>}
+          </>
+        ) : (
+          <PressableScale
+            onPress={() => navigation.replace("MainTabs")}
+            style={{
+              marginTop: 12,
+              height: 48,
+              paddingHorizontal: 24,
+              borderRadius: 12,
+              backgroundColor: colors.accent,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <AppText weight="medium" style={{ color: colors.onAccent }}>
+              홈으로 돌아가기
+            </AppText>
+          </PressableScale>
+        )}
       </View>
     );
   }

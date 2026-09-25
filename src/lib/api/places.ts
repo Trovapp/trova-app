@@ -68,6 +68,15 @@ export async function deletePendingJob(jobId: number): Promise<void> {
   }
 }
 
+// 추출 단계에서 실패한 작업을 같은 링크로 다시 제출한다(백엔드에 재시도 API가 없어 새 작업을 만든다).
+// 새 작업이 만들어진 뒤에만 이전 실패 기록을 지우고, 그 정리가 실패해도 재시도 자체는 성공으로 본다.
+// 일정 생성 단계에서 실패한 작업(이미 장소가 저장된 작업)에는 쓰면 안 된다 — 영상을 처음부터 다시 추출하게 된다.
+export async function resubmitFailedJob(job: PendingJob): Promise<{ jobId: number }> {
+  const created = await createShare(job.sourceUrl);
+  await deletePendingJob(job.jobId).catch(() => {});
+  return created;
+}
+
 export async function getPlaces(): Promise<Place[]> {
   const res = await apiFetch("/api/places");
   if (!res.ok) {

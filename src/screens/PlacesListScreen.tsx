@@ -13,7 +13,7 @@ import { useListEntrance } from "@/hooks/useListEntrance";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { haptics } from "@/lib/haptics";
 import { colors } from "@/lib/theme";
-import { deletePendingJob, getPendingJobs, getPlaces, type PendingJob, type Place } from "@/lib/api/places";
+import { deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob, type Place } from "@/lib/api/places";
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"PlacesList">;
@@ -63,7 +63,16 @@ function placePreview(places: Place[]): string {
 // 진행 중인 작업은 완료된 영상들과 시각적으로 구분되게(진행률 바가 있는
 // 살아있는 상태라) 옅은 배경 블록으로 남겨두고, 완료된 목록만 구분선 리스트로
 // 낮춘다(2026-09 디자인 — TripsListScreen과 동일한 원칙).
-function PendingJobCard({ job, onDelete }: { job: PendingJob; onDelete: (jobId: number) => void }) {
+function PendingJobCard({
+  job,
+  onDelete,
+  onRetry,
+}: {
+  job: PendingJob;
+  onDelete: (jobId: number) => void;
+  // 추출 단계 실패일 때만 넘어온다(일정 생성 실패는 링크 재제출 대상이 아님).
+  onRetry?: (job: PendingJob) => void;
+}) {
   const isFailed = job.status === "FAILED";
   // 백엔드가 진짜로 도달한 파이프라인 단계만 반영한다 — 아직 EXTRACTING도 시작 전(PENDING)이면
   // 지어낸 퍼센트 없이 0%로 둔다.
@@ -96,9 +105,16 @@ function PendingJobCard({ job, onDelete }: { job: PendingJob; onDelete: (jobId: 
           </PressableScale>
         )}
       </View>
-      <AppText style={{ marginTop: 4, fontSize: 12, color: isFailed ? colors.accent : colors.inkMuted }}>
-        {message}
-      </AppText>
+      <View style={{ marginTop: 4, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <AppText style={{ fontSize: 12, color: isFailed ? colors.accent : colors.inkMuted }}>{message}</AppText>
+        {isFailed && onRetry && (
+          <PressableScale onPress={() => onRetry(job)} hitSlop={10}>
+            <AppText weight="medium" style={{ fontSize: 12, color: colors.ink }}>
+              다시 시도
+            </AppText>
+          </PressableScale>
+        )}
+      </View>
       {!isFailed && (
         <View style={{ marginTop: 10 }}>
           <ProgressBar percent={percent} />
@@ -180,6 +196,23 @@ export function PlacesListScreen({ navigation }: Props) {
     }
   }
 
+  const [retryingJobId, setRetryingJobId] = useState<number | null>(null);
+
+  async function handleRetryJob(job: PendingJob) {
+    if (retryingJobId !== null) return;
+    setRetryingJobId(job.jobId);
+    setDeleteError(null);
+    try {
+      const { jobId: newJobId } = await resubmitFailedJob(job);
+      await queryClient.invalidateQueries({ queryKey: ["pendingJobs"] });
+      navigation.navigate("Processing", { jobId: newJobId });
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "다시 시도하지 못했어요.");
+    } finally {
+      setRetryingJobId(null);
+    }
+  }
+
   const previousPendingCountRef = useRef<number | null>(null);
   useEffect(() => {
     const currentCount = pendingQuery.data?.length ?? 0;
@@ -225,7 +258,12 @@ export function PlacesListScreen({ navigation }: Props) {
         pendingJobs.length > 0 ? (
           <View style={{ gap: 12, marginBottom: 20 }}>
             {pendingJobs.map((job) => (
-              <PendingJobCard key={job.jobId} job={job} onDelete={handleDeleteJob} />
+              <PendingJobCard
+                key={job.jobId}
+                job={job}
+                onDelete={handleDeleteJob}
+                onRetry={places.some((place) => place.jobId === job.jobId) ? undefined : handleRetryJob}
+              />
             ))}
             {deleteError && <AppText style={{ color: colors.accent, fontSize: 12 }}>{deleteError}</AppText>}
           </View>
