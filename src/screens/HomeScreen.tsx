@@ -1,5 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, TextInput, View } from "react-native";
+import { useScrollToTop } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
@@ -50,6 +51,9 @@ export function HomeScreen({ navigation }: Props) {
     [bookmarksQuery.refetch, tripsQuery.refetch]
   );
   const { refreshing, onRefresh } = usePullToRefresh(refetchAll);
+  // 이미 보고 있는 탭을 다시 누르면 맨 위로(iOS 기본 동작).
+  const scrollRef = useRef<ScrollView>(null);
+  useScrollToTop(scrollRef);
 
   const pins = (bookmarksQuery.data ?? [])
     .filter((b) => b.latitude !== null && b.longitude !== null)
@@ -77,6 +81,7 @@ export function HomeScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={{ padding: 24, gap: 28 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >

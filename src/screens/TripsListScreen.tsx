@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
+import { useScrollToTop } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
@@ -9,7 +11,7 @@ import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { useListEntrance } from "@/hooks/useListEntrance";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
-import { listTrips } from "@/lib/api/trips";
+import { listTrips, type Trip } from "@/lib/api/trips";
 import { formatTripDates } from "@/lib/date";
 import { colors } from "@/lib/theme";
 import type { MainTabScreenProps } from "@/navigation/types";
@@ -23,6 +25,9 @@ export function TripsListScreen({ navigation }: Props) {
   const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: listTrips });
   const entranceFor = useListEntrance();
   const { refreshing, onRefresh } = usePullToRefresh(tripsQuery.refetch);
+  // 이미 보고 있는 탭을 다시 누르면 맨 위로(iOS 기본 동작).
+  const listRef = useRef<FlatList<Trip>>(null);
+  useScrollToTop(listRef);
 
   if (tripsQuery.isLoading) {
     return (
@@ -50,6 +55,7 @@ export function TripsListScreen({ navigation }: Props) {
 
   return (
     <FlatList
+      ref={listRef}
       contentContainerStyle={{ padding: 16 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       data={trips}

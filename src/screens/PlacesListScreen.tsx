@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ComponentProps } from "react";
 import { Alert, FlatList, RefreshControl, View } from "react-native";
+import { useScrollToTop } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
@@ -177,6 +178,9 @@ export function PlacesListScreen({ navigation }: Props) {
     [placesQuery.refetch, pendingQuery.refetch]
   );
   const { refreshing, onRefresh } = usePullToRefresh(refetchAll);
+  // 이미 보고 있는 탭을 다시 누르면 맨 위로(iOS 기본 동작).
+  const listRef = useRef<FlatList<VideoGroup>>(null);
+  useScrollToTop(listRef);
 
   const [deletingJobId, setDeletingJobId] = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -250,6 +254,7 @@ export function PlacesListScreen({ navigation }: Props) {
 
   return (
     <FlatList
+      ref={listRef}
       contentContainerStyle={{ padding: 16 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       data={videoGroups}
