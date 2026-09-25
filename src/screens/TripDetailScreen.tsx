@@ -155,6 +155,10 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const currentActiveDay = activeDay ?? trip.days[0]?.day ?? 1;
   const activeDayData = trip.days.find((d) => d.day === currentActiveDay);
   const places = activeDayData?.places ?? [];
+  // 추가해도 새 장소는 화면 위쪽 목록에 들어가서, 아래에서 검색하던 사용자는 추가됐는지 알기 어렵고
+  // 한 번 더 눌러 같은 장소가 중복으로 들어가곤 했다 — 이 날짜에 이미 있는 장소는 "추가됨"으로 보여준다.
+  // (다른 날짜에 같은 장소를 다시 넣는 건 재방문일 수 있어 막지 않는다.)
+  const addedGooglePlaceIds = new Set(places.map((p) => p.googlePlaceId).filter((id): id is string => id !== null));
   const menuPlace = places.find((p) => p.id === menuPlaceId) ?? null;
   const dayColor = getDayColor(currentActiveDay);
   const tripId = trip.id;
@@ -734,13 +738,11 @@ export function TripDetailScreen({ route, navigation }: Props) {
                           color={bookmarkedPlaceIds.has(place.id) ? colors.accent : colors.border}
                         />
                       </PressableScale>
-                      <PressableScale
-                        onPress={() => handleAddPlace(place.googlePlaceId)}
+                      <AddToDayButton
+                        added={addedGooglePlaceIds.has(place.googlePlaceId)}
                         disabled={busy}
-                        style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
-                      >
-                        <AppText style={{ fontSize: 12, color: colors.onAccent }}>추가</AppText>
-                      </PressableScale>
+                        onPress={() => handleAddPlace(place.googlePlaceId)}
+                      />
                     </View>
                   </View>
                   <PressableScale
@@ -795,14 +797,12 @@ export function TripDetailScreen({ route, navigation }: Props) {
                           {bookmark.placeName}
                         </AppText>
                       </PressableScale>
-                      <View style={{ flexDirection: "row", gap: 10 }}>
-                        <PressableScale
-                          onPress={() => handleAddPlace(bookmark.googlePlaceId)}
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                        <AddToDayButton
+                          added={addedGooglePlaceIds.has(bookmark.googlePlaceId)}
                           disabled={busy}
-                          style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.accent }}
-                        >
-                          <AppText style={{ fontSize: 12, color: colors.onAccent }}>추가</AppText>
-                        </PressableScale>
+                          onPress={() => handleAddPlace(bookmark.googlePlaceId)}
+                        />
                         <PressableScale
                           onPress={() =>
                             Alert.alert("찜을 해제할까요?", `"${bookmark.placeName}"을(를) 찜한 장소에서 뺍니다.`, [
@@ -952,5 +952,22 @@ export function TripDetailScreen({ route, navigation }: Props) {
       </BottomSheetView>
     </BottomSheetModal>
     </View>
+  );
+}
+
+function AddToDayButton({ added, disabled, onPress }: { added: boolean; disabled: boolean; onPress: () => void }) {
+  const box = { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1 } as const;
+  if (added) {
+    return (
+      <View style={[box, { borderColor: colors.border, flexDirection: "row", alignItems: "center", gap: 3 }]}>
+        <Feather name="check" size={12} color={colors.inkMuted} />
+        <AppText style={{ fontSize: 12, color: colors.inkMuted }}>추가됨</AppText>
+      </View>
+    );
+  }
+  return (
+    <PressableScale onPress={onPress} disabled={disabled} style={[box, { borderColor: colors.accent, backgroundColor: colors.accent }]}>
+      <AppText style={{ fontSize: 12, color: colors.onAccent }}>추가</AppText>
+    </PressableScale>
   );
 }
