@@ -17,7 +17,8 @@ import { listBookmarks } from "@/lib/api/bookmarks";
 import { listTrips } from "@/lib/api/trips";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
-import { formatTripDates } from "@/lib/date";
+import { formatTripDates, toDateString } from "@/lib/date";
+import { groupTripsByDate } from "@/lib/tripSections";
 import { toUserMessage } from "@/lib/api/client";
 import { colors } from "@/lib/theme";
 import { isSupportedShareUrl, sourceVideoKey } from "@/lib/shareUrl";
@@ -61,7 +62,12 @@ export function HomeScreen({ navigation }: Props) {
   const pins = (bookmarksQuery.data ?? [])
     .filter((b) => b.latitude !== null && b.longitude !== null)
     .map((b) => ({ id: String(b.id), latitude: b.latitude as number, longitude: b.longitude as number }));
-  const recentTrips = (tripsQuery.data ?? []).slice(0, 3);
+  // 백엔드 목록은 만든 순서라, 내 여행 탭과 같은 기준으로 나눠서 다가오는 여행이 있으면 그걸(가까운 순),
+  // 없으면 지난 여행(최근 날짜순)을 보여준다. 두 종류를 한 제목 아래 섞지 않는다.
+  const tripSections = groupTripsByDate(tripsQuery.data ?? [], toDateString(new Date()));
+  const homeTripSection = tripSections.find((s) => s.title === "다가오는 여행") ?? tripSections.find((s) => s.title === "지난 여행");
+  const recentTrips = (homeTripSection?.data ?? []).slice(0, 3);
+  const recentTripsTitle = homeTripSection?.title === "다가오는 여행" ? "다가오는 여행" : "최근 여행";
   // 찜도 여행도 없는 처음 사용자는 "찜한 장소"·"최근 여행" 섹션이 모두 사라져 입력창만 남는다 —
   // 이 앱이 뭘 해주는지, 링크를 어디서 가져오는지 알려준다(둘 다 불러오기에 성공했을 때만).
   const isFirstVisit =
@@ -230,7 +236,7 @@ export function HomeScreen({ navigation }: Props) {
           recentTrips.length > 0 && (
             <View>
               <AppText weight="medium" style={{ marginBottom: 10 }}>
-                최근 여행
+                {recentTripsTitle}
               </AppText>
               {recentTrips.map((trip, i) => (
                 <Animated.View
