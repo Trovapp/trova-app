@@ -4,6 +4,11 @@
 // 매핑을 채워두고, 매핑에 없는 값은 언더스코어를 공백으로 바꿔서라도 원문 영어
 // snake_case를 그대로 노출하지 않게 한다.
 const CATEGORY_LABELS: Record<string, string> = {
+  // 영상 장소 추출 파이프라인(extract_places.py)이 쓰는 카테고리 — restaurant/cafe/lodging은 아래 구글 타입과 겹친다.
+  attraction: "관광명소",
+  shopping: "쇼핑",
+  other: "기타",
+
   restaurant: "음식점",
   fast_food_restaurant: "패스트푸드",
   cafe: "카페",

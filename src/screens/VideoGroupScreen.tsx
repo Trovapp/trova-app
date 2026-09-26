@@ -10,7 +10,7 @@ import { ErrorText } from "@/components/ErrorText";
 import { DayPickerSheet } from "@/components/DayPickerSheet";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
-import { PlaceReviewSheet } from "@/components/PlaceReviewModal";
+import { SavedPlaceInfoSheet } from "@/components/SavedPlaceInfoSheet";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
 import { SourceVideoLink } from "@/components/SourceVideoLink";
@@ -49,6 +49,8 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const [reviewPlaceId, setReviewPlaceId] = useState<number | null>(null);
 
   const group = (placesQuery.data ?? []).filter((p) => p.jobId === jobId);
+  // 장소 정보 시트는 SavedPlace 자체를 넘긴다(리뷰 요약 시트에 SavedPlace id를 넘기면 다른 장소가 조회됐다).
+  const reviewPlace = group.find((p) => p.id === reviewPlaceId) ?? null;
   const placeIdsKey = group.map((p) => p.id).join(",");
 
   // 완료된 영상 기록은 지울 방법이 없던 문제 — 여행 상세와 같은 위치(헤더 오른쪽)에 삭제를 둔다.
@@ -337,7 +339,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
           })}
         </View>
       </ScrollView>
-      <PlaceReviewSheet placeId={reviewPlaceId} onClose={() => setReviewPlaceId(null)} />
+      <SavedPlaceInfoSheet place={reviewPlace} onClose={() => setReviewPlaceId(null)} />
       </View>
     );
   }
@@ -541,7 +543,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
         </View>
       }
     />
-    <PlaceReviewSheet placeId={reviewPlaceId} onClose={() => setReviewPlaceId(null)} />
+    <SavedPlaceInfoSheet place={reviewPlace} onClose={() => setReviewPlaceId(null)} />
     </View>
   );
 }
