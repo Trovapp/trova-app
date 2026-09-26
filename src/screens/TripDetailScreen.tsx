@@ -156,14 +156,15 @@ export function TripDetailScreen({ route, navigation }: Props) {
     }
   }, [gapCardFor]);
 
+  // "⋮" 메뉴는 누를 때 바로 present()한다. 예전엔 menuPlaceId 변화를 effect로 보고 열고 닫았는데,
+  // 시트가 닫히며 onDismiss가 값을 null로 되돌리면 effect가 이미 닫힌 시트에 dismiss()를 한 번 더 불러
+  // 라이브러리 내부 상태가 꼬였고, 그 뒤로는 "⋮"를 눌러도 메뉴가 다시 열리지 않았다(실제 탭으로 재현).
+  // 닫기는 각 메뉴 항목과 바깥 탭(backdrop)이 직접 한다.
   const menuSheetRef = useRef<BottomSheetModal>(null);
-  useEffect(() => {
-    if (menuPlaceId !== null) {
-      menuSheetRef.current?.present();
-    } else {
-      menuSheetRef.current?.dismiss();
-    }
-  }, [menuPlaceId]);
+  function openPlaceMenu(placeId: number) {
+    setMenuPlaceId(placeId);
+    menuSheetRef.current?.present();
+  }
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const foldersQuery = useQuery({ queryKey: ["bookmarkFolders"], queryFn: listFolders });
@@ -463,7 +464,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             setAlternativeTargetId(null);
             setReviewTarget({ kind: "tripPlace", id: place.id });
           }}
-          onOpenMenu={() => setMenuPlaceId(place.id)}
+          onOpenMenu={() => openPlaceMenu(place.id)}
           showLinks={false}
         >
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: 4 }}>

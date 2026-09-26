@@ -71,17 +71,13 @@ export function SavedPlacesScreen() {
   const snapPoints = useMemo(() => ["18%", `${SHEET_DEFAULT_PERCENT}%`, "90%"], []);
   const entranceFor = useListEntrance();
 
-  // 북마크 메뉴 시트 — menuBookmarkId(원시 상태)로 여닫는다. menuBookmark(파생값)는
-  // 이 아래 early return들 다음에 계산되므로, 훅 순서 규칙상 그걸 의존성으로 쓰는
-  // effect를 여기 둘 수 없다.
+  // 누를 때 바로 present()한다 — effect로 열고 닫으면 닫힘(onDismiss→null) 뒤 이미 닫힌 시트에 dismiss()가
+  // 한 번 더 불려 이후 메뉴가 다시 안 열렸다(여행 상세에서 실제 탭으로 재현한 것과 같은 구조).
   const menuSheetRef = useRef<BottomSheetModal>(null);
-  useEffect(() => {
-    if (menuBookmarkId !== null) {
-      menuSheetRef.current?.present();
-    } else {
-      menuSheetRef.current?.dismiss();
-    }
-  }, [menuBookmarkId]);
+  function openBookmarkMenu(bookmarkId: number) {
+    setMenuBookmarkId(bookmarkId);
+    menuSheetRef.current?.present();
+  }
 
   if (bookmarksQuery.isLoading || foldersQuery.isLoading) {
     return (
@@ -478,7 +474,7 @@ export function SavedPlacesScreen() {
                       </AppText>
                     )}
                   </View>
-                  <PressableScale onPress={() => setMenuBookmarkId(item.id)} hitSlop={10} style={{ paddingHorizontal: 4 }}>
+                  <PressableScale onPress={() => openBookmarkMenu(item.id)} hitSlop={10} style={{ paddingHorizontal: 4 }}>
                     <Feather name="more-vertical" size={18} color={colors.inkMuted} />
                   </PressableScale>
                 </PressableRow>
