@@ -56,6 +56,18 @@ export async function getTripPlaceDetails(id: number): Promise<TripPlaceReviewSu
 // 잘려 보이므로 UI 기준으로 훨씬 짧게 제한해 저장 실패와 읽기 힘든 긴 이름을 함께 막는다.
 export const TRIP_TITLE_MAX_LENGTH = 50;
 
+// 이 영상으로 이미 만든 여행(같은 영상을 다시 추출한 기록 포함). 없으면 null.
+export async function getVideoTrip(jobId: number): Promise<Trip | null> {
+  const res = await apiFetch(`/api/places/videos/${jobId}/trip`);
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) {
+    throw new ApiError(res.status, `GET /api/places/videos/${jobId}/trip failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function confirmTrip(jobId: number, title: string, startDate: string | null): Promise<Trip> {
   const res = await apiFetch(`/api/places/videos/${jobId}/confirm-trip`, {
     method: "POST",

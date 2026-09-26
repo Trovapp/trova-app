@@ -2,6 +2,7 @@ import { useLayoutEffect, useState } from "react";
 import { Alert, Platform, ScrollView, TextInput, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
+import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -17,7 +18,7 @@ import { SourceVideoLink } from "@/components/SourceVideoLink";
 import { haversineDistanceKm } from "@/lib/geo";
 import { haptics } from "@/lib/haptics";
 import { deleteVideoPlaces, generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
-import { confirmTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
+import { confirmTrip, getVideoTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
 import { formatDateLabel, formatTripDates, toDateString } from "@/lib/date";
 import { groupByDay, isItineraryGroup } from "@/lib/itinerary";
 import { colors } from "@/lib/theme";
@@ -33,6 +34,11 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const placesQuery = useQuery({ queryKey: ["places"], queryFn: getPlaces });
+  // 이 영상으로 이미 만든 여행 — 있으면 "여행으로 만들기" 대신 "만든 여행 보기"를 보여준다. 예전엔 항상 폼을
+  // 보여줘서 같은 영상 여행이 중복으로 쌓이거나, 입력한 이름·출발일이 말없이 무시되고 기존 여행으로 이동했다.
+  // 조회에 실패하면(서버에 API가 없는 등) 지금처럼 만들기 폼을 보여준다.
+  const videoTripQuery = useQuery({ queryKey: ["videoTrip", jobId], queryFn: () => getVideoTrip(jobId) });
+  const existingTrip = videoTripQuery.data ?? null;
   const [localPlaces, setLocalPlaces] = useState<Place[] | null>(null);
   const [emptyDayNumbers, setEmptyDayNumbers] = useState<number[]>([]);
   const [actionPending, setActionPending] = useState(false);
@@ -191,6 +197,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
       // replace는 아래에 깔린 여행 목록 화면을 unmount하지 않는다 — 무효화해두지 않으면
       // 뒤로 가기로 돌아왔을 때 방금 확정한 여행이 목록에 없다.
       await queryClient.invalidateQueries({ queryKey: ["trips"] });
+      await queryClient.invalidateQueries({ queryKey: ["videoTrip"] });
       navigation.replace("TripDetail", { id: trip.id });
     } catch {
       setTripError("여행 확정에 실패했어요. 다시 시도해주세요.");
@@ -386,7 +393,34 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             </PressableScale>
           </View>
 
-          {!showTripForm ? (
+          {existingTrip ? (
+            <PressableRow
+              onPress={() => navigation.navigate("TripDetail", { id: existingTrip.id })}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+                padding: 12,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <Feather name="calendar" size={16} color={colors.accent} />
+              <View style={{ flex: 1 }}>
+                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>이 영상으로 만든 여행</AppText>
+                <AppText weight="medium" numberOfLines={1}>
+                  {existingTrip.title}
+                </AppText>
+                {existingTrip.startDate && (
+                  <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                    {formatTripDates(existingTrip.startDate, existingTrip.endDate)}
+                  </AppText>
+                )}
+              </View>
+              <Feather name="chevron-right" size={18} color={colors.inkMuted} />
+            </PressableRow>
+          ) : !showTripForm ? (
             <PressableScale
               onPress={() => {
                 setTripTitle(title);

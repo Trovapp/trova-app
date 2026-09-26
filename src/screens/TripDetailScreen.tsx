@@ -84,6 +84,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
             try {
               await deleteTrip(id);
               await queryClient.invalidateQueries({ queryKey: ["trips"] });
+              // 영상 속 장소 화면의 "이 영상으로 만든 여행" 표시도 지운 여행을 가리키지 않게 한다.
+              await queryClient.invalidateQueries({ queryKey: ["videoTrip"] });
               queryClient.removeQueries({ queryKey: ["trip", id] });
               if (navigation.canGoBack()) navigation.goBack();
               else navigation.replace("MainTabs");
