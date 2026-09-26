@@ -437,6 +437,8 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                   <DateTimePicker
                     value={tripStartDate}
                     mode="date"
+                    // 새 여행 화면과 같은 규칙 — 오늘 이전 출발일은 고를 수 없다.
+                    minimumDate={new Date(new Date().setHours(0, 0, 0, 0))}
                     locale="ko-KR"
                     display={Platform.OS === "ios" ? "spinner" : "default"}
                     onValueChange={(_, selected) => {

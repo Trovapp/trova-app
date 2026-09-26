@@ -18,6 +18,10 @@ type Props = NativeStackScreenProps<RootStackParamList, "NewTrip">;
 export function NewTripScreen({ navigation }: Props) {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
+  const [today] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  });
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [showStartPicker, setShowStartPicker] = useState(false);
@@ -108,6 +112,8 @@ export function NewTripScreen({ navigation }: Props) {
             value={startDate}
             mode="date"
             locale="ko-KR"
+            // 앞으로의 여행을 계획하는 화면이라 오늘 이전은 고를 수 없게 한다(도착일은 이미 출발일 이후로 제한됨).
+            minimumDate={today}
             display={Platform.OS === "ios" ? "spinner" : "default"}
             // onChange는 라이브러리 9.x에서 deprecated(개발 빌드 경고) — 선택은 onValueChange, 취소는 onDismiss.
             onValueChange={(_, selected) => {
