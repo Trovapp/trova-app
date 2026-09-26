@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { FlatList, RefreshControl, View } from "react-native";
+import { RefreshControl, SectionList, View } from "react-native";
 import { useScrollToTop } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
@@ -12,7 +12,8 @@ import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { useListEntrance } from "@/hooks/useListEntrance";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { listTrips, type Trip } from "@/lib/api/trips";
-import { formatTripDates } from "@/lib/date";
+import { formatTripDates, toDateString } from "@/lib/date";
+import { groupTripsByDate } from "@/lib/tripSections";
 import { colors } from "@/lib/theme";
 import type { MainTabScreenProps } from "@/navigation/types";
 
@@ -26,7 +27,7 @@ export function TripsListScreen({ navigation }: Props) {
   const entranceFor = useListEntrance();
   const { refreshing, onRefresh } = usePullToRefresh(tripsQuery.refetch);
   // 이미 보고 있는 탭을 다시 누르면 맨 위로(iOS 기본 동작).
-  const listRef = useRef<FlatList<Trip>>(null);
+  const listRef = useRef<SectionList<Trip>>(null);
   useScrollToTop(listRef);
 
   if (tripsQuery.isLoading) {
@@ -52,13 +53,21 @@ export function TripsListScreen({ navigation }: Props) {
   }
 
   const trips = tripsQuery.data ?? [];
+  const sections = groupTripsByDate(trips, toDateString(new Date()));
 
   return (
-    <FlatList
+    <SectionList
       ref={listRef}
+      stickySectionHeadersEnabled={false}
       contentContainerStyle={{ padding: 16 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      data={trips}
+      sections={sections}
+      renderSectionHeader={({ section }) => (
+        <AppText weight="medium" style={{ fontSize: 13, color: colors.inkMuted, marginTop: 8, marginBottom: 4 }}>
+          {section.title}
+        </AppText>
+      )}
+      renderSectionFooter={() => <View style={{ height: 16 }} />}
       keyExtractor={(item) => String(item.id)}
       ListHeaderComponent={
         <PressableScale
