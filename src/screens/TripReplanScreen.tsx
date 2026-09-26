@@ -178,7 +178,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
       total === null ? 15 : total === 0 ? 100 : Math.round(((job.completedTargets + 1) / total) * 100);
     const ceiling = Math.min(nextTargetPercent - 2, 99);
     return (
-      <View style={{ flex: 1, padding: 24, paddingTop: topClearance, backgroundColor: colors.bg }}>
+      <View style={{ flex: 1, padding: 24, paddingTop: topClearance }}>
         <BackButton onPress={goBackToTrip} />
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
           <ProgressHero percent={percent} ceiling={ceiling} creepMs={AVG_TARGET_MS} />
@@ -242,7 +242,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1 }}>
       <BackButton onPress={goBackToTrip} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: topClearance, gap: 16 }}>
         {/* 교체 추천이 0개이고 "대안을 찾지 못한 장소"만 있는 결과도 이 화면으로 온다 —

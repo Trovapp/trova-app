@@ -55,7 +55,7 @@ export function MyPageScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg, padding: 24 }}>
+    <View style={{ flex: 1, padding: 24 }}>
       <View style={{ alignItems: "center", marginTop: 12, marginBottom: 36 }}>
         {user?.profileImageUrl && !avatarFailed ? (
           <Image

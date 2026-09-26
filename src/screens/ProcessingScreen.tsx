@@ -224,7 +224,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
   const analysis = STAGE_ANALYSIS[stage];
 
   return (
-    <View style={{ flex: 1, padding: 24, paddingTop: topClearance, paddingBottom: Math.max(24, bottomInset + 8), backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, padding: 24, paddingTop: topClearance, paddingBottom: Math.max(24, bottomInset + 8) }}>
       <BackButton onPress={handleBack} />
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
         <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={STAGE_CREEP_MS[stage]} />
