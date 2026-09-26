@@ -1,7 +1,8 @@
+import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { LoginScreen } from "@/screens/LoginScreen";
-import { MainTabs } from "@/navigation/MainTabs";
+import { MainTabs, TAB_LABEL } from "@/navigation/MainTabs";
 import { ProcessingScreen } from "@/screens/ProcessingScreen";
 import { VideoGroupScreen } from "@/screens/VideoGroupScreen";
 import { NewTripScreen } from "@/screens/NewTripScreen";
@@ -11,7 +12,7 @@ import { LicensesScreen } from "@/screens/LicensesScreen";
 import { AppText } from "@/components/AppText";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { View } from "react-native";
-import type { RootStackParamList } from "@/navigation/types";
+import type { MainTabParamList, RootStackParamList } from "@/navigation/types";
 
 export type { RootStackParamList };
 
@@ -47,7 +48,16 @@ export function RootNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
       ) : (
         <>
-          <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+          <Stack.Screen
+            name="MainTabs"
+            component={MainTabs}
+            // 헤더는 숨기지만 title은 다음 화면의 iOS 뒤로가기 문구가 된다 — 지정하지 않으면 라우트 이름
+            // "MainTabs"가 그대로 보였다. 지금 열려 있는 탭 이름을 써서 "‹ 내 여행"처럼 보이게 한다.
+            options={({ route }) => ({
+              headerShown: false,
+              title: TAB_LABEL[(getFocusedRouteNameFromRoute(route) ?? "Home") as keyof MainTabParamList],
+            })}
+          />
           <Stack.Screen name="Processing" component={ProcessingScreen} options={{ headerShown: false }} />
           <Stack.Screen name="VideoGroup" component={VideoGroupScreen} options={{ title: "영상 속 장소" }} />
           <Stack.Screen name="NewTrip" component={NewTripScreen} options={{ title: "새 여행" }} />
