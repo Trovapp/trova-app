@@ -8,6 +8,7 @@ import { ErrorText } from "@/components/ErrorText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { PressableScale } from "@/components/PressableScale";
+import { SheetCloseButton } from "@/components/SheetCloseButton";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
 import { categoryLabel } from "@/lib/placeCategory";
@@ -376,9 +377,11 @@ export function ConversationSheet({
           <>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Feather name="message-circle" size={16} color={colors.accent} />
-              <AppText weight="medium" style={{ fontSize: 16 }}>
+              <AppText weight="medium" style={{ fontSize: 16, flex: 1 }}>
                 비서에게 물어보기
               </AppText>
+              {/* 시트를 닫으면 onClose(handleSheetClose)가 돌아 대화 세션도 정리된다. */}
+              <SheetCloseButton onPress={() => sheetRef.current?.close()} />
             </View>
 
             {messages.length === 0 && (

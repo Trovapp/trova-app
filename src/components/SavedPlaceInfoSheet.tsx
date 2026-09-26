@@ -3,6 +3,7 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
+import { SheetCloseButton } from "@/components/SheetCloseButton";
 import type { Place } from "@/lib/api/places";
 import { categoryLabel } from "@/lib/placeCategory";
 import { kakaoMapUrl, openExternal, phoneUrl } from "@/lib/placeLinks";
@@ -36,9 +37,7 @@ export function SavedPlaceInfoSheet({ place, onClose }: { place: Place | null; o
               <AppText style={{ fontSize: 12, color: colors.accent }}>위치 확인 안됨 · 지도에 안 뜰 수 있어요</AppText>
             )}
           </View>
-          <PressableScale onPress={onClose} hitSlop={10}>
-            <Feather name="x" size={18} color={colors.inkMuted} />
-          </PressableScale>
+          <SheetCloseButton onPress={onClose} />
         </View>
 
         {(mapUrl || telUrl) && (

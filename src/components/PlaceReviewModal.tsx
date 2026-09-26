@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { PressableScale } from "@/components/PressableScale";
+import { SheetCloseButton } from "@/components/SheetCloseButton";
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
@@ -290,6 +291,7 @@ export function PlaceReviewSheet({
       }}
     >
       <BottomSheetScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
+        <SheetCloseButton onPress={() => sheetRef.current?.close()} style={{ alignSelf: "flex-end" }} />
         <PlaceReviewContent placeId={placeId} tripPlaceId={tripPlaceId} />
       </BottomSheetScrollView>
     </BottomSheet>

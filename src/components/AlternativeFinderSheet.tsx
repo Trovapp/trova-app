@@ -8,6 +8,7 @@ import { ErrorText } from "@/components/ErrorText";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { PressableScale } from "@/components/PressableScale";
+import { SheetCloseButton } from "@/components/SheetCloseButton";
 import { ProgressBar } from "@/components/ProgressBar";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
@@ -252,9 +253,12 @@ export function AlternativeFinderSheet({
           </>
         ) : (
           <>
-            <AppText weight="medium" style={{ fontSize: 16 }}>
-              대안 찾기
-            </AppText>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <AppText weight="medium" style={{ fontSize: 16 }}>
+                대안 찾기
+              </AppText>
+              <SheetCloseButton onPress={onClose} />
+            </View>
 
             <PressableScale
               onPress={() => setFiltersExpanded((v) => !v)}
