@@ -7,13 +7,18 @@ import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { PressableScale } from "@/components/PressableScale";
 import { haptics } from "@/lib/haptics";
-import { createTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
+import { createTrip, TRIP_MAX_DAYS, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
 import { formatDateLabel, toDateString } from "@/lib/date";
 import { colors } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewTrip">;
+
+// 출발일 포함 TRIP_MAX_DAYS일째 날(서버와 같은 기간 상한).
+function lastDayFor(start: Date): Date {
+  return new Date(start.getFullYear(), start.getMonth(), start.getDate() + TRIP_MAX_DAYS - 1);
+}
 
 export function NewTripScreen({ navigation }: Props) {
   const queryClient = useQueryClient();
@@ -122,6 +127,8 @@ export function NewTripScreen({ navigation }: Props) {
               setStartDate(selected);
               // 출발일이 도착일보다 늦어지면 도착일도 함께 밀어준다(웹과 동일한 보정).
               if (selected > endDate) setEndDate(selected);
+              // 출발일을 옮겨 기간이 최대 일수를 넘으면 도착일을 상한으로 당긴다.
+              else if (endDate > lastDayFor(selected)) setEndDate(lastDayFor(selected));
             }}
             onDismiss={() => setShowStartPicker(false)}
           />
@@ -141,6 +148,7 @@ export function NewTripScreen({ navigation }: Props) {
             mode="date"
             locale="ko-KR"
             minimumDate={startDate}
+            maximumDate={lastDayFor(startDate)}
             display={Platform.OS === "ios" ? "spinner" : "default"}
             onValueChange={(_, selected) => {
               if (Platform.OS !== "ios") setShowEndPicker(false);
