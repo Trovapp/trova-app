@@ -29,6 +29,7 @@ import { parseTimeToDate, toTimeString } from "@/lib/date";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { formatCount } from "@/lib/number";
 import { kakaoMapUrl, openExternal, phoneUrl } from "@/lib/placeLinks";
+import { toUserMessage } from "@/lib/api/client";
 import { colors } from "@/lib/theme";
 import { addBookmark, invalidateBookmarkQueries, listBookmarks, listFolders, removeBookmark } from "@/lib/api/bookmarks";
 import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
@@ -240,8 +241,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
     try {
       setSearchResults(await searchPlaces(trimmed));
       setSearchedQuery(trimmed);
-    } catch {
-      setError("장소를 찾지 못했어요. 다른 검색어로 시도해보세요.");
+    } catch (err) {
+      setError(toUserMessage(err, "장소를 찾지 못했어요. 다른 검색어로 시도해보세요."));
     } finally {
       setSearching(false);
     }
@@ -441,8 +442,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
     try {
       const { jobId } = await startTripReplan(tripId);
       navigation.navigate("TripReplan", { tripId, jobId });
-    } catch {
-      setError("일정 재구성을 시작하지 못했어요.");
+    } catch (err) {
+      setError(toUserMessage(err, "일정 재구성을 시작하지 못했어요."));
     } finally {
       setReplanStarting(false);
     }

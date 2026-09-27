@@ -13,6 +13,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
 import { categoryLabel } from "@/lib/placeCategory";
+import { toUserMessage } from "@/lib/api/client";
 import { colors } from "@/lib/theme";
 import {
   getAlternatives,
@@ -189,8 +190,8 @@ export function AlternativeFinderSheet({
       // 없으면 사용자가 바로 필터를 조정할 수 있게 펼친 채로 둔다.
       setFiltersExpanded(result.length === 0);
       scrollRef.current?.scrollTo({ y: 0, animated: true });
-    } catch {
-      setSearchError("대안을 찾지 못했어요. 다시 시도해주세요.");
+    } catch (err) {
+      setSearchError(toUserMessage(err, "대안을 찾지 못했어요. 다시 시도해주세요."));
     } finally {
       setSearching(false);
     }

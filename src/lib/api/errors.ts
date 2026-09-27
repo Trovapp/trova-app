@@ -4,6 +4,8 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    // 서버가 사용자에게 보여주라고 보낸 안내(하루 한도 초과 429, 처리 대기열 포화 503 등). 있으면 그대로 보여준다.
+    readonly userMessage?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -13,7 +15,7 @@ export class ApiError extends Error {
 // 화면에 띄울 오류 문구. API 오류("GET ... failed: 500")나 네트워크 오류("Network request failed")처럼
 // 개발자용 메시지는 사용자 문구로 바꾸고, createShare처럼 처음부터 사용자용으로 던진 메시지만 그대로 쓴다.
 export function toUserMessage(err: unknown, fallback: string): string {
-  if (err instanceof ApiError) return fallback;
+  if (err instanceof ApiError) return err.userMessage ?? fallback;
   if (err instanceof TypeError && /network request failed/i.test(err.message)) {
     return "인터넷 연결을 확인하고 다시 시도해주세요.";
   }

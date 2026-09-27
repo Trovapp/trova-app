@@ -37,6 +37,7 @@ import {
 import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
 import { categoryLabel } from "@/lib/placeCategory";
 import { formatCount } from "@/lib/number";
+import { toUserMessage } from "@/lib/api/client";
 import { colors } from "@/lib/theme";
 
 const UNSORTED_ID = -1; // "미분류" 가상 폴더 id — 실제 폴더 id는 항상 양수(DB IDENTITY)라 겹치지 않는다.
@@ -197,9 +198,9 @@ export function SavedPlacesScreen() {
     setSearchError(null);
     try {
       setSearchResults(await searchPlaces(trimmed));
-    } catch {
+    } catch (err) {
       setSearchResults([]);
-      setSearchError("장소를 찾지 못했어요. 다른 검색어로 시도해보세요.");
+      setSearchError(toUserMessage(err, "장소를 찾지 못했어요. 다른 검색어로 시도해보세요."));
     } finally {
       setSearchedQuery(trimmed);
       setSearching(false);

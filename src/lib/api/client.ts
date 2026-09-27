@@ -1,5 +1,6 @@
 import { clearToken, getToken } from "@/lib/tokenStorage";
 import { API_BASE_URL } from "@/lib/api/config";
+import { ApiError } from "@/lib/api/errors";
 
 // AuthProvider가 등록해두는 콜백 — 401을 받으면 토큰만 지우는 게 아니라
 // 인증 상태(user)도 즉시 null로 바꿔서 네비게이터가 로그인 화면으로
@@ -26,6 +27,12 @@ export async function apiFetch(path: string, options: RequestInit = {}): Promise
   if (res.status === 401) {
     await clearToken();
     unauthorizedHandler?.({ hadToken: Boolean(token) });
+  }
+  // 하루 한도 초과(429)·처리 대기열 포화(503)는 서버가 안내 문구를 보낸다 — 호출부마다 파싱하지 않도록 여기서
+  // 사용자용 메시지를 담은 오류로 바꿔 던진다. 화면은 toUserMessage로 그 문구를 그대로 보여준다.
+  if (res.status === 429 || res.status === 503) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    throw new ApiError(res.status, `${options.method ?? "GET"} ${path} failed: ${res.status}`, body?.message);
   }
   return res;
 }

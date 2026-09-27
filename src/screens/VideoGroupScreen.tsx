@@ -21,6 +21,7 @@ import { deleteVideoPlaces, generateItinerary, getPlaces, moveToDay, optimizeRou
 import { confirmTrip, getVideoTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
 import { formatDateLabel, formatTripDates, toDateString } from "@/lib/date";
 import { groupByDay, isItineraryGroup } from "@/lib/itinerary";
+import { toUserMessage } from "@/lib/api/client";
 import { colors } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
@@ -115,8 +116,8 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     try {
       await generateItinerary(jobId);
       navigation.navigate("Processing", { jobId });
-    } catch {
-      setError("일정 생성 요청에 실패했어요. 다시 시도해주세요.");
+    } catch (err) {
+      setError(toUserMessage(err, "일정 생성 요청에 실패했어요. 다시 시도해주세요."));
       setGenerating(false);
     }
   }
