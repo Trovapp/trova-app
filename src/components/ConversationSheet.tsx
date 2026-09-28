@@ -13,7 +13,7 @@ import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
 import { categoryLabel } from "@/lib/placeCategory";
 import { colors } from "@/lib/theme";
-import { replacePlace, type AlternativeCandidate } from "@/lib/api/trips";
+import { invalidateTripPlaceChangeQueries, replacePlace, type AlternativeCandidate } from "@/lib/api/trips";
 import { endConversationSession, sendConversationMessage } from "@/lib/api/conversations";
 
 const SNAP_POINTS = ["65%", "90%"];
@@ -341,8 +341,7 @@ export function ConversationSheet({
     setConfirmError(null);
     try {
       await replacePlace(tripPlaceId, candidate.googlePlaceId);
-      await queryClient.invalidateQueries({ queryKey: ["trip"] });
-      await queryClient.invalidateQueries({ queryKey: ["gapRecommendations"] });
+      await invalidateTripPlaceChangeQueries(queryClient);
       onReplaced();
     } catch {
       setConfirmError("교체하지 못했어요. 다시 시도해주세요.");

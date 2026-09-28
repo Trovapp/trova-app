@@ -1,3 +1,4 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { AI_TIMEOUT_MS, ApiError, apiFetch } from "@/lib/api/client";
 
 export type Trip = { id: number; title: string; startDate: string | null; endDate: string | null };
@@ -301,4 +302,14 @@ export async function getTripReplanJob(tripId: number, jobId: number): Promise<T
     throw new ApiError(res.status, `GET /api/trips/${tripId}/replan/${jobId} failed: ${res.status}`);
   }
   return res.json();
+}
+
+// 일정 장소를 교체·삭제한 뒤 호출. 서버가 그 장소를 가리키던 비 알림을 정리하므로(백엔드 #41)
+// 알림 목록도 함께 새로 받아야 배너가 사라진다 — 일정·빈 시간 추천과 같이 무효화한다.
+export function invalidateTripPlaceChangeQueries(queryClient: QueryClient) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["trip"] }),
+    queryClient.invalidateQueries({ queryKey: ["gapRecommendations"] }),
+    queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+  ]);
 }

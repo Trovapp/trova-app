@@ -14,7 +14,7 @@ import { RecommendationReason } from "@/components/RecommendationReason";
 import { Skeleton } from "@/components/Skeleton";
 import { haptics } from "@/lib/haptics";
 import { colors } from "@/lib/theme";
-import { getTrip, getTripReplanJob, optimizeTripRoute, replacePlace, type TripReplanResult } from "@/lib/api/trips";
+import { getTrip, getTripReplanJob, invalidateTripPlaceChangeQueries, optimizeTripRoute, replacePlace, type TripReplanResult } from "@/lib/api/trips";
 import { categoryLabel } from "@/lib/placeCategory";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
@@ -82,8 +82,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
     setConfirmError(null);
     try {
       await replacePlace(tripPlaceId, googlePlaceId);
-      await queryClient.invalidateQueries({ queryKey: ["trip"] });
-      await queryClient.invalidateQueries({ queryKey: ["gapRecommendations"] });
+      await invalidateTripPlaceChangeQueries(queryClient);
       setCardStatus((s) => ({ ...s, [tripPlaceId]: "confirmed" }));
     } catch {
       setCardStatus((s) => {

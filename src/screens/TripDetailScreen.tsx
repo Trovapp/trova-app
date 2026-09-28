@@ -40,6 +40,7 @@ import {
   getGapRecommendations,
   getTrip,
   insertPlaceAfter,
+  invalidateTripPlaceChangeQueries,
   optimizeTripRoute,
   removeTripPlace,
   reorderTripPlace,
@@ -348,7 +349,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
     setError(null);
     try {
       await removeTripPlace(placeId);
-      await reload();
+      await invalidateTripPlaceChangeQueries(queryClient);
     } catch {
       setError("장소를 삭제하지 못했어요.");
     } finally {

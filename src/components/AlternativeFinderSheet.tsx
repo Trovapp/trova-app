@@ -17,6 +17,7 @@ import { toUserMessage } from "@/lib/api/client";
 import { colors } from "@/lib/theme";
 import {
   getAlternatives,
+  invalidateTripPlaceChangeQueries,
   replacePlace,
   type AlternativeCandidate,
   type AlternativeFilter,
@@ -202,8 +203,7 @@ export function AlternativeFinderSheet({
     setReplacing(true);
     try {
       await replacePlace(tripPlaceId, selected.googlePlaceId);
-      await queryClient.invalidateQueries({ queryKey: ["trip"] });
-      await queryClient.invalidateQueries({ queryKey: ["gapRecommendations"] });
+      await invalidateTripPlaceChangeQueries(queryClient);
       onReplaced();
     } catch {
       setSearchError("교체하지 못했어요. 다시 시도해주세요.");
