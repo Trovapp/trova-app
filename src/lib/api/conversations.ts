@@ -1,4 +1,4 @@
-import { ApiError, apiFetch } from "@/lib/api/client";
+import { AI_TIMEOUT_MS, ApiError, apiFetch } from "@/lib/api/client";
 import type { AlternativeCandidate } from "@/lib/api/trips";
 
 export type ConversationMessageRequest = {
@@ -21,6 +21,7 @@ export async function sendConversationMessage(
   request: ConversationMessageRequest
 ): Promise<ConversationMessageResponse> {
   const res = await apiFetch(`/api/conversations/${sessionId}/messages`, {
+    timeoutMs: AI_TIMEOUT_MS,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),

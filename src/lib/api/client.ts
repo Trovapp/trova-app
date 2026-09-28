@@ -1,6 +1,6 @@
 import { clearToken, getToken } from "@/lib/tokenStorage";
 import { API_BASE_URL } from "@/lib/api/config";
-import { ApiError } from "@/lib/api/errors";
+import { ApiError, RequestTimeoutError } from "@/lib/api/errors";
 
 // AuthProvider가 등록해두는 콜백 — 401을 받으면 토큰만 지우는 게 아니라
 // 인증 상태(user)도 즉시 null로 바꿔서 네비게이터가 로그인 화면으로
@@ -8,7 +8,7 @@ import { ApiError } from "@/lib/api/errors";
 // 어디서든 호출되는 평범한 함수라 React context를 직접 구독할 수 없기
 // 때문.
 // 오류 타입/판단 함수는 네이티브 모듈 의존이 없는 errors.ts에 두고(단위 테스트 가능) 여기서 다시 내보낸다.
-export { ApiError, shouldRetryQuery, toUserMessage } from "@/lib/api/errors";
+export { ApiError, RequestTimeoutError, shouldRetryQuery, toUserMessage } from "@/lib/api/errors";
 
 // hadToken: 토큰을 보냈는데 401이면 "세션 만료", 토큰 없이 401이면 원래 비로그인(첫 실행 등)이다.
 let unauthorizedHandler: ((info: { hadToken: boolean }) => void) | null = null;
@@ -17,13 +17,30 @@ export function setUnauthorizedHandler(handler: (info: { hadToken: boolean }) =>
   unauthorizedHandler = handler;
 }
 
-export async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
+// 요청 시간 제한. 일반 조회·저장은 20초, AI(Gemini 최대 20초 + 구글 호출)를 거치는 API는 호출부에서 60초로 늘린다.
+export const DEFAULT_TIMEOUT_MS = 20_000;
+export const AI_TIMEOUT_MS = 60_000;
+
+export async function apiFetch(
+  path: string,
+  { timeoutMs = DEFAULT_TIMEOUT_MS, ...options }: RequestInit & { timeoutMs?: number } = {},
+): Promise<Response> {
   const token = await getToken();
   const headers = new Headers(options.headers);
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
-  const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, signal: controller.signal });
+  } catch (err) {
+    if (controller.signal.aborted) throw new RequestTimeoutError(path, timeoutMs);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
   if (res.status === 401) {
     await clearToken();
     unauthorizedHandler?.({ hadToken: Boolean(token) });

@@ -1,4 +1,4 @@
-import { ApiError, apiFetch } from "@/lib/api/client";
+import { AI_TIMEOUT_MS, ApiError, apiFetch } from "@/lib/api/client";
 
 export type RecommendedPlace = {
   id: number;
@@ -35,7 +35,7 @@ export type PlaceReviewSummary = Omit<RecommendedPlace, "mood" | "space"> & {
 };
 
 export async function getPlaceDetails(id: number): Promise<PlaceReviewSummary> {
-  const res = await apiFetch(`/api/places/${id}/details`);
+  const res = await apiFetch(`/api/places/${id}/details`, { timeoutMs: AI_TIMEOUT_MS });
   if (!res.ok) {
     throw new ApiError(res.status, `GET /api/places/${id}/details failed: ${res.status}`);
   }

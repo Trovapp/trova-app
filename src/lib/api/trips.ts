@@ -1,4 +1,4 @@
-import { ApiError, apiFetch } from "@/lib/api/client";
+import { AI_TIMEOUT_MS, ApiError, apiFetch } from "@/lib/api/client";
 
 export type Trip = { id: number; title: string; startDate: string | null; endDate: string | null };
 
@@ -45,7 +45,7 @@ export type TripPlaceReviewSummary = {
 };
 
 export async function getTripPlaceDetails(id: number): Promise<TripPlaceReviewSummary> {
-  const res = await apiFetch(`/api/trip-places/${id}/details`);
+  const res = await apiFetch(`/api/trip-places/${id}/details`, { timeoutMs: AI_TIMEOUT_MS });
   if (!res.ok) {
     throw new ApiError(res.status, `GET /api/trip-places/${id}/details failed: ${res.status}`);
   }
@@ -224,7 +224,9 @@ export async function getAlternatives(tripPlaceId: number, filter: AlternativeFi
   if (filter.maxTravelMinutes !== undefined) params.set("maxTravelMinutes", String(filter.maxTravelMinutes));
   if (filter.transportMode) params.set("transportMode", filter.transportMode);
 
-  const res = await apiFetch(`/api/trip-places/${tripPlaceId}/alternatives?${params.toString()}`);
+  const res = await apiFetch(`/api/trip-places/${tripPlaceId}/alternatives?${params.toString()}`, {
+    timeoutMs: AI_TIMEOUT_MS,
+  });
   if (!res.ok) {
     throw new ApiError(res.status, `GET /api/trip-places/${tripPlaceId}/alternatives failed: ${res.status}`);
   }
@@ -244,7 +246,9 @@ export async function replacePlace(tripPlaceId: number, googlePlaceId: string): 
 }
 
 export async function getGapRecommendations(tripId: number, day: number): Promise<Gap[]> {
-  const res = await apiFetch(`/api/trips/${tripId}/days/${day}/gap-recommendations`);
+  const res = await apiFetch(`/api/trips/${tripId}/days/${day}/gap-recommendations`, {
+    timeoutMs: AI_TIMEOUT_MS,
+  });
   if (!res.ok) {
     throw new ApiError(res.status, `GET /api/trips/${tripId}/days/${day}/gap-recommendations failed: ${res.status}`);
   }
