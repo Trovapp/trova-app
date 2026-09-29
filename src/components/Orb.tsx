@@ -56,7 +56,7 @@ function SoftCircle({ diameter, color, opacity, steps = 10 }: { diameter: number
   );
 }
 
-export function Orb({ state, size = 160 }: { state: OrbState; size?: number }) {
+export function Orb({ state, size = 160, label = "분석 중" }: { state: OrbState; size?: number; label?: string }) {
   const reducedMotion = useReducedMotion();
   const motion = MOTION[state];
 
@@ -122,7 +122,7 @@ export function Orb({ state, size = 160 }: { state: OrbState; size?: number }) {
     <View
       style={{ width: size * 1.8, height: size * 1.8, alignItems: "center", justifyContent: "center" }}
       accessibilityRole="progressbar"
-      accessibilityLabel="분석 중"
+      accessibilityLabel={label}
     >
       <Animated.View style={[circle(size * 1.6), { alignItems: "center", justifyContent: "center" }, glowStyle]}>
         <SoftCircle diameter={size * 1.6} color={colors.accent} opacity={0.5} steps={28} />

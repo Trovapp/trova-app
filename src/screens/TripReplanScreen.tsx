@@ -7,6 +7,7 @@ import { AppText } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { BackButton, useBackButtonClearance } from "@/components/BackButton";
 import { Emoji } from "@/components/Emoji";
+import { Orb } from "@/components/Orb";
 import { ProgressHero } from "@/components/ProgressHero";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { RatingBadge } from "@/components/RatingBadge";
@@ -180,7 +181,9 @@ export function TripReplanScreen({ route, navigation }: Props) {
       <View style={{ flex: 1, padding: 24, paddingTop: topClearance }}>
         <BackButton onPress={goBackToTrip} />
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
-          <ProgressHero percent={percent} ceiling={ceiling} creepMs={AVG_TARGET_MS} />
+          {/* 장소들을 살펴보는 동안은 "생각", 대안을 찾기 시작하면 바깥으로 물결이 퍼지는 "탐색" */}
+          <Orb state={total === null ? "thinking" : "searching"} size={140} label="일정 재구성 중" />
+          <ProgressHero percent={percent} ceiling={ceiling} creepMs={AVG_TARGET_MS} showCards={false} />
           {total !== null && (
             <AppText mono weight="medium" style={{ color: colors.inkMuted }}>
               {job.completedTargets} / {total}

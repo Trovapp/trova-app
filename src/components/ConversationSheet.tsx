@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ElementRef } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { InlineMap } from "@/components/InlineMap";
+import { Orb } from "@/components/Orb";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { PressableScale } from "@/components/PressableScale";
 import { SheetCloseButton } from "@/components/SheetCloseButton";
@@ -425,8 +426,18 @@ export function ConversationSheet({
             {sending && (
               <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 6 }}>
                 <AssistantAvatar />
-                <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: colors.bgMuted }}>
-                  <ActivityIndicator size="small" color={colors.inkMuted} />
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingVertical: 2,
+                    paddingRight: 14,
+                    borderRadius: 12,
+                    backgroundColor: colors.bgMuted,
+                  }}
+                >
+                  <Orb state="thinking" size={20} label="답변을 생각하는 중" />
+                  <AppText style={{ fontSize: 13, color: colors.inkMuted }}>생각하고 있어요</AppText>
                 </View>
               </View>
             )}
