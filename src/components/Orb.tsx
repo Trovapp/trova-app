@@ -14,7 +14,7 @@ import { colors } from "@/lib/theme";
 // 앱이 "살아서 일하고 있다"는 느낌을 주는 상태 표시. 작은 빛 점들이 상태에 따라 모였다 흩어진다.
 // 긴 AI 대기(영상 분석·재구성·AI 대화)에만 쓴다 — 짧은 로딩은 기존 스피너/스켈레톤을 그대로 둔다.
 // 네이티브 재빌드가 필요 없도록 Reanimated + View만 쓴다.
-export type OrbState = "waiting" | "thinking" | "searching" | "settling";
+export type OrbState = "waiting" | "thinking" | "searching" | "settling" | "arrived";
 
 type Motion = {
   spread: number; // 점들이 퍼진 정도(영역 반지름 대비)
@@ -28,6 +28,7 @@ const MOTION: Record<OrbState, Motion> = {
   thinking: { spread: 0.38, speed: 0.22, pulse: 0 }, // 가운데로 모여 맴돎
   searching: { spread: 0.8, speed: 0.12, pulse: 0.35 }, // 퍼져나갔다 모이기를 반복
   settling: { spread: 0.28, speed: 0.06, pulse: 0 }, // 작게 모여 가라앉음
+  arrived: { spread: 1.0, speed: 0.14, pulse: 0.12 }, // 답이 도착한 순간 한 번 활짝 퍼짐(호출부가 잠시 뒤 다른 상태로 돌린다)
 };
 
 // ProgressHero 카드 팔레트에 이미 있는 금색 — 강조색과 섞여 따뜻한 빛처럼 보이게 한다.
@@ -114,12 +115,23 @@ function Dot({
   );
 }
 
-export function Orb({ state, size = 160, label = "분석 중" }: { state: OrbState; size?: number; label?: string }) {
-  const reducedMotion = useReducedMotion();
+export function Orb({
+  state,
+  size = 160,
+  label = "분석 중",
+  still = false,
+}: {
+  state: OrbState;
+  size?: number;
+  label?: string;
+  // 같은 존재를 여러 곳에 그릴 때(지나간 대화의 아바타 등) 움직이는 건 하나만 두려고 멈춘 모습으로 그린다.
+  still?: boolean;
+}) {
+  const reducedMotion = useReducedMotion() || still;
   const motion = MOTION[state];
   // 작은 자리(대화 말풍선 등)에서는 점을 줄여야 뭉개지지 않는다.
-  const particles = useMemo(() => makeParticles(size < 48 ? 7 : 28), [size]);
-  const dotSize = Math.max(3, size * 0.055);
+  const particles = useMemo(() => makeParticles(size < 32 ? 6 : size < 48 ? 7 : 28), [size]);
+  const dotSize = Math.max(size < 32 ? 2.6 : 3, size * 0.055);
 
   const clock = useSharedValue(0);
   const speed = useSharedValue(motion.speed);

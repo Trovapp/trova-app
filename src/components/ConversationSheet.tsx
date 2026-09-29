@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { InlineMap } from "@/components/InlineMap";
-import { Orb } from "@/components/Orb";
+import { Orb, type OrbState } from "@/components/Orb";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { PressableScale } from "@/components/PressableScale";
 import { SheetCloseButton } from "@/components/SheetCloseButton";
@@ -200,24 +200,18 @@ function CandidateRow({
 
 // 비서 쪽 말풍선에만 붙이는 작은 아이콘 — 양쪽에 다 붙이면 오히려 산만해져서
 // 비서 쪽에만 둬서 "누가 말하는지"를 한눈에 구분되게 한다.
-function AssistantAvatar() {
+// 비서의 "몸" — 영상 분석·재구성 화면과 같은 빛 점 무리. 움직이는 비서는 한 명만 두고(지금 말하는 쪽),
+// 지나간 답변 옆의 아바타는 같은 모양으로 멈춰 있게 한다.
+function AssistantAvatar({ state }: { state?: OrbState }) {
+  // 배경 원 없이 점 무리만 둔다 — 원 안에 가두면 도장처럼 보여서 "떠 있는 존재" 느낌이 사라진다.
   return (
-    <View
-      style={{
-        width: 22,
-        height: 22,
-        borderRadius: 11,
-        backgroundColor: colors.accentBg,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Feather name="message-circle" size={12} color={colors.accent} />
+    <View style={{ width: 28, height: 28, justifyContent: "center", alignItems: "center", overflow: "visible" }}>
+      <Orb state={state ?? "waiting"} size={22} still={state === undefined} label="여행 비서" />
     </View>
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({ message, avatarState }: { message: ChatMessage; avatarState?: OrbState }) {
   const isUser = message.role === "user";
   return (
     <View
@@ -228,7 +222,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         gap: 6,
       }}
     >
-      {!isUser && <AssistantAvatar />}
+      {!isUser && <AssistantAvatar state={avatarState} />}
       <View
         style={{
           maxWidth: "80%",
@@ -261,6 +255,13 @@ export function ConversationSheet({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  // 답이 막 도착한 순간 비서가 한 번 퍼졌다가(1.2초) 다시 천천히 떠다닌다.
+  const [justArrived, setJustArrived] = useState(false);
+  useEffect(() => {
+    if (!justArrived) return;
+    const id = setTimeout(() => setJustArrived(false), 1200);
+    return () => clearTimeout(id);
+  }, [justArrived]);
   const [sendError, setSendError] = useState<string | null>(null);
   const [turnLimitReached, setTurnLimitReached] = useState(false);
   const [expandedPlaceId, setExpandedPlaceId] = useState<number | null>(null);
@@ -327,6 +328,7 @@ export function ConversationSheet({
         ...prev,
         { role: "assistant", text: stripMarkdownEmphasis(result.reply), candidates: result.candidates },
       ]);
+      setJustArrived(true);
       setTurnLimitReached(result.turnLimitReached);
       requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
     } catch {
@@ -350,6 +352,8 @@ export function ConversationSheet({
       setConfirming(false);
     }
   }
+
+  const lastAssistantIndex = messages.map((m) => m.role).lastIndexOf("assistant");
 
   return (
     <BottomSheet
@@ -376,7 +380,8 @@ export function ConversationSheet({
         ) : (
           <>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <Feather name="message-circle" size={16} color={colors.accent} />
+              {/* 대화 전엔 제목 옆 비서가 떠다니며 기다리고, 대화가 시작되면 움직임은 대화 속 비서로 넘어간다. */}
+              <AssistantAvatar state={messages.length === 0 && !sending ? "waiting" : undefined} />
               <AppText weight="medium" style={{ fontSize: 16, flex: 1 }}>
                 비서에게 물어보기
               </AppText>
@@ -408,7 +413,12 @@ export function ConversationSheet({
 
             {messages.map((message, index) => (
               <View key={index} style={{ gap: 10 }}>
-                <MessageBubble message={message} />
+                <MessageBubble
+                  message={message}
+                  avatarState={
+                    index === lastAssistantIndex && !sending ? (justArrived ? "arrived" : "waiting") : undefined
+                  }
+                />
                 {message.role === "assistant" && message.candidates && message.candidates.length > 0 && (
                   <CandidateRow
                     candidates={message.candidates}
@@ -425,18 +435,8 @@ export function ConversationSheet({
 
             {sending && (
               <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 6 }}>
-                <AssistantAvatar />
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingVertical: 2,
-                    paddingRight: 14,
-                    borderRadius: 12,
-                    backgroundColor: colors.bgMuted,
-                  }}
-                >
-                  <Orb state="thinking" size={20} label="답변을 생각하는 중" />
+                <AssistantAvatar state="thinking" />
+                <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: colors.bgMuted }}>
                   <AppText style={{ fontSize: 13, color: colors.inkMuted }}>생각하고 있어요</AppText>
                 </View>
               </View>
