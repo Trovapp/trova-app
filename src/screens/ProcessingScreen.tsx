@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,11 +8,13 @@ import { ErrorText } from "@/components/ErrorText";
 import { BackButton, useBackButtonClearance } from "@/components/BackButton";
 import { Emoji } from "@/components/Emoji";
 import { PressableScale } from "@/components/PressableScale";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { Orb, type OrbState } from "@/components/Orb";
 import { ProgressHero } from "@/components/ProgressHero";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
-import { describeSourceUrl } from "@/lib/shareUrl";
+import { describeSourceUrl, sourceKindLabel } from "@/lib/shareUrl";
+import { cleanVideoTitle } from "@/lib/videoTitle";
 import { toUserMessage } from "@/lib/api/client";
 import { colors } from "@/lib/theme";
 import { getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob } from "@/lib/api/places";
@@ -48,6 +50,9 @@ function nextCeiling(percent: number): number {
   const next = STAGE_MILESTONES.find((m) => m > percent) ?? 100;
   return next === 100 ? 100 : Math.min(next - 2, 99);
 }
+
+// 찾은 장소 이름을 보여주는 최소 시간. 이름을 하나씩 띄우는 연출(220ms 간격)이 끝나고 잠깐 머무를 만큼.
+const MIN_FOUND_NAMES_MS = 2500;
 
 const STAGE_TIP: Record<Stage, string> = {
   PENDING: "곧 분석을 시작해요",
@@ -94,7 +99,19 @@ export function ProcessingScreen({ route, navigation }: Props) {
     refetchInterval: 2000,
   });
 
-  const job = pendingQuery.data?.find((item) => item.jobId === jobId);
+  const currentJob = pendingQuery.data?.find((item) => item.jobId === jobId);
+  // 완료 직후 결과 화면으로 넘어가기 전 잠깐 기다리는 동안, 목록에서 사라진 작업의 마지막 모습을 계속 보여준다.
+  const [lastSeenJob, setLastSeenJob] = useState<PendingJob | null>(null);
+  useEffect(() => {
+    if (currentJob) setLastSeenJob(currentJob);
+  }, [currentJob]);
+  const job = currentJob;
+  const namesShownAtRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (namesShownAtRef.current === null && (currentJob?.foundPlaceNames?.length ?? 0) > 0) {
+      namesShownAtRef.current = Date.now();
+    }
+  }, [currentJob?.foundPlaceNames?.length]);
   // 실패한 작업에 이미 저장된 장소가 있으면 "일정 생성" 단계 실패다 — 그땐 링크 재제출이 맞지 않아
   // 다시 시도를 보여주지 않는다. 장소 조회가 끝나기 전엔 판단을 미룬다.
   const placesQuery = useQuery({ queryKey: ["places"], queryFn: getPlaces, enabled: job?.status === "FAILED" });
@@ -132,7 +149,12 @@ export function ProcessingScreen({ route, navigation }: Props) {
     // 작업도 "없음 = 완료"로 오인해 바로 넘어가 버린다 — 이 화면에서 새로 받아온 목록으로만 판단한다.
     // 다시 시도 중엔 이전 실패 기록을 지우므로 그 사이의 "없음"도 무시한다.
     if (pendingQuery.isSuccess && pendingQuery.isFetchedAfterMount && !job && !retrying) {
-      navigation.replace("VideoGroup", { jobId });
+      // 찾은 장소 이름은 분석이 거의 끝날 때 도착해서(실측: 끝나기 1~3초 전), 바로 넘어가면 번쩍하고 사라진다.
+      // 이름이 보인 지 최소 시간이 안 됐으면 남은 만큼 기다렸다 넘어간다.
+      const shownAt = namesShownAtRef.current;
+      const wait = shownAt === null ? 0 : Math.max(0, MIN_FOUND_NAMES_MS - (Date.now() - shownAt));
+      const id = setTimeout(() => navigation.replace("VideoGroup", { jobId }), wait);
+      return () => clearTimeout(id);
     }
   }, [pendingQuery.isSuccess, pendingQuery.isFetchedAfterMount, job, jobId, navigation, retrying]);
 
@@ -145,6 +167,23 @@ export function ProcessingScreen({ route, navigation }: Props) {
           fullScreen
           message="처리 상태를 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요."
           onRetry={() => pendingQuery.refetch()}
+        />
+      </View>
+    );
+  }
+
+  const holdingJob = !job && namesShownAtRef.current !== null && lastSeenJob?.status !== "FAILED" ? lastSeenJob : null;
+  if (holdingJob) {
+    return (
+      <View style={{ flex: 1, padding: 24, paddingTop: topClearance, paddingBottom: Math.max(24, bottomInset + 8) }}>
+        <BackButton onPress={handleBack} />
+        <ProcessingProgressView
+          stage="SAVING"
+          percent={holdingJob.progressPercent ?? 90}
+          message="거의 다 됐어요"
+          title={holdingJob.title}
+          sourceUrl={holdingJob.sourceUrl}
+          foundPlaceNames={holdingJob.foundPlaceNames}
         />
       </View>
     );
@@ -223,7 +262,14 @@ export function ProcessingScreen({ route, navigation }: Props) {
   return (
     <View style={{ flex: 1, padding: 24, paddingTop: topClearance, paddingBottom: Math.max(24, bottomInset + 8) }}>
       <BackButton onPress={handleBack} />
-      <ProcessingProgressView stage={stage} percent={job.progressPercent ?? 0} message={job.stageMessage} />
+      <ProcessingProgressView
+        stage={stage}
+        percent={job.progressPercent ?? 0}
+        message={job.stageMessage}
+        title={job.title}
+        sourceUrl={job.sourceUrl}
+        foundPlaceNames={job.foundPlaceNames}
+      />
     </View>
   );
 }
@@ -242,34 +288,55 @@ export function ProcessingProgressView({
   stage,
   percent,
   message,
+  title,
+  sourceUrl,
+  foundPlaceNames = [],
 }: {
   stage: Stage;
   percent: number;
   message?: string | null;
+  title?: string | null;
+  sourceUrl?: string;
+  foundPlaceNames?: string[];
 }) {
   const analysis = STAGE_ANALYSIS[stage];
+  // 무엇을 보고 있는지 보여준다 — 다듬은 제목, 쓸 수 없으면 "유튜브 쇼츠" 같은 영상 종류.
+  // 제목을 아직 모르거나 못 가져왔으면 단계 팁을 그대로 보여준다.
+  const videoLabel = title ? cleanVideoTitle(title) ?? (sourceUrl ? sourceKindLabel(sourceUrl) : null) : null;
+  const found = foundPlaceNames.length > 0;
   return (
     <>
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 12 }}>
-        <Orb state={STAGE_ORB[stage]} size={140} />
+        <Orb state={found ? "arrived" : STAGE_ORB[stage]} size={140} />
         <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={STAGE_CREEP_MS[stage]} showCards={false} />
         <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>
           {message ?? analysis.title}
         </AppText>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-            paddingVertical: 8,
-            paddingHorizontal: 16,
-            borderRadius: 20,
-            backgroundColor: colors.bgMuted,
-          }}
-        >
-          <Emoji symbol="💡" size={14} />
-          <AppText style={{ fontSize: 13, color: colors.inkMuted }}>{STAGE_TIP[stage]}</AppText>
-        </View>
+        {found ? (
+          <FoundPlaceChips names={foundPlaceNames} />
+        ) : videoLabel ? (
+          <View style={{ alignItems: "center", gap: 2, paddingHorizontal: 12 }}>
+            <AppText weight="medium" numberOfLines={2} style={{ fontSize: 14, color: colors.ink, textAlign: "center" }}>
+              {videoLabel}
+            </AppText>
+            <AppText style={{ fontSize: 13, color: colors.inkMuted }}>영상을 보고 있어요</AppText>
+          </View>
+        ) : (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 20,
+              backgroundColor: colors.bgMuted,
+            }}
+          >
+            <Emoji symbol="💡" size={14} />
+            <AppText style={{ fontSize: 13, color: colors.inkMuted }}>{STAGE_TIP[stage]}</AppText>
+          </View>
+        )}
       </View>
 
       <View
@@ -294,5 +361,27 @@ export function ProcessingProgressView({
         다른 화면으로 가도 분석은 계속돼요.{"\n"}결과는 영상 기록 탭에서 확인할 수 있어요.
       </AppText>
     </>
+  );
+}
+
+// 찾은 장소 이름이 하나씩 차례로 떠오른다. "동작 줄이기"가 켜져 있으면 Reanimated가 등장 애니메이션을 생략한다.
+function FoundPlaceChips({ names }: { names: string[] }) {
+  return (
+    <View style={{ alignItems: "center", gap: 10, paddingHorizontal: 8 }}>
+      <AppText weight="medium" style={{ fontSize: 14, color: colors.accent }}>
+        {names.length}곳을 찾았어요
+      </AppText>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6 }}>
+        {names.map((name, index) => (
+          <Animated.View
+            key={name + index}
+            entering={FadeInDown.delay(index * 220).duration(420)}
+            style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 16, backgroundColor: colors.accentBg }}
+          >
+            <AppText style={{ fontSize: 13, color: colors.ink }}>{name}</AppText>
+          </Animated.View>
+        ))}
+      </View>
+    </View>
   );
 }

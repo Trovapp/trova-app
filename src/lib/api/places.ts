@@ -31,6 +31,8 @@ export type PendingJob = {
   currentStage: "EXTRACTING" | "GEOCODING" | "SELECTING" | "VERIFYING" | "SAVING" | null;
   progressPercent: number | null;
   stageMessage: string | null;
+  // 분석이 끝나기 전에 서버가 먼저 알려준 장소 이름(백엔드 #51). 이전 서버는 이 필드가 없을 수 있다.
+  foundPlaceNames?: string[];
 };
 
 export async function createShare(url: string): Promise<{ jobId: number }> {

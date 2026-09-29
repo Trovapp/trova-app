@@ -45,3 +45,11 @@ export function sourceVideoKey(url: string): string {
   }
   return url.trim();
 }
+
+// 제목을 쓸 수 없을 때(없거나 인스타 자동 제목) 대신 보여줄 영상 종류 이름. 예: "유튜브 쇼츠", "인스타그램 릴스".
+export function sourceKindLabel(url: string): string {
+  for (const [pattern, kind, platform] of SOURCE_PATTERNS) {
+    if (pattern.test(url)) return `${platform === "yt" ? "유튜브" : "인스타그램"} ${kind}`;
+  }
+  return "영상";
+}
