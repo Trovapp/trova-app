@@ -8,6 +8,7 @@ import { ErrorText } from "@/components/ErrorText";
 import { BackButton, useBackButtonClearance } from "@/components/BackButton";
 import { Emoji } from "@/components/Emoji";
 import { PressableScale } from "@/components/PressableScale";
+import { Orb, type OrbState } from "@/components/Orb";
 import { ProgressHero } from "@/components/ProgressHero";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
@@ -20,7 +21,7 @@ import type { RootStackParamList } from "@/navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Processing">;
 
-type Stage = NonNullable<PendingJob["currentStage"]> | "PENDING";
+export type Stage = NonNullable<PendingJob["currentStage"]> | "PENDING";
 
 // 백엔드 ProcessingStage.java와 동일한 고정 퍼센트 — 다음 스테이지 값만 절대
 // 앞지르지 않게 캡을 잡는 용도로 쓴다.
@@ -219,17 +220,41 @@ export function ProcessingScreen({ route, navigation }: Props) {
   }
 
   const stage: Stage = job.currentStage ?? "PENDING";
-  const percent = job.progressPercent ?? 0;
-  const message = job.stageMessage ?? STAGE_ANALYSIS[stage].title;
-  const analysis = STAGE_ANALYSIS[stage];
-
   return (
     <View style={{ flex: 1, padding: 24, paddingTop: topClearance, paddingBottom: Math.max(24, bottomInset + 8) }}>
       <BackButton onPress={handleBack} />
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
-        <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={STAGE_CREEP_MS[stage]} />
+      <ProcessingProgressView stage={stage} percent={job.progressPercent ?? 0} message={job.stageMessage} />
+    </View>
+  );
+}
+
+// 분석 단계 → 오브 상태. 장소 이름을 찾는 긴 구간은 "생각", 위치·후보를 좁히는 구간은 바깥으로 물결이 퍼지는 "탐색".
+const STAGE_ORB: Record<Stage, OrbState> = {
+  PENDING: "waiting",
+  EXTRACTING: "thinking",
+  GEOCODING: "searching",
+  SELECTING: "searching",
+  VERIFYING: "searching",
+  SAVING: "settling",
+};
+
+export function ProcessingProgressView({
+  stage,
+  percent,
+  message,
+}: {
+  stage: Stage;
+  percent: number;
+  message?: string | null;
+}) {
+  const analysis = STAGE_ANALYSIS[stage];
+  return (
+    <>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 12 }}>
+        <Orb state={STAGE_ORB[stage]} size={140} />
+        <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={STAGE_CREEP_MS[stage]} showCards={false} />
         <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>
-          {message}
+          {message ?? analysis.title}
         </AppText>
         <View
           style={{
@@ -268,6 +293,6 @@ export function ProcessingScreen({ route, navigation }: Props) {
       <AppText style={{ marginTop: 16, fontSize: 12, lineHeight: 18, color: colors.inkMuted, textAlign: "center" }}>
         다른 화면으로 가도 분석은 계속돼요.{"\n"}결과는 영상 기록 탭에서 확인할 수 있어요.
       </AppText>
-    </View>
+    </>
   );
 }

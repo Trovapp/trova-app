@@ -53,11 +53,14 @@ export function ProgressHero({
   ceiling,
   creepMs = 6000,
   cards = DEFAULT_CARDS,
+  showCards = true,
 }: {
   percent: number;
   ceiling?: number;
   creepMs?: number;
   cards?: Card[];
+  // 영상 분석 화면처럼 오브가 움직임을 맡는 곳에선 흘러가는 카드 줄을 끈다(움직임이 겹치지 않게).
+  showCards?: boolean;
 }) {
   const translateX = useRef(new Animated.Value(0)).current;
   const [setWidth, setSetWidth] = useState(0);
@@ -89,7 +92,7 @@ export function ProgressHero({
   }, [percent, effectiveCeiling, creepMs]);
 
   useEffect(() => {
-    if (setWidth === 0) return;
+    if (!showCards || setWidth === 0) return;
     translateX.setValue(0);
     const loop = Animated.loop(
       Animated.timing(translateX, {
@@ -101,25 +104,27 @@ export function ProgressHero({
     );
     loop.start();
     return () => loop.stop();
-  }, [setWidth, cards.length, translateX]);
+  }, [showCards, setWidth, cards.length, translateX]);
 
   return (
     <View style={{ width: "100%", alignItems: "center", gap: 20 }}>
       <AppText weight="medium" style={{ fontSize: 48, color: colors.accent }}>
         {displayPercent}%
       </AppText>
-      <View style={{ width: "100%", height: CARD_SIZE, overflow: "hidden" }}>
-        <Animated.View
-          style={{ flexDirection: "row", transform: [{ translateX }] }}
-          onLayout={(e) => {
-            if (setWidth === 0) setSetWidth(e.nativeEvent.layout.width / 2);
-          }}
-        >
-          {[...cards, ...cards].map((card, i) => (
-            <ProgressCard key={i} icon={card.icon} color={card.color} />
-          ))}
-        </Animated.View>
-      </View>
+      {showCards && (
+        <View style={{ width: "100%", height: CARD_SIZE, overflow: "hidden" }}>
+          <Animated.View
+            style={{ flexDirection: "row", transform: [{ translateX }] }}
+            onLayout={(e) => {
+              if (setWidth === 0) setSetWidth(e.nativeEvent.layout.width / 2);
+            }}
+          >
+            {[...cards, ...cards].map((card, i) => (
+              <ProgressCard key={i} icon={card.icon} color={card.color} />
+            ))}
+          </Animated.View>
+        </View>
+      )}
     </View>
   );
 }
