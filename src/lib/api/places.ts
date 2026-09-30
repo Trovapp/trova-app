@@ -35,7 +35,8 @@ export type PendingJob = {
   foundPlaceNames?: string[];
   // 실패 이유. 영상에서 장소를 못 찾았으면 "NO_PLACES"(백엔드 #55) — 같은 영상은 다시 해도 결과가 같다.
   // AI 하루 한도를 다 썼으면 "AI_QUOTA"(백엔드 #63) — 한도가 초기화(한국 오후 4~5시)되기 전엔 다시 해도 실패한다.
-  failureReason?: "NO_PLACES" | "AI_QUOTA" | null;
+  // 인스타그램이 서버 요청을 막았으면 "SOURCE_RATE_LIMITED"(백엔드 #65) — 언제 풀릴지는 알 수 없다.
+  failureReason?: "NO_PLACES" | "AI_QUOTA" | "SOURCE_RATE_LIMITED" | null;
 };
 
 export async function createShare(url: string): Promise<{ jobId: number }> {

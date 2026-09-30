@@ -207,12 +207,19 @@ export function ProcessingScreen({ route, navigation }: Props) {
   if (job.status === "FAILED") {
     const noPlaces = job.failureReason === "NO_PLACES";
     const aiQuota = job.failureReason === "AI_QUOTA";
+    const sourceBlocked = job.failureReason === "SOURCE_RATE_LIMITED";
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
         <BackButton onPress={handleBack} />
-        <Feather name={noPlaces ? "map-pin" : aiQuota ? "clock" : "alert-circle"} size={48} color={colors.accent} />
+        <Feather name={noPlaces ? "map-pin" : aiQuota || sourceBlocked ? "clock" : "alert-circle"} size={48} color={colors.accent} />
         <AppText weight="medium" style={{ fontSize: 20 }}>
-          {noPlaces ? "장소를 찾지 못했어요" : aiQuota ? "오늘 AI 분석 한도를 다 썼어요" : "처리에 실패했어요"}
+          {noPlaces
+            ? "장소를 찾지 못했어요"
+            : aiQuota
+              ? "오늘 AI 분석 한도를 다 썼어요"
+              : sourceBlocked
+                ? "인스타그램이 잠시 요청을 막았어요"
+                : "처리에 실패했어요"}
         </AppText>
         <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>
           {job.title ?? describeSourceUrl(job.sourceUrl)}
@@ -227,8 +234,13 @@ export function ProcessingScreen({ route, navigation }: Props) {
             매일 오후 4~5시쯤 한도가 다시 채워져요.{"\n"}그 뒤에 이 영상을 다시 넣어주세요.
           </AppText>
         )}
-        {/* 장소를 못 찾은 영상은 다시 해도 결과가 같고, AI 한도는 초기화 전엔 다시 해도 실패해서 홈으로 안내한다. */}
-        {canRetry && !noPlaces && !aiQuota ? (
+        {sourceBlocked && (
+          <AppText style={{ fontSize: 13, color: colors.inkMuted, textAlign: "center", lineHeight: 19 }}>
+            요청이 몰려서 잠시 막힌 거예요.{"\n"}조금 뒤에 이 릴스를 다시 넣어주세요.
+          </AppText>
+        )}
+        {/* 장소를 못 찾은 영상은 다시 해도 결과가 같고, AI 한도·인스타 제한은 풀리기 전엔 다시 해도 실패해서 홈으로 안내한다. */}
+        {canRetry && !noPlaces && !aiQuota && !sourceBlocked ? (
           <>
             <PressableScale
               onPress={handleRetry}
