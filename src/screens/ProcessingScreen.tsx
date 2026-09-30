@@ -107,11 +107,15 @@ export function ProcessingScreen({ route, navigation }: Props) {
   }, [currentJob]);
   const job = currentJob;
   const namesShownAtRef = useRef<number | null>(null);
+  // 한 번 받은 찾은 이름은 이 작업이 끝날 때까지 기억한다. 서버는 완료 직후 이름을 지우는데, 상태(DB)와 이름(메모리)을
+  // 따로 읽어서 완료 직전 한 번의 조회에 "처리 중인데 이름 0곳"이 섞여 올 수 있다(로컬 서버 실측).
+  const [foundNames, setFoundNames] = useState<string[]>([]);
   useEffect(() => {
-    if (namesShownAtRef.current === null && (currentJob?.foundPlaceNames?.length ?? 0) > 0) {
-      namesShownAtRef.current = Date.now();
-    }
-  }, [currentJob?.foundPlaceNames?.length]);
+    const names = currentJob?.foundPlaceNames ?? [];
+    if (names.length === 0) return;
+    setFoundNames(names);
+    if (namesShownAtRef.current === null) namesShownAtRef.current = Date.now();
+  }, [currentJob?.foundPlaceNames]);
   // 실패한 작업에 이미 저장된 장소가 있으면 "일정 생성" 단계 실패다 — 그땐 링크 재제출이 맞지 않아
   // 다시 시도를 보여주지 않는다. 장소 조회가 끝나기 전엔 판단을 미룬다.
   const placesQuery = useQuery({ queryKey: ["places"], queryFn: getPlaces, enabled: job?.status === "FAILED" });
@@ -183,7 +187,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
           message="거의 다 됐어요"
           title={holdingJob.title}
           sourceUrl={holdingJob.sourceUrl}
-          foundPlaceNames={holdingJob.foundPlaceNames}
+          foundPlaceNames={foundNames}
         />
       </View>
     );
@@ -275,7 +279,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
         message={job.stageMessage}
         title={job.title}
         sourceUrl={job.sourceUrl}
-        foundPlaceNames={job.foundPlaceNames}
+        foundPlaceNames={foundNames}
       />
     </View>
   );
