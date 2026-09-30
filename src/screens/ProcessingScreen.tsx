@@ -153,7 +153,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
       // 이름이 보인 지 최소 시간이 안 됐으면 남은 만큼 기다렸다 넘어간다.
       const shownAt = namesShownAtRef.current;
       const wait = shownAt === null ? 0 : Math.max(0, MIN_FOUND_NAMES_MS - (Date.now() - shownAt));
-      const id = setTimeout(() => navigation.replace("VideoGroup", { jobId }), wait);
+      const id = setTimeout(() => navigation.replace("VideoGroup", { jobId, justAnalyzed: true }), wait);
       return () => clearTimeout(id);
     }
   }, [pendingQuery.isSuccess, pendingQuery.isFetchedAfterMount, job, jobId, navigation, retrying]);

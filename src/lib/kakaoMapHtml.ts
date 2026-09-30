@@ -4,7 +4,26 @@ export function buildKakaoMapHtml(appKey: string): string {
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <style>html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; }</style>
+  <style>
+    html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; }
+    /* 핀이 위에서 톡 떨어져 착지한다 — 지도를 처음 열 때와 새 핀이 생길 때만(새로고침마다 튀지 않게). */
+    @keyframes trova-drop {
+      0% { transform: translateY(-18px) scale(0.6); opacity: 0; }
+      60% { transform: translateY(2px) scale(1.06); opacity: 1; }
+      100% { transform: none; opacity: 1; }
+    }
+    .trova-pin-drop { animation: trova-drop 420ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
+    /* 선택한 핀의 고리가 은은하게 숨쉰다. */
+    @keyframes trova-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.55; }
+    }
+    .trova-pin-pulse { animation: trova-pulse 1.8s ease-in-out infinite; }
+    /* iOS "동작 줄이기"를 켜면 WebView도 이 값을 따른다. */
+    @media (prefers-reduced-motion: reduce) {
+      .trova-pin-drop, .trova-pin-pulse { animation: none; }
+    }
+  </style>
 </head>
 <body>
   <div id="map"></div>
@@ -20,6 +39,7 @@ export function buildKakaoMapHtml(appKey: string): string {
     var overlays = [];
     var polyline = null;
     var positions = {};
+    var landedPinIds = {};
     var highlightOverlay = null;
     // 지도 아래쪽을 가리는 바텀시트 높이(지도 높이 대비 비율). 0이면 가림 없음.
     var bottomInsetRatio = 0;
@@ -41,7 +61,7 @@ export function buildKakaoMapHtml(appKey: string): string {
 
     // 웹(KakaoMap.tsx)의 선택 하이라이트를 그대로 이식 — 반투명 배경 + 테두리 링.
     function buildHighlightHtml() {
-      return '<div style="width:28px;height:28px;border-radius:9999px;background:#FF6B4A48;border:2px solid #FF6B4A;"></div>';
+      return '<div class="trova-pin-pulse" style="width:28px;height:28px;border-radius:9999px;background:#FF6B4A48;border:2px solid #FF6B4A;"></div>';
     }
 
     function applySelection(selectedId) {
@@ -108,6 +128,8 @@ export function buildKakaoMapHtml(appKey: string): string {
         }
 
         positions = {};
+        // 이미 한 번 착지한 핀은 다시 튀지 않는다. 처음 열 때는 차례로, 이후엔 새로 생긴 핀만 떨어진다.
+        var firstRender = Object.keys(landedPinIds).length === 0;
         pins.forEach(function (pin, index) {
           var position = path[index];
           var pinColor = pin.color || '#FF6B4A';
@@ -117,6 +139,11 @@ export function buildKakaoMapHtml(appKey: string): string {
           el.style.cssText = 'width:26px;height:26px;border-radius:9999px;background:' + pinColor + ';' +
             'color:#fff;display:flex;align-items:center;justify-content:center;' +
             'font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.35);';
+          if (!landedPinIds[pin.id]) {
+            el.className = 'trova-pin-drop';
+            el.style.animationDelay = (firstRender ? Math.min(index, 12) * 50 : 0) + 'ms';
+            landedPinIds[pin.id] = true;
+          }
           var overlay = new kakao.maps.CustomOverlay({ position: position, content: el, zIndex: 2 });
           overlay.setMap(mapInstance);
           overlays.push(overlay);

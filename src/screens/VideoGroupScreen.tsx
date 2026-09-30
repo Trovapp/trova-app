@@ -1,16 +1,18 @@
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Alert, Platform, ScrollView, TextInput, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
 import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
+import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { DayPickerSheet } from "@/components/DayPickerSheet";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
+import { CountUpText } from "@/components/CountUpText";
 import { SavedPlaceInfoSheet } from "@/components/SavedPlaceInfoSheet";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
@@ -29,7 +31,12 @@ import type { RootStackParamList } from "@/navigation/types";
 type Props = NativeStackScreenProps<RootStackParamList, "VideoGroup">;
 
 export function VideoGroupScreen({ route, navigation }: Props) {
-  const { jobId } = route.params;
+  const { jobId, justAnalyzed = false } = route.params;
+  // 분석 직후 도착 연출(개수 세기·카드 순차 등장). 다시 들어올 때는 차분하게 둔다.
+  const reducedMotion = useReducedMotion();
+  // 화면에 들어온 직후에만 연출한다 — 날짜 탭을 바꿀 때 행이 새로 그려져도 다시 튀지 않게.
+  const arrivalDeadlineRef = useRef(Date.now() + 2500);
+  const arrive = justAnalyzed && !reducedMotion && Date.now() < arrivalDeadlineRef.current;
   const queryClient = useQueryClient();
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -278,19 +285,24 @@ export function VideoGroupScreen({ route, navigation }: Props) {
         ? haversineDistanceKm(place.latitude, place.longitude, next!.latitude!, next!.longitude!)
         : null;
     return (
-      <View style={{ opacity: isActive ? 0.9 : 1 }}>
-        <PlaceRow
-          place={place}
-          index={index}
-          isLast={isLast}
-          distanceKm={distanceKm}
-          editable
-          disabled={actionPending}
-          dragHandle={{ onPressIn: drag }}
-          onPressInfo={() => setReviewPlaceId(place.id)}
-          onOpenDayPicker={() => setDayPickerFor(place)}
-        />
-      </View>
+      // 등장 애니메이션(바깥)과 드래그 중 투명도(안쪽)를 나눈다 — 한 View에 두면 Reanimated가 투명도를 덮어쓴다고 경고한다.
+      <Animated.View
+        entering={arrive ? FadeInDown.delay(250 + Math.min(index, 8) * 70).springify().damping(16) : undefined}
+      >
+        <View style={{ opacity: isActive ? 0.9 : 1 }}>
+          <PlaceRow
+            place={place}
+            index={index}
+            isLast={isLast}
+            distanceKm={distanceKm}
+            editable
+            disabled={actionPending}
+            dragHandle={{ onPressIn: drag }}
+            onPressInfo={() => setReviewPlaceId(place.id)}
+            onOpenDayPicker={() => setDayPickerFor(place)}
+          />
+        </View>
+      </Animated.View>
     );
   }
 
@@ -303,6 +315,15 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             {title}
           </AppText>
           <SourceVideoLink url={group[0].sourceUrl} platform={group[0].sourcePlatform} />
+          {justAnalyzed && (
+            <CountUpText
+              value={group.length}
+              suffix="곳을 찾았어요"
+              animate={!reducedMotion}
+              weight="medium"
+              style={{ fontSize: 14, color: colors.accent, marginTop: 4 }}
+            />
+          )}
         </View>
         <InlineMap
           pins={group
@@ -335,14 +356,18 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                 ? haversineDistanceKm(place.latitude, place.longitude, next!.latitude!, next!.longitude!)
                 : null;
             return (
-              <PlaceRow
+              <Animated.View
                 key={place.id}
-                place={place}
-                index={index}
-                isLast={isLast}
-                distanceKm={distanceKm}
-                onPressInfo={() => setReviewPlaceId(place.id)}
-              />
+                entering={arrive ? FadeInDown.delay(250 + Math.min(index, 8) * 70).springify().damping(16) : undefined}
+              >
+                <PlaceRow
+                  place={place}
+                  index={index}
+                  isLast={isLast}
+                  distanceKm={distanceKm}
+                  onPressInfo={() => setReviewPlaceId(place.id)}
+                />
+              </Animated.View>
             );
           })}
         </View>
@@ -368,6 +393,15 @@ export function VideoGroupScreen({ route, navigation }: Props) {
               {title}
             </AppText>
             <SourceVideoLink url={group[0].sourceUrl} platform={group[0].sourcePlatform} />
+            {justAnalyzed && (
+              <CountUpText
+                value={group.length}
+                suffix="곳을 찾았어요"
+                animate={!reducedMotion}
+                weight="medium"
+                style={{ fontSize: 14, color: colors.accent, marginTop: 4 }}
+              />
+            )}
           </View>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {dayNumbers.map((day) => (
