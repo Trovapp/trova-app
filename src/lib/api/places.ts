@@ -33,8 +33,9 @@ export type PendingJob = {
   stageMessage: string | null;
   // 분석이 끝나기 전에 서버가 먼저 알려준 장소 이름(백엔드 #51). 이전 서버는 이 필드가 없을 수 있다.
   foundPlaceNames?: string[];
-  // 실패 이유(백엔드 #55). 영상에서 장소를 못 찾았으면 "NO_PLACES". 같은 영상은 다시 해도 결과가 같다.
-  failureReason?: "NO_PLACES" | null;
+  // 실패 이유. 영상에서 장소를 못 찾았으면 "NO_PLACES"(백엔드 #55) — 같은 영상은 다시 해도 결과가 같다.
+  // AI 하루 한도를 다 썼으면 "AI_QUOTA"(백엔드 #63) — 한도가 초기화(한국 오후 4~5시)되기 전엔 다시 해도 실패한다.
+  failureReason?: "NO_PLACES" | "AI_QUOTA" | null;
 };
 
 export async function createShare(url: string): Promise<{ jobId: number }> {

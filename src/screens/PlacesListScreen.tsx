@@ -82,7 +82,14 @@ function PendingJobCard({
   // 지어낸 퍼센트 없이 0%로 둔다.
   const percent = isFailed ? 0 : job.progressPercent ?? 0;
   const noPlaces = isFailed && job.failureReason === "NO_PLACES";
-  const message = noPlaces ? "장소를 찾지 못했어요" : isFailed ? "처리에 실패했어요" : job.stageMessage ?? "처리 대기 중이에요";
+  const aiQuota = isFailed && job.failureReason === "AI_QUOTA";
+  const message = noPlaces
+    ? "장소를 찾지 못했어요"
+    : aiQuota
+      ? "AI 분석 한도 초과, 오후 4~5시 이후 다시 시도"
+      : isFailed
+        ? "처리에 실패했어요"
+        : job.stageMessage ?? "처리 대기 중이에요";
 
   return (
     <View style={{ padding: 16, borderRadius: 12, backgroundColor: colors.bgMuted }}>
