@@ -201,17 +201,24 @@ export function ProcessingScreen({ route, navigation }: Props) {
   }
 
   if (job.status === "FAILED") {
+    const noPlaces = job.failureReason === "NO_PLACES";
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
         <BackButton onPress={handleBack} />
-        <Feather name="alert-circle" size={48} color={colors.accent} />
+        <Feather name={noPlaces ? "map-pin" : "alert-circle"} size={48} color={colors.accent} />
         <AppText weight="medium" style={{ fontSize: 20 }}>
-          처리에 실패했어요
+          {noPlaces ? "장소를 찾지 못했어요" : "처리에 실패했어요"}
         </AppText>
         <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>
           {job.title ?? describeSourceUrl(job.sourceUrl)}
         </AppText>
-        {canRetry ? (
+        {noPlaces && (
+          <AppText style={{ fontSize: 13, color: colors.inkMuted, textAlign: "center", lineHeight: 19 }}>
+            영상에서 장소 이름이 나오지 않았거나 알아보기 어려웠어요.{"\n"}장소를 소개하는 다른 영상을 넣어보세요.
+          </AppText>
+        )}
+        {/* 장소를 못 찾은 영상은 다시 해도 결과가 같아서 다시 시도 대신 홈으로 안내한다. */}
+        {canRetry && !noPlaces ? (
           <>
             <PressableScale
               onPress={handleRetry}

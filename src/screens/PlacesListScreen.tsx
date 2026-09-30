@@ -81,7 +81,8 @@ function PendingJobCard({
   // 백엔드가 진짜로 도달한 파이프라인 단계만 반영한다 — 아직 EXTRACTING도 시작 전(PENDING)이면
   // 지어낸 퍼센트 없이 0%로 둔다.
   const percent = isFailed ? 0 : job.progressPercent ?? 0;
-  const message = isFailed ? "처리에 실패했어요" : job.stageMessage ?? "처리 대기 중이에요";
+  const noPlaces = isFailed && job.failureReason === "NO_PLACES";
+  const message = noPlaces ? "장소를 찾지 못했어요" : isFailed ? "처리에 실패했어요" : job.stageMessage ?? "처리 대기 중이에요";
 
   return (
     <View style={{ padding: 16, borderRadius: 12, backgroundColor: colors.bgMuted }}>
@@ -111,7 +112,8 @@ function PendingJobCard({
       </View>
       <View style={{ marginTop: 4, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <AppText style={{ fontSize: 12, color: isFailed ? colors.accent : colors.inkMuted }}>{message}</AppText>
-        {isFailed && onRetry && (
+        {/* 장소를 못 찾은 영상은 다시 해도 결과가 같아서 다시 시도를 두지 않는다(삭제로 정리). */}
+        {isFailed && !noPlaces && onRetry && (
           <PressableScale onPress={() => onRetry(job)} hitSlop={10}>
             <AppText weight="medium" style={{ fontSize: 12, color: colors.ink }}>
               다시 시도
