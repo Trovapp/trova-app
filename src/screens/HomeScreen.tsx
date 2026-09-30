@@ -12,7 +12,7 @@ import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
-import { createShare, deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob } from "@/lib/api/places";
+import { createShare, deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob } from "@/lib/api/places";
 import { listBookmarks } from "@/lib/api/bookmarks";
 import { listTrips } from "@/lib/api/trips";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -21,7 +21,7 @@ import { formatTripDates, toDateString } from "@/lib/date";
 import { groupTripsByDate } from "@/lib/tripSections";
 import { toUserMessage } from "@/lib/api/client";
 import { colors } from "@/lib/theme";
-import { isSupportedShareUrl, sourceVideoKey } from "@/lib/shareUrl";
+import { isSupportedShareUrl, sourceVideoKey, UNSUPPORTED_SHARE_URL_MESSAGE } from "@/lib/shareUrl";
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"Home">;
@@ -73,6 +73,26 @@ export function HomeScreen({ navigation }: Props) {
   const isFirstVisit =
     bookmarksQuery.isSuccess && tripsQuery.isSuccess && bookmarksQuery.data.length === 0 && tripsQuery.data.length === 0;
 
+  // 같은 영상의 실패 기록을 다시 시도로 처리하고, 여러 개 쌓여 있으면 나머지는 지운다.
+  async function retryFailedJobs(failedSame: PendingJob[]) {
+    const { jobId } = await resubmitFailedJob(failedSame[0]);
+    await Promise.allSettled(failedSame.slice(1).map((job) => deletePendingJob(job.jobId)));
+    navigation.navigate("Processing", { jobId });
+  }
+
+  // 확인창에서 "다시 분석"을 눌렀을 때 — 제출 흐름(handleSubmit)이 이미 끝난 뒤라 진행 상태를 따로 관리한다.
+  async function retryFailedShare(failedSame: PendingJob[]) {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await retryFailedJobs(failedSame);
+    } catch (err) {
+      setError(toUserMessage(err, "요청에 실패했어요. 잠시 후 다시 시도해주세요."));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function submitNewShare(sourceUrl: string) {
     setSubmitting(true);
     setError(null);
@@ -90,7 +110,7 @@ export function HomeScreen({ navigation }: Props) {
     const trimmed = url.trim();
     if (!trimmed || submitting) return;
     if (!isSupportedShareUrl(trimmed)) {
-      setError("인스타그램 또는 유튜브 링크만 넣을 수 있어요.");
+      setError(UNSUPPORTED_SHARE_URL_MESSAGE);
       return;
     }
     setSubmitting(true);
@@ -124,9 +144,15 @@ export function HomeScreen({ navigation }: Props) {
       //    여러 개 쌓여 있으면(이 확인이 생기기 전 중복 제출분) 나머지도 함께 지운다.
       const failedSame = pendingJobs.filter((job) => job.status === "FAILED" && sourceVideoKey(job.sourceUrl) === key);
       if (failedSame.length > 0) {
-        const { jobId } = await resubmitFailedJob(failedSame[0]);
-        await Promise.allSettled(failedSame.slice(1).map((job) => deletePendingJob(job.jobId)));
-        navigation.navigate("Processing", { jobId });
+        // 장소를 못 찾았던 영상은 다시 분석해도 결과가 같을 가능성이 높다 — 조용히 다시 돌리지 말고 먼저 묻는다.
+        if (failedSame.some((job) => job.failureReason === "NO_PLACES")) {
+          Alert.alert("이전에 장소를 찾지 못한 영상이에요", "다시 분석해도 장소를 찾지 못할 수 있어요.", [
+            { text: "취소", style: "cancel" },
+            { text: "다시 분석", onPress: () => retryFailedShare(failedSame) },
+          ]);
+          return;
+        }
+        await retryFailedJobs(failedSame);
         return;
       }
       const { jobId } = await createShare(trimmed);

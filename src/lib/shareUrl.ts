@@ -1,21 +1,19 @@
-// 백엔드 SharesController의 호스트 화이트리스트와 같은 기준으로 미리 걸러서,
-// 명백히 지원하지 않는 링크는 서버 왕복 없이 바로 안내한다(최종 판정은 여전히 서버).
-const SUPPORTED_HOSTS = new Set([
-  "youtube.com",
-  "www.youtube.com",
-  "m.youtube.com",
-  "youtu.be",
-  "youtube-nocookie.com",
-  "www.youtube-nocookie.com",
-  "instagram.com",
-  "www.instagram.com",
-  "m.instagram.com",
-]);
+// 백엔드 ShareUrl(#50)과 같은 기준으로 미리 걸러서, 영상이 아닌 링크(채널·계정 페이지, 리다이렉트 주소 등)는
+// 서버 왕복 없이 바로 안내한다(최종 판정은 여전히 서버).
+export const UNSUPPORTED_SHARE_URL_MESSAGE = "유튜브 영상·쇼츠 또는 인스타그램 릴스·게시물 링크만 등록할 수 있어요.";
+
+const VIDEO_ID = "[A-Za-z0-9_-]{1,64}";
+// 호스트가 스킴 바로 뒤에 와야 한다 — "user@evil.com" 같은 형태는 여기서 걸러진다.
+const VIDEO_URL_PATTERNS = [
+  new RegExp(`^https?://youtu\\.be\\.?/${VIDEO_ID}(?:[/?#]|$)`, "i"),
+  new RegExp(`^https?://(?:www\\.|m\\.)?youtube(?:-nocookie)?\\.com\\.?/(?:shorts|live|embed)/${VIDEO_ID}(?:[/?#]|$)`, "i"),
+  new RegExp(`^https?://(?:www\\.|m\\.)?youtube(?:-nocookie)?\\.com\\.?/watch\\?(?:[^#]*&)?v=${VIDEO_ID}(?:[&#]|$)`, "i"),
+  new RegExp(`^https?://(?:www\\.|m\\.)?instagram\\.com\\.?/(?:reels?|p|tv)/${VIDEO_ID}(?:[/?#]|$)`, "i"),
+];
 
 export function isSupportedShareUrl(url: string): boolean {
-  const match = /^https?:\/\/([^/?#:]+)/i.exec(url.trim());
-  if (!match) return false;
-  return SUPPORTED_HOSTS.has(match[1].toLowerCase().replace(/\.$/, ""));
+  const trimmed = url.trim();
+  return VIDEO_URL_PATTERNS.some((pattern) => pattern.test(trimmed));
 }
 
 // 제목을 못 얻은 영상(주로 추출 실패)은 긴 URL 대신 "쇼츠 · CXdphBD0"처럼 종류와 영상 ID만 보여준다.
