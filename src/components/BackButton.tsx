@@ -1,12 +1,12 @@
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PressableScale } from "@/components/PressableScale";
-import { colors } from "@/lib/theme";
+import { colors, space } from "@/lib/theme";
 
 // headerShown: false로 네이티브 헤더 자체를 끈 화면(Processing/TripReplan)에서
 // 뒤로 갈 방법이 전혀 안 보이던 걸 보완한다 — 화면 자체 디자인(전체 화면 진행률
 // 히어로 등)은 유지하면서 최소한의 뒤로가기 흔적만 얹는다.
-const BUTTON_TOP_GAP = 8;
+const BUTTON_TOP_GAP = space.xs;
 const BUTTON_SIZE = 36;
 
 // 버튼이 absolute로 떠 있으므로, 아래 콘텐츠는 이만큼 위를 비워야 버튼과 겹치지 않는다.

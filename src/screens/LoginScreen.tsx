@@ -6,7 +6,7 @@ import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { oauthUrl } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 
 // 디자인(2026-09): 로그인 전 첫 화면인데도 브랜드 요소가 하나도 없던 걸
 // 고쳤다 — 앱 아이콘 마크(핀+재생버튼) + Trova 워드마크(이 화면의 유일한
@@ -38,17 +38,17 @@ export function LoginScreen() {
   }
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 24 }}>
-      <View style={{ alignItems: "center", marginBottom: 40 }}>
+    <View style={{ flex: 1, justifyContent: "center", padding: space.xl }}>
+      <View style={{ alignItems: "center", marginBottom: space.xxxl }}>
         <Image
           source={require("../../assets/splash-icon.png")}
           resizeMode="contain"
-          style={{ width: 96, height: 96, marginBottom: 20 }}
+          style={{ width: 96, height: 96, marginBottom: space.lg }}
         />
-        <AppText weight="bold" style={{ fontSize: 32 }}>
+        <AppText weight="bold" style={{ fontSize: fontSize.largeTitle }}>
           Trova
         </AppText>
-        <AppText style={{ marginTop: 8, fontSize: 14, color: colors.inkMuted, textAlign: "center" }}>
+        <AppText style={{ marginTop: space.xs, fontSize: fontSize.subheadline, color: colors.inkMuted, textAlign: "center" }}>
           여행 영상 속 장소를 지도로 옮겨드려요
         </AppText>
       </View>
@@ -59,27 +59,27 @@ export function LoginScreen() {
           style={{
             flexDirection: "row",
             alignItems: "center",
-            gap: 8,
-            padding: 12,
-            marginBottom: 16,
-            borderRadius: 12,
+            gap: space.xs,
+            padding: space.sm,
+            marginBottom: space.md,
+            borderRadius: radius.md,
             backgroundColor: colors.bgMuted,
           }}
         >
           <Feather name="info" size={15} color={colors.inkMuted} />
-          <AppText style={{ flexShrink: 1, fontSize: 13, color: colors.inkMuted }}>
+          <AppText style={{ flexShrink: 1, fontSize: fontSize.footnote, color: colors.inkMuted }}>
             로그인이 만료됐어요. 다시 로그인해주세요.
           </AppText>
         </View>
       )}
 
-      <View style={{ gap: 12 }}>
+      <View style={{ gap: space.sm }}>
         <PressableScale
           onPress={() => handleLogin("kakao")}
           disabled={isLoggingIn}
           style={{
             height: 48,
-            borderRadius: 12,
+            borderRadius: radius.md,
             backgroundColor: colors.kakao,
             justifyContent: "center",
             alignItems: "center",
@@ -93,7 +93,7 @@ export function LoginScreen() {
           disabled={isLoggingIn}
           style={{
             height: 48,
-            borderRadius: 12,
+            borderRadius: radius.md,
             borderWidth: 1,
             borderColor: colors.border,
             justifyContent: "center",

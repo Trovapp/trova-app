@@ -9,7 +9,7 @@ import { PressableScale } from "@/components/PressableScale";
 import { haptics } from "@/lib/haptics";
 import { createTrip, TRIP_MAX_DAYS, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
 import { formatDateLabel, toDateString } from "@/lib/date";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
 
@@ -64,7 +64,7 @@ export function NewTripScreen({ navigation }: Props) {
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 24, gap: 16 }}
+        contentContainerStyle={{ padding: space.xl, gap: space.md }}
         keyboardShouldPersistTaps="handled"
       >
       <TextInput
@@ -78,33 +78,33 @@ export function NewTripScreen({ navigation }: Props) {
           height: 48,
           borderWidth: 1,
           borderColor: colors.border,
-          borderRadius: 12,
-          paddingHorizontal: 16,
+          borderRadius: radius.md,
+          paddingHorizontal: space.md,
           fontFamily: "NotoSansKR_400Regular",
         }}
       />
 
-      <View style={{ flexDirection: "row", gap: 12 }}>
-        <View style={{ flex: 1, gap: 4 }}>
-          <AppText style={{ fontSize: 12, color: colors.inkMuted }}>출발일</AppText>
+      <View style={{ flexDirection: "row", gap: space.sm }}>
+        <View style={{ flex: 1, gap: space.xxs }}>
+          <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>출발일</AppText>
           <PressableScale
             onPress={() => {
               setShowEndPicker(false);
               setShowStartPicker(true);
             }}
-            style={{ height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 12, justifyContent: "center", paddingHorizontal: 12 }}
+            style={{ height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, justifyContent: "center", paddingHorizontal: space.sm }}
           >
             <AppText>{formatDateLabel(startDate)}</AppText>
           </PressableScale>
         </View>
-        <View style={{ flex: 1, gap: 4 }}>
-          <AppText style={{ fontSize: 12, color: colors.inkMuted }}>도착일</AppText>
+        <View style={{ flex: 1, gap: space.xxs }}>
+          <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>도착일</AppText>
           <PressableScale
             onPress={() => {
               setShowStartPicker(false);
               setShowEndPicker(true);
             }}
-            style={{ height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 12, justifyContent: "center", paddingHorizontal: 12 }}
+            style={{ height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, justifyContent: "center", paddingHorizontal: space.sm }}
           >
             <AppText>{formatDateLabel(endDate)}</AppText>
           </PressableScale>
@@ -112,7 +112,7 @@ export function NewTripScreen({ navigation }: Props) {
       </View>
 
       {showStartPicker && (
-        <View style={{ gap: 4 }}>
+        <View style={{ gap: space.xxs }}>
           <DateTimePicker
             value={startDate}
             mode="date"
@@ -134,7 +134,7 @@ export function NewTripScreen({ navigation }: Props) {
           />
           {Platform.OS === "ios" && (
             <PressableScale onPress={() => setShowStartPicker(false)} style={{ alignSelf: "flex-end" }}>
-              <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
+              <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
                 확인
               </AppText>
             </PressableScale>
@@ -142,7 +142,7 @@ export function NewTripScreen({ navigation }: Props) {
         </View>
       )}
       {showEndPicker && (
-        <View style={{ gap: 4 }}>
+        <View style={{ gap: space.xxs }}>
           <DateTimePicker
             value={endDate}
             mode="date"
@@ -158,7 +158,7 @@ export function NewTripScreen({ navigation }: Props) {
           />
           {Platform.OS === "ios" && (
             <PressableScale onPress={() => setShowEndPicker(false)} style={{ alignSelf: "flex-end" }}>
-              <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
+              <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
                 확인
               </AppText>
             </PressableScale>
@@ -173,7 +173,7 @@ export function NewTripScreen({ navigation }: Props) {
         disabled={!title.trim() || submitting}
         style={{
           height: 48,
-          borderRadius: 12,
+          borderRadius: radius.md,
           backgroundColor: colors.accent,
           justifyContent: "center",
           alignItems: "center",

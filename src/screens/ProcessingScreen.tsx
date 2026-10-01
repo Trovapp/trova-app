@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { describeSourceUrl, sourceKindLabel } from "@/lib/shareUrl";
 import { cleanVideoTitle } from "@/lib/videoTitle";
 import { toUserMessage } from "@/lib/api/client";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 import { getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob } from "@/lib/api/places";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
@@ -179,7 +179,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
   const holdingJob = !job && namesShownAtRef.current !== null && lastSeenJob?.status !== "FAILED" ? lastSeenJob : null;
   if (holdingJob) {
     return (
-      <View style={{ flex: 1, padding: 24, paddingTop: topClearance, paddingBottom: Math.max(24, bottomInset + 8) }}>
+      <View style={{ flex: 1, padding: space.xl, paddingTop: topClearance, paddingBottom: Math.max(24, bottomInset + 8) }}>
         <BackButton onPress={handleBack} />
         <ProcessingProgressView
           stage="SAVING"
@@ -195,11 +195,11 @@ export function ProcessingScreen({ route, navigation }: Props) {
 
   if (pendingQuery.isLoading || !job) {
     return (
-      <View style={{ flex: 1, padding: 24, gap: 16, justifyContent: "center" }}>
+      <View style={{ flex: 1, padding: space.xl, gap: space.md, justifyContent: "center" }}>
         <BackButton onPress={handleBack} />
         <Skeleton style={{ width: "50%", height: 22, alignSelf: "center" }} />
         <Skeleton style={{ width: "80%", height: 14, alignSelf: "center" }} />
-        <Skeleton style={{ height: 10, borderRadius: 5, marginTop: 8 }} />
+        <Skeleton style={{ height: 10, borderRadius: radius.full, marginTop: space.xs }} />
       </View>
     );
   }
@@ -209,10 +209,10 @@ export function ProcessingScreen({ route, navigation }: Props) {
     const aiQuota = job.failureReason === "AI_QUOTA";
     const sourceBlocked = job.failureReason === "SOURCE_RATE_LIMITED";
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: space.xl, gap: space.md }}>
         <BackButton onPress={handleBack} />
         <Feather name={noPlaces ? "map-pin" : aiQuota || sourceBlocked ? "clock" : "alert-circle"} size={48} color={colors.accent} />
-        <AppText weight="medium" style={{ fontSize: 20 }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.title3 }}>
           {noPlaces
             ? "장소를 찾지 못했어요"
             : aiQuota
@@ -225,17 +225,17 @@ export function ProcessingScreen({ route, navigation }: Props) {
           {job.title ?? describeSourceUrl(job.sourceUrl)}
         </AppText>
         {noPlaces && (
-          <AppText style={{ fontSize: 13, color: colors.inkMuted, textAlign: "center", lineHeight: 19 }}>
+          <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, textAlign: "center", lineHeight: 19 }}>
             영상에서 장소 이름이 나오지 않았거나 알아보기 어려웠어요.{"\n"}장소를 소개하는 다른 영상을 넣어보세요.
           </AppText>
         )}
         {aiQuota && (
-          <AppText style={{ fontSize: 13, color: colors.inkMuted, textAlign: "center", lineHeight: 19 }}>
+          <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, textAlign: "center", lineHeight: 19 }}>
             매일 오후 4~5시쯤 한도가 다시 채워져요.{"\n"}그 뒤에 이 영상을 다시 넣어주세요.
           </AppText>
         )}
         {sourceBlocked && (
-          <AppText style={{ fontSize: 13, color: colors.inkMuted, textAlign: "center", lineHeight: 19 }}>
+          <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, textAlign: "center", lineHeight: 19 }}>
             요청이 몰려서 잠시 막힌 거예요.{"\n"}조금 뒤에 이 릴스를 다시 넣어주세요.
           </AppText>
         )}
@@ -246,10 +246,10 @@ export function ProcessingScreen({ route, navigation }: Props) {
               onPress={handleRetry}
               disabled={retrying}
               style={{
-                marginTop: 12,
+                marginTop: space.sm,
                 height: 48,
-                paddingHorizontal: 24,
-                borderRadius: 12,
+                paddingHorizontal: space.xl,
+                borderRadius: radius.md,
                 backgroundColor: colors.accent,
                 justifyContent: "center",
                 alignItems: "center",
@@ -269,10 +269,10 @@ export function ProcessingScreen({ route, navigation }: Props) {
           <PressableScale
             onPress={() => navigation.replace("MainTabs")}
             style={{
-              marginTop: 12,
+              marginTop: space.sm,
               height: 48,
-              paddingHorizontal: 24,
-              borderRadius: 12,
+              paddingHorizontal: space.xl,
+              borderRadius: radius.md,
               backgroundColor: colors.accent,
               justifyContent: "center",
               alignItems: "center",
@@ -289,7 +289,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
 
   const stage: Stage = job.currentStage ?? "PENDING";
   return (
-    <View style={{ flex: 1, padding: 24, paddingTop: topClearance, paddingBottom: Math.max(24, bottomInset + 8) }}>
+    <View style={{ flex: 1, padding: space.xl, paddingTop: topClearance, paddingBottom: Math.max(24, bottomInset + 8) }}>
       <BackButton onPress={handleBack} />
       <ProcessingProgressView
         stage={stage}
@@ -335,58 +335,58 @@ export function ProcessingProgressView({
   const found = foundPlaceNames.length > 0;
   return (
     <>
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 12 }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: space.sm }}>
         <Orb state={found ? "arrived" : STAGE_ORB[stage]} size={140} />
         <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={STAGE_CREEP_MS[stage]} showCards={false} />
-        <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.title3, textAlign: "center" }}>
           {message ?? analysis.title}
         </AppText>
         {found ? (
           <FoundPlaceChips names={foundPlaceNames} />
         ) : videoLabel ? (
-          <View style={{ alignItems: "center", gap: 2, paddingHorizontal: 12 }}>
-            <AppText weight="medium" numberOfLines={2} style={{ fontSize: 14, color: colors.ink, textAlign: "center" }}>
+          <View style={{ alignItems: "center", gap: space.xxxs, paddingHorizontal: space.sm }}>
+            <AppText weight="medium" numberOfLines={2} style={{ fontSize: fontSize.subheadline, color: colors.ink, textAlign: "center" }}>
               {videoLabel}
             </AppText>
-            <AppText style={{ fontSize: 13, color: colors.inkMuted }}>영상을 보고 있어요</AppText>
+            <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>영상을 보고 있어요</AppText>
           </View>
         ) : (
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
-              gap: 6,
-              paddingVertical: 8,
-              paddingHorizontal: 16,
-              borderRadius: 20,
+              gap: space.xs,
+              paddingVertical: space.xs,
+              paddingHorizontal: space.md,
+              borderRadius: radius.full,
               backgroundColor: colors.bgMuted,
             }}
           >
             <Emoji symbol="💡" size={14} />
-            <AppText style={{ fontSize: 13, color: colors.inkMuted }}>{STAGE_TIP[stage]}</AppText>
+            <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>{STAGE_TIP[stage]}</AppText>
           </View>
         )}
       </View>
 
       <View
         style={{
-          padding: 20,
-          borderRadius: 16,
+          padding: space.lg,
+          borderRadius: radius.lg,
           borderWidth: 1,
           borderColor: colors.border,
           backgroundColor: colors.bgMuted,
-          gap: 6,
+          gap: space.xs,
         }}
       >
-        <AppText mono style={{ fontSize: 11, color: colors.inkMuted, letterSpacing: 1 }}>AI ANALYSIS</AppText>
-        <AppText weight="medium" style={{ fontSize: 15 }}>
+        <AppText mono style={{ fontSize: fontSize.caption2, color: colors.inkMuted, letterSpacing: 1 }}>AI ANALYSIS</AppText>
+        <AppText weight="medium" style={{ fontSize: fontSize.subheadline }}>
           {analysis.title}
         </AppText>
-        <AppText style={{ fontSize: 13, color: colors.inkMuted, lineHeight: 19 }}>{analysis.description}</AppText>
+        <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, lineHeight: 19 }}>{analysis.description}</AppText>
       </View>
 
       {/* 처리는 서버에서 비동기로 도는데, 안내가 없으면 12~40초(실측) 동안 이 화면을 지켜봐야 한다고 느끼기 쉽다. */}
-      <AppText style={{ marginTop: 16, fontSize: 12, lineHeight: 18, color: colors.inkMuted, textAlign: "center" }}>
+      <AppText style={{ marginTop: space.md, fontSize: fontSize.caption1, lineHeight: 18, color: colors.inkMuted, textAlign: "center" }}>
         다른 화면으로 가도 분석은 계속돼요.{"\n"}결과는 영상 기록 탭에서 확인할 수 있어요.
       </AppText>
     </>
@@ -396,18 +396,18 @@ export function ProcessingProgressView({
 // 찾은 장소 이름이 하나씩 차례로 떠오른다. "동작 줄이기"가 켜져 있으면 Reanimated가 등장 애니메이션을 생략한다.
 function FoundPlaceChips({ names }: { names: string[] }) {
   return (
-    <View style={{ alignItems: "center", gap: 10, paddingHorizontal: 8 }}>
-      <AppText weight="medium" style={{ fontSize: 14, color: colors.accent }}>
+    <View style={{ alignItems: "center", gap: space.sm, paddingHorizontal: space.xs }}>
+      <AppText weight="medium" style={{ fontSize: fontSize.subheadline, color: colors.accent }}>
         {names.length}곳을 찾았어요
       </AppText>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: space.xs }}>
         {names.map((name, index) => (
           <Animated.View
             key={name + index}
             entering={FadeInDown.delay(index * 220).duration(420)}
-            style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 16, backgroundColor: colors.accentBg }}
+            style={{ paddingVertical: space.xs, paddingHorizontal: space.sm, borderRadius: radius.lg, backgroundColor: colors.accentBg }}
           >
-            <AppText style={{ fontSize: 13, color: colors.ink }}>{name}</AppText>
+            <AppText style={{ fontSize: fontSize.footnote, color: colors.ink }}>{name}</AppText>
           </Animated.View>
         ))}
       </View>

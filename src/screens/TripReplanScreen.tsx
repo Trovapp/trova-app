@@ -14,7 +14,7 @@ import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
 import { Skeleton } from "@/components/Skeleton";
 import { haptics } from "@/lib/haptics";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 import { getTrip, getTripReplanJob, invalidateTripPlaceChangeQueries, optimizeTripRoute, replacePlace, type TripReplanResult } from "@/lib/api/trips";
 import { categoryLabel } from "@/lib/placeCategory";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -127,21 +127,21 @@ export function TripReplanScreen({ route, navigation }: Props) {
 
   if (replanQuery.isLoading || !job) {
     return (
-      <View style={{ flex: 1, padding: 24, gap: 16, justifyContent: "center" }}>
+      <View style={{ flex: 1, padding: space.xl, gap: space.md, justifyContent: "center" }}>
         <BackButton onPress={goBackToTrip} />
         <Skeleton style={{ width: "50%", height: 22, alignSelf: "center" }} />
         <Skeleton style={{ width: "80%", height: 14, alignSelf: "center" }} />
-        <Skeleton style={{ height: 10, borderRadius: 5, marginTop: 8 }} />
+        <Skeleton style={{ height: 10, borderRadius: radius.full, marginTop: space.xs }} />
       </View>
     );
   }
 
   if (job.status === "FAILED") {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: space.xl, gap: space.md }}>
         <BackButton onPress={goBackToTrip} />
         <Feather name="alert-circle" size={48} color={colors.accent} />
-        <AppText weight="medium" style={{ fontSize: 20 }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.title3 }}>
           재구성에 실패했어요
         </AppText>
         {job.errorMessage && (
@@ -150,10 +150,10 @@ export function TripReplanScreen({ route, navigation }: Props) {
         <PressableScale
           onPress={goBackToTrip}
           style={{
-            marginTop: 12,
+            marginTop: space.sm,
             height: 48,
-            paddingHorizontal: 24,
-            borderRadius: 12,
+            paddingHorizontal: space.xl,
+            borderRadius: radius.md,
             backgroundColor: colors.accent,
             justifyContent: "center",
             alignItems: "center",
@@ -178,9 +178,9 @@ export function TripReplanScreen({ route, navigation }: Props) {
       total === null ? 15 : total === 0 ? 100 : Math.round(((job.completedTargets + 1) / total) * 100);
     const ceiling = Math.min(nextTargetPercent - 2, 99);
     return (
-      <View style={{ flex: 1, padding: 24, paddingTop: topClearance }}>
+      <View style={{ flex: 1, padding: space.xl, paddingTop: topClearance }}>
         <BackButton onPress={goBackToTrip} />
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 20 }}>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: space.lg }}>
           {/* 장소들을 살펴보는 동안은 "생각", 대안을 찾기 시작하면 바깥으로 물결이 퍼지는 "탐색" */}
           <Orb state={total === null ? "thinking" : "searching"} size={140} label="일정 재구성 중" />
           <ProgressHero percent={percent} ceiling={ceiling} creepMs={AVG_TARGET_MS} showCards={false} />
@@ -189,22 +189,22 @@ export function TripReplanScreen({ route, navigation }: Props) {
               {job.completedTargets} / {total}
             </AppText>
           )}
-          <AppText weight="medium" style={{ fontSize: 20, textAlign: "center" }}>
+          <AppText weight="medium" style={{ fontSize: fontSize.title3, textAlign: "center" }}>
             {total === null ? "여행 속 장소들을 살펴보고 있어요" : "취향에 맞는 대안을 찾고 있어요"}
           </AppText>
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
-              gap: 6,
-              paddingVertical: 8,
-              paddingHorizontal: 16,
-              borderRadius: 20,
+              gap: space.xs,
+              paddingVertical: space.xs,
+              paddingHorizontal: space.md,
+              borderRadius: radius.full,
               backgroundColor: colors.bgMuted,
             }}
           >
             <Emoji symbol="💡" size={14} />
-            <AppText style={{ fontSize: 13, color: colors.inkMuted }}>여행 전체를 확인하는 중이라 조금 걸릴 수 있어요</AppText>
+            <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>여행 전체를 확인하는 중이라 조금 걸릴 수 있어요</AppText>
           </View>
         </View>
       </View>
@@ -217,19 +217,19 @@ export function TripReplanScreen({ route, navigation }: Props) {
 
   if (isEmpty) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: space.xl, gap: space.md }}>
         <BackButton onPress={goBackToTrip} />
         <Feather name="check-circle" size={48} color={colors.accent} />
-        <AppText weight="medium" style={{ fontSize: 18, textAlign: "center" }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.body, textAlign: "center" }}>
           추천할 만한 다른 장소를 찾지 못했어요
         </AppText>
         <PressableScale
           onPress={goBackToTrip}
           style={{
-            marginTop: 12,
+            marginTop: space.sm,
             height: 48,
-            paddingHorizontal: 24,
-            borderRadius: 12,
+            paddingHorizontal: space.xl,
+            borderRadius: radius.md,
             backgroundColor: colors.accent,
             justifyContent: "center",
             alignItems: "center",
@@ -246,15 +246,15 @@ export function TripReplanScreen({ route, navigation }: Props) {
   return (
     <View style={{ flex: 1 }}>
       <BackButton onPress={goBackToTrip} />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: topClearance, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: space.lg, paddingTop: topClearance, gap: space.md }}>
         {/* 교체 추천이 0개이고 "대안을 찾지 못한 장소"만 있는 결과도 이 화면으로 온다 —
             그때 "새로운 추천을 찾았어요"는 사실과 다르므로 문구를 나눈다. */}
-        <AppText weight="medium" style={{ fontSize: 18 }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.body }}>
           {result.replaced.length > 0
             ? `새로운 추천을 ${result.replaced.length}곳 찾았어요`
             : "바꿀 만한 장소를 찾지 못했어요"}
         </AppText>
-        <AppText style={{ fontSize: 13, color: colors.inkMuted }}>
+        <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
           {result.replaced.length > 0
             ? "장소마다 확인하고 교체하거나 건너뛸 수 있어요. 확정하면 동선도 자동으로 다시 정리돼요."
             : "아래 장소는 비슷한 대안을 찾지 못해 일정에 그대로 남겨둬요."}
@@ -268,23 +268,23 @@ export function TripReplanScreen({ route, navigation }: Props) {
             <View
               key={tripPlaceId}
               style={{
-                padding: 14,
-                borderRadius: 12,
+                padding: space.md,
+                borderRadius: radius.md,
                 borderWidth: 1,
                 borderColor: colors.border,
-                gap: 8,
+                gap: space.xs,
                 opacity: status === "skipped" ? 0.5 : 1,
               }}
             >
-              <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
                 {originalName} →
               </AppText>
               <AppText weight="medium" numberOfLines={1}>
                 {candidate.name}
               </AppText>
-              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: space.xs }}>
                 {candidate.rating !== null && <RatingBadge rating={candidate.rating} />}
-                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
                   {[
                     categoryLabel(candidate.category),
                     candidate.distanceToNextKm !== null ? `다음 장소까지 ${candidate.distanceToNextKm.toFixed(1)}km` : null,
@@ -297,28 +297,28 @@ export function TripReplanScreen({ route, navigation }: Props) {
               {candidate.recommendationReason && <RecommendationReason text={candidate.recommendationReason} />}
 
               {status === "confirmed" ? (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
                   <Feather name="check" size={14} color={colors.accent} />
-                  <AppText style={{ fontSize: 13, color: colors.accent }}>교체 완료</AppText>
+                  <AppText style={{ fontSize: fontSize.footnote, color: colors.accent }}>교체 완료</AppText>
                 </View>
               ) : status === "skipped" ? (
-                <AppText style={{ fontSize: 13, color: colors.inkMuted }}>건너뜀</AppText>
+                <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>건너뜀</AppText>
               ) : (
-                <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
+                <View style={{ flexDirection: "row", gap: space.xs, marginTop: space.xxs }}>
                   <PressableScale
                     onPress={() => handleSkip(tripPlaceId)}
                     disabled={status === "confirming"}
                     style={{
                       flex: 1,
                       height: 40,
-                      borderRadius: 8,
+                      borderRadius: radius.sm,
                       borderWidth: 1,
                       borderColor: colors.border,
                       justifyContent: "center",
                       alignItems: "center",
                     }}
                   >
-                    <AppText style={{ fontSize: 13, color: colors.inkMuted }}>건너뛰기</AppText>
+                    <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>건너뛰기</AppText>
                   </PressableScale>
                   <PressableScale
                     onPress={() => handleConfirm(tripPlaceId, candidate.googlePlaceId)}
@@ -326,14 +326,14 @@ export function TripReplanScreen({ route, navigation }: Props) {
                     style={{
                       flex: 1,
                       height: 40,
-                      borderRadius: 8,
+                      borderRadius: radius.sm,
                       backgroundColor: colors.accent,
                       justifyContent: "center",
                       alignItems: "center",
                       opacity: status === "confirming" ? 0.6 : 1,
                     }}
                   >
-                    <AppText weight="medium" style={{ fontSize: 13, color: colors.onAccent }}>
+                    <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.onAccent }}>
                       {status === "confirming" ? "교체 중..." : "교체"}
                     </AppText>
                   </PressableScale>
@@ -344,12 +344,12 @@ export function TripReplanScreen({ route, navigation }: Props) {
         })}
 
         {result.failedTripPlaceIds.length > 0 && (
-          <View style={{ gap: 6, padding: 14, borderRadius: 12, backgroundColor: colors.bgMuted }}>
-            <AppText weight="medium" style={{ fontSize: 13 }}>
+          <View style={{ gap: space.xs, padding: space.md, borderRadius: radius.md, backgroundColor: colors.bgMuted }}>
+            <AppText weight="medium" style={{ fontSize: fontSize.footnote }}>
               대안을 찾지 못한 장소
             </AppText>
             {result.failedTripPlaceIds.map((id) => (
-              <AppText key={id} style={{ fontSize: 13, color: colors.inkMuted }}>
+              <AppText key={id} style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
                 {nameByTripPlaceId.get(id) ?? "이름을 불러오는 중..."}
               </AppText>
             ))}
@@ -359,9 +359,9 @@ export function TripReplanScreen({ route, navigation }: Props) {
         <PressableScale
           onPress={goBackToTrip}
           style={{
-            marginTop: 8,
+            marginTop: space.xs,
             height: 48,
-            borderRadius: 12,
+            borderRadius: radius.md,
             backgroundColor: colors.accent,
             justifyContent: "center",
             alignItems: "center",

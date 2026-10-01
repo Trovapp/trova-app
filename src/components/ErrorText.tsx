@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { View, type StyleProp, type ViewStyle } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
-import { colors, space } from "@/lib/theme";
+import { colors, space, fontSize } from "@/lib/theme";
 
-const FONT_SIZE = 13;
+const FONT_SIZE = fontSize.footnote;
 const LINE_HEIGHT = 19;
 const ICON_SIZE = 14;
 

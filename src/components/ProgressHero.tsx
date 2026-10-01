@@ -15,7 +15,7 @@ const DEFAULT_CARDS: Card[] = [
 ];
 
 const CARD_SIZE = 72;
-const CARD_GAP = 12;
+const CARD_GAP = space.sm;
 const MS_PER_CARD = 1800;
 const CREEP_TICK_MS = 150;
 

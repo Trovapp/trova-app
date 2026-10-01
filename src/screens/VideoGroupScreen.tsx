@@ -24,7 +24,7 @@ import { confirmTrip, getVideoTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trip
 import { formatDateLabel, formatTripDates, toDateString } from "@/lib/date";
 import { groupByDay, isItineraryGroup } from "@/lib/itinerary";
 import { toUserMessage } from "@/lib/api/client";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
 
@@ -246,11 +246,11 @@ export function VideoGroupScreen({ route, navigation }: Props) {
 
   if (placesQuery.isLoading) {
     return (
-      <View style={{ flex: 1, padding: 16, gap: 12 }}>
+      <View style={{ flex: 1, padding: space.md, gap: space.sm }}>
         <Skeleton style={{ width: "70%", height: 20 }} />
-        <Skeleton style={{ height: 180, borderRadius: 12 }} />
-        <Skeleton style={{ height: 64, borderRadius: 12 }} />
-        <Skeleton style={{ height: 64, borderRadius: 12 }} />
+        <Skeleton style={{ height: 180, borderRadius: radius.md }} />
+        <Skeleton style={{ height: 64, borderRadius: radius.md }} />
+        <Skeleton style={{ height: 64, borderRadius: radius.md }} />
       </View>
     );
   }
@@ -309,9 +309,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   if (!hasItinerary) {
     return (
       <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-        <View style={{ gap: 4 }}>
-          <AppText weight="medium" style={{ fontSize: 18 }} numberOfLines={2}>
+      <ScrollView contentContainerStyle={{ padding: space.md, gap: space.sm }}>
+        <View style={{ gap: space.xxs }}>
+          <AppText weight="medium" style={{ fontSize: fontSize.body }} numberOfLines={2}>
             {title}
           </AppText>
           <SourceVideoLink url={group[0].sourceUrl} platform={group[0].sourcePlatform} />
@@ -321,7 +321,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
               suffix="곳을 찾았어요"
               animate={!reducedMotion}
               weight="medium"
-              style={{ fontSize: 14, color: colors.accent, marginTop: 4 }}
+              style={{ fontSize: fontSize.subheadline, color: colors.accent, marginTop: space.xxs }}
             />
           )}
         </View>
@@ -335,7 +335,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
           disabled={generating}
           style={{
             height: 48,
-            borderRadius: 12,
+            borderRadius: radius.md,
             backgroundColor: colors.accent,
             justifyContent: "center",
             alignItems: "center",
@@ -385,11 +385,11 @@ export function VideoGroupScreen({ route, navigation }: Props) {
       onDragEnd={handleDragEnd}
       renderItem={renderActivePlaceItem}
       activationDistance={0}
-      contentContainerStyle={{ padding: 16 }}
+      contentContainerStyle={{ padding: space.md }}
       ListHeaderComponent={
-        <View style={{ gap: 12, marginBottom: 12 }}>
-          <View style={{ gap: 4 }}>
-            <AppText weight="medium" style={{ fontSize: 18 }} numberOfLines={2}>
+        <View style={{ gap: space.sm, marginBottom: space.sm }}>
+          <View style={{ gap: space.xxs }}>
+            <AppText weight="medium" style={{ fontSize: fontSize.body }} numberOfLines={2}>
               {title}
             </AppText>
             <SourceVideoLink url={group[0].sourceUrl} platform={group[0].sourcePlatform} />
@@ -399,32 +399,32 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                 suffix="곳을 찾았어요"
                 animate={!reducedMotion}
                 weight="medium"
-                style={{ fontSize: 14, color: colors.accent, marginTop: 4 }}
+                style={{ fontSize: fontSize.subheadline, color: colors.accent, marginTop: space.xxs }}
               />
             )}
           </View>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
             {dayNumbers.map((day) => (
               <PressableScale
                 key={day}
                 onPress={() => setActiveDay(day)}
                 style={{
-                  paddingVertical: 8,
-                  paddingHorizontal: 14,
-                  borderRadius: 20,
+                  paddingVertical: space.xs,
+                  paddingHorizontal: space.md,
+                  borderRadius: radius.full,
                   backgroundColor: day === currentActiveDay ? colors.accent : colors.bgMuted,
                 }}
               >
-                <AppText weight="medium" style={{ color: day === currentActiveDay ? colors.onAccent : colors.inkMuted, fontSize: 13 }}>
+                <AppText weight="medium" style={{ color: day === currentActiveDay ? colors.onAccent : colors.inkMuted, fontSize: fontSize.footnote }}>
                   {day}일차
                 </AppText>
               </PressableScale>
             ))}
             <PressableScale
               onPress={handleAddDay}
-              style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.border }}
+              style={{ paddingVertical: space.xs, paddingHorizontal: space.md, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border }}
             >
-              <AppText style={{ fontSize: 13, color: colors.inkMuted }}>+ 날짜 추가</AppText>
+              <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>+ 날짜 추가</AppText>
             </PressableScale>
           </View>
 
@@ -434,21 +434,21 @@ export function VideoGroupScreen({ route, navigation }: Props) {
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 10,
-                padding: 12,
-                borderRadius: 12,
+                gap: space.sm,
+                padding: space.sm,
+                borderRadius: radius.md,
                 borderWidth: 1,
                 borderColor: colors.border,
               }}
             >
               <Feather name="calendar" size={16} color={colors.accent} />
               <View style={{ flex: 1 }}>
-                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>이 영상으로 만든 여행</AppText>
+                <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>이 영상으로 만든 여행</AppText>
                 <AppText weight="medium" numberOfLines={1}>
                   {existingTrip.title}
                 </AppText>
                 {existingTrip.startDate && (
-                  <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                  <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
                     {formatTripDates(existingTrip.startDate, existingTrip.endDate)}
                   </AppText>
                 )}
@@ -461,14 +461,14 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                 setTripTitle(title);
                 setShowTripForm(true);
               }}
-              style={{ height: 44, borderRadius: 12, borderWidth: 1, borderColor: colors.accent, justifyContent: "center", alignItems: "center" }}
+              style={{ height: 44, borderRadius: radius.md, borderWidth: 1, borderColor: colors.accent, justifyContent: "center", alignItems: "center" }}
             >
               <AppText weight="medium" style={{ color: colors.accent }}>
                 여행으로 만들기
               </AppText>
             </PressableScale>
           ) : (
-            <View style={{ gap: 8, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 12 }}>
+            <View style={{ gap: space.xs, padding: space.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md }}>
               <TextInput
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
                 value={tripTitle}
@@ -479,13 +479,13 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                   height: 40,
                   borderWidth: 1,
                   borderColor: colors.border,
-                  borderRadius: 8,
-                  paddingHorizontal: 10,
+                  borderRadius: radius.sm,
+                  paddingHorizontal: space.sm,
                   fontFamily: "NotoSansKR_400Regular",
                 }}
               />
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <AppText style={{ fontSize: 13, color: colors.inkMuted }}>출발일</AppText>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+                <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>출발일</AppText>
                 <PressableScale
                   onPress={() => setShowTripDatePicker((v) => !v)}
                   style={{
@@ -493,8 +493,8 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                     height: 40,
                     borderWidth: 1,
                     borderColor: colors.border,
-                    borderRadius: 8,
-                    paddingHorizontal: 10,
+                    borderRadius: radius.sm,
+                    paddingHorizontal: space.sm,
                     justifyContent: "center",
                   }}
                 >
@@ -502,7 +502,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                 </PressableScale>
               </View>
               {showTripDatePicker && (
-                <View style={{ gap: 4 }}>
+                <View style={{ gap: space.xxs }}>
                   <DateTimePicker
                     value={tripStartDate}
                     mode="date"
@@ -519,14 +519,14 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                   />
                   {Platform.OS === "ios" && (
                     <PressableScale onPress={() => setShowTripDatePicker(false)} style={{ alignSelf: "flex-end" }}>
-                      <AppText weight="medium" style={{ fontSize: 13, color: colors.accent }}>
+                      <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
                         확인
                       </AppText>
                     </PressableScale>
                   )}
                 </View>
               )}
-              <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
                 {formatTripDates(toDateString(tripStartDate), toDateString(tripEndDate))}
               </AppText>
               <PressableScale
@@ -534,7 +534,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                 disabled={confirmingTrip}
                 style={{
                   height: 40,
-                  borderRadius: 8,
+                  borderRadius: radius.sm,
                   backgroundColor: colors.accent,
                   justifyContent: "center",
                   alignItems: "center",
@@ -551,7 +551,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
 
           {currentActiveDay !== null && emptyDayNumbers.includes(currentActiveDay) && activePlaces.length === 0 && (
             <PressableScale onPress={() => handleDeleteDay(currentActiveDay)} hitSlop={10}>
-              <AppText style={{ fontSize: 12, color: colors.inkMuted }}>이 빈 날짜 삭제</AppText>
+              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>이 빈 날짜 삭제</AppText>
             </PressableScale>
           )}
 
@@ -560,7 +560,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             disabled={actionPending || activePlaces.length < 2}
             style={{ opacity: actionPending || activePlaces.length < 2 ? 0.4 : 1 }}
           >
-            <AppText style={{ fontSize: 13, color: colors.accent }}>동선 최적화</AppText>
+            <AppText style={{ fontSize: fontSize.footnote, color: colors.accent }}>동선 최적화</AppText>
           </PressableScale>
 
           {itineraryError && <ErrorText>{itineraryError}</ErrorText>}
@@ -573,15 +573,15 @@ export function VideoGroupScreen({ route, navigation }: Props) {
         </View>
       }
       ListEmptyComponent={
-        <AppText style={{ textAlign: "center", color: colors.inkMuted, padding: 16 }}>
+        <AppText style={{ textAlign: "center", color: colors.inkMuted, padding: space.md }}>
           이 날짜엔 아직 장소가 없어요.
         </AppText>
       }
       ListFooterComponent={
-        <View style={{ gap: 12, marginTop: 12 }}>
+        <View style={{ gap: space.sm, marginTop: space.sm }}>
           {unassignedPlaces.length > 0 && (
-            <View style={{ gap: 12 }}>
-              <AppText weight="medium" style={{ fontSize: 13, color: colors.inkMuted }}>
+            <View style={{ gap: space.sm }}>
+              <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
                 아직 날짜가 없는 장소
               </AppText>
               <View>
