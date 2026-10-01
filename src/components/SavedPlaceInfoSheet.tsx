@@ -7,7 +7,7 @@ import { SheetCloseButton } from "@/components/SheetCloseButton";
 import type { Place } from "@/lib/api/places";
 import { categoryLabel } from "@/lib/placeCategory";
 import { kakaoMapUrl, openExternal, phoneUrl } from "@/lib/placeLinks";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 
 // 영상에서 뽑은 장소(SavedPlace)의 정보 시트. 예전엔 리뷰 요약 시트(PlaceReviewSheet)에 SavedPlace id를
 // 넘겼는데, 그 시트는 장소 카탈로그(Place) id로 조회해서 번호가 같은 전혀 다른 장소가 떴다(실제 탭으로 확인).
@@ -25,39 +25,39 @@ export function SavedPlaceInfoSheet({ place, onClose }: { place: Place | null; o
 
   return (
     <BottomSheet index={0} snapPoints={["45%"]} enableDynamicSizing={false} enablePanDownToClose onClose={onClose}>
-      <BottomSheetView style={{ padding: 20, gap: 14 }}>
-        <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
-          <View style={{ flex: 1, gap: 4 }}>
-            <AppText weight="medium" style={{ fontSize: 16 }}>
+      <BottomSheetView style={{ padding: space.lg, gap: space.md }}>
+        <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.sm }}>
+          <View style={{ flex: 1, gap: space.xxs }}>
+            <AppText weight="medium" style={{ fontSize: fontSize.callout }}>
               {place.placeName}
             </AppText>
-            {category && <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{category}</AppText>}
-            {address && <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{address}</AppText>}
+            {category && <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{category}</AppText>}
+            {address && <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{address}</AppText>}
             {!hasLocation && (
-              <AppText style={{ fontSize: 12, color: colors.accent }}>위치 확인 안됨 · 지도에 안 뜰 수 있어요</AppText>
+              <AppText style={{ fontSize: fontSize.caption1, color: colors.accent }}>위치 확인 안됨 · 지도에 안 뜰 수 있어요</AppText>
             )}
           </View>
           <SheetCloseButton onPress={onClose} />
         </View>
 
         {(mapUrl || telUrl) && (
-          <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={{ flexDirection: "row", gap: space.xs }}>
             {mapUrl && (
               <PressableScale
                 onPress={() => openExternal(mapUrl)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 6,
-                  paddingVertical: 10,
-                  paddingHorizontal: 14,
-                  borderRadius: 10,
+                  gap: space.xs,
+                  paddingVertical: space.sm,
+                  paddingHorizontal: space.md,
+                  borderRadius: radius.md,
                   borderWidth: 1,
                   borderColor: colors.border,
                 }}
               >
                 <Feather name="map" size={14} color={colors.ink} />
-                <AppText style={{ fontSize: 13 }}>카카오맵에서 보기</AppText>
+                <AppText style={{ fontSize: fontSize.footnote }}>카카오맵에서 보기</AppText>
               </PressableScale>
             )}
             {telUrl && (
@@ -66,22 +66,22 @@ export function SavedPlaceInfoSheet({ place, onClose }: { place: Place | null; o
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 6,
-                  paddingVertical: 10,
-                  paddingHorizontal: 14,
-                  borderRadius: 10,
+                  gap: space.xs,
+                  paddingVertical: space.sm,
+                  paddingHorizontal: space.md,
+                  borderRadius: radius.md,
                   borderWidth: 1,
                   borderColor: colors.border,
                 }}
               >
                 <Feather name="phone" size={14} color={colors.ink} />
-                <AppText style={{ fontSize: 13 }}>전화 걸기</AppText>
+                <AppText style={{ fontSize: fontSize.footnote }}>전화 걸기</AppText>
               </PressableScale>
             )}
           </View>
         )}
 
-        <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+        <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
           영상에서 찾은 장소라 리뷰 요약은 아직 볼 수 없어요.
         </AppText>
       </BottomSheetView>

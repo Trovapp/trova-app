@@ -14,7 +14,7 @@ import { getPlaceDetails } from "@/lib/api/recommendations";
 import { getTripPlaceDetails } from "@/lib/api/trips";
 import { categoryLabel } from "@/lib/placeCategory";
 import { formatCount } from "@/lib/number";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 
 const SHEET_SNAP_POINTS = ["32%", "60%"];
 
@@ -31,7 +31,7 @@ const SLOW_NOTICE_DELAY_MS = 4000;
 function HighlightedText({ text }: { text: string }) {
   const parts = text.split(/\*\*(.+?)\*\*/g);
   return (
-    <AppText style={{ fontSize: 13, lineHeight: 19 }}>
+    <AppText style={{ fontSize: fontSize.footnote, lineHeight: 19 }}>
       {parts.map((part, i) =>
         i % 2 === 1 ? (
           <AppText key={i} weight="medium" style={{ backgroundColor: colors.accentBg }}>
@@ -92,13 +92,13 @@ export function PlaceReviewContent({
 
   if (detailQuery.isLoading || !detail) {
     return (
-      <View style={{ gap: 8, paddingVertical: 12 }}>
-        <AppText style={{ color: colors.inkMuted, fontSize: 13 }}>
+      <View style={{ gap: space.xs, paddingVertical: space.sm }}>
+        <AppText style={{ color: colors.inkMuted, fontSize: fontSize.footnote }}>
           리뷰 요약을 만들고 있어요... {loadingPercent}%
         </AppText>
         <ProgressBar percent={loadingPercent} />
         {showSlowNotice && (
-          <AppText style={{ color: colors.inkMuted, fontSize: 12 }}>
+          <AppText style={{ color: colors.inkMuted, fontSize: fontSize.caption1 }}>
             무료 API를 쓰고 있어서 가끔 평소보다 오래 걸릴 수 있어요.
           </AppText>
         )}
@@ -108,27 +108,27 @@ export function PlaceReviewContent({
 
   return (
     <>
-      <View style={{ gap: 4 }}>
-        <AppText weight="medium" style={{ fontSize: 16 }}>
+      <View style={{ gap: space.xxs }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.callout }}>
           {detail.name}
         </AppText>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
           {categoryLabel(detail.category) && (
-            <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{categoryLabel(detail.category)}</AppText>
+            <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{categoryLabel(detail.category)}</AppText>
           )}
           {categoryLabel(detail.category) && detail.rating !== null && (
-            <AppText style={{ fontSize: 12, color: colors.inkMuted }}>·</AppText>
+            <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>·</AppText>
           )}
           {detail.rating !== null && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
               <RatingBadge rating={detail.rating} />
               {detail.userRatingCount !== null && (
-                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>(리뷰 {formatCount(detail.userRatingCount)}개)</AppText>
+                <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>(리뷰 {formatCount(detail.userRatingCount)}개)</AppText>
               )}
             </View>
           )}
         </View>
-        {detail.address && <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{detail.address}</AppText>}
+        {detail.address && <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{detail.address}</AppText>}
       </View>
       {/* 메인 지도가 화면 밖으로 스크롤된 상태에서 카드를 열어도 위치를 볼 수 있게,
           장소 상세 카드/시트 안에 그 장소 하나만 보여주는 작은 지도를 함께 넣는다
@@ -140,40 +140,40 @@ export function PlaceReviewContent({
           showPath={false}
         />
       )}
-      <View style={{ borderTopWidth: 1, borderTopColor: colors.border, marginVertical: 12 }} />
-      <View style={{ gap: 12 }}>
-        <AppText weight="medium" style={{ fontSize: 13, color: colors.inkMuted }}>
+      <View style={{ borderTopWidth: 1, borderTopColor: colors.border, marginVertical: space.sm }} />
+      <View style={{ gap: space.sm }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
           리뷰 요약
         </AppText>
         <HighlightedText text={detail.highlights} />
 
         {(detail.pros.length > 0 || detail.cons.length > 0) && (
-          <View style={{ flexDirection: "row", gap: 16 }}>
+          <View style={{ flexDirection: "row", gap: space.md }}>
             {detail.pros.length > 0 && (
-              <View style={{ flex: 1, gap: 2 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <View style={{ flex: 1, gap: space.xxxs }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
                   <Emoji symbol="👍" size={12} />
-                  <AppText weight="medium" style={{ fontSize: 11, color: colors.inkMuted }}>
+                  <AppText weight="medium" style={{ fontSize: fontSize.caption2, color: colors.inkMuted }}>
                     좋은 점
                   </AppText>
                 </View>
                 {detail.pros.map((p, i) => (
-                  <AppText key={i} style={{ fontSize: 12 }}>
+                  <AppText key={i} style={{ fontSize: fontSize.caption1 }}>
                     {p}
                   </AppText>
                 ))}
               </View>
             )}
             {detail.cons.length > 0 && (
-              <View style={{ flex: 1, gap: 2 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <View style={{ flex: 1, gap: space.xxxs }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
                   <Emoji symbol="👎" size={12} />
-                  <AppText weight="medium" style={{ fontSize: 11, color: colors.inkMuted }}>
+                  <AppText weight="medium" style={{ fontSize: fontSize.caption2, color: colors.inkMuted }}>
                     아쉬운 점
                   </AppText>
                 </View>
                 {detail.cons.map((c, i) => (
-                  <AppText key={i} style={{ fontSize: 12 }}>
+                  <AppText key={i} style={{ fontSize: fontSize.caption1 }}>
                     {c}
                   </AppText>
                 ))}
@@ -183,32 +183,32 @@ export function PlaceReviewContent({
         )}
 
         {(detail.hours || detail.fee) && (
-          <View style={{ gap: 4 }}>
+          <View style={{ gap: space.xxs }}>
             {detail.hours && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
                 <Feather name="clock" size={12} color={colors.ink} />
-                <AppText style={{ fontSize: 12 }}>{detail.hours}</AppText>
+                <AppText style={{ fontSize: fontSize.caption1 }}>{detail.hours}</AppText>
               </View>
             )}
             {detail.fee && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
                 <Feather name="dollar-sign" size={12} color={colors.ink} />
-                <AppText style={{ fontSize: 12 }}>{detail.fee}</AppText>
+                <AppText style={{ fontSize: fontSize.caption1 }}>{detail.fee}</AppText>
               </View>
             )}
           </View>
         )}
 
         {detail.tips.length > 0 && (
-          <View style={{ padding: 10, borderRadius: 8, backgroundColor: colors.accentBg, gap: 2 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <View style={{ padding: space.sm, borderRadius: radius.sm, backgroundColor: colors.accentBg, gap: space.xxxs }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
               <Emoji symbol="💡" size={12} />
-              <AppText weight="medium" style={{ fontSize: 11, color: colors.accent }}>
+              <AppText weight="medium" style={{ fontSize: fontSize.caption2, color: colors.accent }}>
                 꿀팁
               </AppText>
             </View>
             {detail.tips.map((tip, i) => (
-              <AppText key={i} style={{ fontSize: 12 }}>
+              <AppText key={i} style={{ fontSize: fontSize.caption1 }}>
                 {tip}
               </AppText>
             ))}
@@ -216,20 +216,20 @@ export function PlaceReviewContent({
         )}
 
         {detail.checklist.length > 0 && (
-          <View style={{ gap: 4 }}>
+          <View style={{ gap: space.xxs }}>
             {detail.checklist.map((item, i) => (
-              <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
                 <Feather name="square" size={12} color={colors.inkMuted} />
-                <AppText style={{ fontSize: 12 }}>{item}</AppText>
+                <AppText style={{ fontSize: fontSize.caption1 }}>{item}</AppText>
               </View>
             ))}
           </View>
         )}
 
         {detail.reviewSnippets.length > 0 && (
-          <View style={{ gap: 4 }}>
+          <View style={{ gap: space.xxs }}>
             <PressableScale onPress={() => setShowRawReviews((current) => !current)}>
-              <AppText style={{ fontSize: 11, color: colors.inkMuted }}>
+              <AppText style={{ fontSize: fontSize.caption2, color: colors.inkMuted }}>
                 {showRawReviews ? "실제 리뷰 원문 접기 ▲" : "실제 리뷰 원문 보기 ▼"}
               </AppText>
             </PressableScale>
@@ -237,7 +237,7 @@ export function PlaceReviewContent({
               detail.reviewSnippets.slice(0, 3).map((snippet, i) => (
                 <AppText
                   key={i}
-                  style={{ fontSize: 12, color: colors.inkMuted, borderLeftWidth: 2, borderLeftColor: colors.border, paddingLeft: 8 }}
+                  style={{ fontSize: fontSize.caption1, color: colors.inkMuted, borderLeftWidth: 2, borderLeftColor: colors.border, paddingLeft: space.xs }}
                 >
                   &ldquo;{snippet}&rdquo;
                 </AppText>
@@ -290,7 +290,7 @@ export function PlaceReviewSheet({
         onClose();
       }}
     >
-      <BottomSheetScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
+      <BottomSheetScrollView contentContainerStyle={{ padding: space.lg, gap: space.sm }}>
         <SheetCloseButton onPress={() => sheetRef.current?.close()} style={{ alignSelf: "flex-end" }} />
         <PlaceReviewContent placeId={placeId} tripPlaceId={tripPlaceId} />
       </BottomSheetScrollView>

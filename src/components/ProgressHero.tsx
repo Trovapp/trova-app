@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 
 type Card = { icon: keyof typeof Feather.glyphMap; color: string };
 
@@ -30,7 +30,7 @@ function ProgressCard({ icon, color }: Card) {
         width: CARD_SIZE,
         height: CARD_SIZE,
         marginRight: CARD_GAP,
-        borderRadius: 18,
+        borderRadius: radius.full,
         backgroundColor: `${color}26`,
         justifyContent: "center",
         alignItems: "center",
@@ -107,8 +107,8 @@ export function ProgressHero({
   }, [showCards, setWidth, cards.length, translateX]);
 
   return (
-    <View style={{ width: "100%", alignItems: "center", gap: 20 }}>
-      <AppText weight="medium" style={{ fontSize: 48, color: colors.accent }}>
+    <View style={{ width: "100%", alignItems: "center", gap: space.lg }}>
+      <AppText weight="medium" style={{ fontSize: fontSize.hero, color: colors.accent }}>
         {displayPercent}%
       </AppText>
       {showCards && (

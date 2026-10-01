@@ -13,7 +13,7 @@ import { SheetCloseButton } from "@/components/SheetCloseButton";
 import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
 import { categoryLabel } from "@/lib/placeCategory";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 import { invalidateTripPlaceChangeQueries, replacePlace, type AlternativeCandidate } from "@/lib/api/trips";
 import { endConversationSession, sendConversationMessage } from "@/lib/api/conversations";
 
@@ -77,21 +77,21 @@ function CompactCandidateCard({
       onPress={onPress}
       style={{
         width: 140,
-        padding: 10,
-        borderRadius: 10,
+        padding: space.sm,
+        borderRadius: radius.md,
         borderWidth: active ? 2 : 1,
         borderColor: active ? colors.accent : colors.border,
         backgroundColor: colors.bg,
-        gap: 2,
+        gap: space.xxxs,
       }}
     >
-      <AppText weight="medium" style={{ fontSize: 12 }} numberOfLines={1}>
+      <AppText weight="medium" style={{ fontSize: fontSize.caption1 }} numberOfLines={1}>
         {candidate.name}
       </AppText>
-      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: space.xxs }}>
         <MaterialCommunityIcons name={categoryIcon(candidate.category)} size={11} color={colors.inkMuted} />
         {categoryLabel(candidate.category) && (
-          <AppText style={{ fontSize: 11, color: colors.inkMuted }} numberOfLines={1}>
+          <AppText style={{ fontSize: fontSize.caption2, color: colors.inkMuted }} numberOfLines={1}>
             {categoryLabel(candidate.category)}
           </AppText>
         )}
@@ -115,11 +115,11 @@ function ExpandedCandidateCard({
   onOpenReview: () => void;
 }) {
   return (
-    <View style={{ padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, gap: 8 }}>
+    <View style={{ padding: space.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, gap: space.xs }}>
       <AppText weight="medium">{candidate.name}</AppText>
-      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: space.xxs }}>
         <MaterialCommunityIcons name={categoryIcon(candidate.category)} size={12} color={colors.inkMuted} />
-        <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+        <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
           {[categoryLabel(candidate.category), candidate.address].filter(Boolean).join(" · ")}
         </AppText>
         {candidate.rating !== null && <RatingBadge rating={candidate.rating} />}
@@ -130,8 +130,8 @@ function ExpandedCandidateCard({
         height={110}
         showPath={false}
       />
-      <PressableScale onPress={onOpenReview} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-        <AppText style={{ fontSize: 12, color: colors.accent }}>리뷰 보기</AppText>
+      <PressableScale onPress={onOpenReview} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
+        <AppText style={{ fontSize: fontSize.caption1, color: colors.accent }}>리뷰 보기</AppText>
         <Feather name="chevron-right" size={12} color={colors.accent} />
       </PressableScale>
       {error && <ErrorText>{error}</ErrorText>}
@@ -140,7 +140,7 @@ function ExpandedCandidateCard({
         disabled={confirming}
         style={{
           height: 42,
-          borderRadius: 10,
+          borderRadius: radius.md,
           backgroundColor: colors.accent,
           justifyContent: "center",
           alignItems: "center",
@@ -174,8 +174,8 @@ function CandidateRow({
 }) {
   const expanded = candidates.find((c) => c.placeId === expandedPlaceId) ?? null;
   return (
-    <View style={{ gap: 10 }}>
-      <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+    <View style={{ gap: space.sm }}>
+      <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
         {candidates.map((candidate) => (
           <CompactCandidateCard
             key={candidate.placeId}
@@ -219,19 +219,19 @@ function MessageBubble({ message, avatarState }: { message: ChatMessage; avatarS
         flexDirection: "row",
         justifyContent: isUser ? "flex-end" : "flex-start",
         alignItems: "flex-end",
-        gap: 6,
+        gap: space.xs,
       }}
     >
       {!isUser && <AssistantAvatar state={avatarState} />}
       <View
         style={{
           maxWidth: "80%",
-          padding: 10,
-          borderRadius: 12,
+          padding: space.sm,
+          borderRadius: radius.md,
           backgroundColor: isUser ? colors.accent : colors.bgMuted,
         }}
       >
-        <AppText style={{ color: isUser ? colors.onAccent : colors.ink, fontSize: 14 }}>{message.text}</AppText>
+        <AppText style={{ color: isUser ? colors.onAccent : colors.ink, fontSize: fontSize.subheadline }}>{message.text}</AppText>
       </View>
     </View>
   );
@@ -364,25 +364,25 @@ export function ConversationSheet({
       enablePanDownToClose
       onClose={handleSheetClose}
     >
-      <BottomSheetScrollView keyboardShouldPersistTaps="handled" ref={scrollRef} contentContainerStyle={{ padding: 20, gap: 14 }}>
+      <BottomSheetScrollView keyboardShouldPersistTaps="handled" ref={scrollRef} contentContainerStyle={{ padding: space.lg, gap: space.md }}>
         {reviewCandidateId !== null ? (
           <>
             <PressableScale
               onPress={() => setReviewCandidateId(null)}
               hitSlop={8}
-              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+              style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}
             >
               <Feather name="chevron-left" size={18} color={colors.accent} />
-              <AppText style={{ fontSize: 14, color: colors.accent }}>대화로</AppText>
+              <AppText style={{ fontSize: fontSize.subheadline, color: colors.accent }}>대화로</AppText>
             </PressableScale>
             <PlaceReviewContent placeId={reviewCandidateId} showMiniMap={false} />
           </>
         ) : (
           <>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
               {/* 대화 전엔 제목 옆 비서가 떠다니며 기다리고, 대화가 시작되면 움직임은 대화 속 비서로 넘어간다. */}
               <AssistantAvatar state={messages.length === 0 && !sending ? "waiting" : undefined} />
-              <AppText weight="medium" style={{ fontSize: 16, flex: 1 }}>
+              <AppText weight="medium" style={{ fontSize: fontSize.callout, flex: 1 }}>
                 비서에게 물어보기
               </AppText>
               {/* 시트를 닫으면 onClose(handleSheetClose)가 돌아 대화 세션도 정리된다. */}
@@ -390,21 +390,21 @@ export function ConversationSheet({
             </View>
 
             {messages.length === 0 && (
-              <View style={{ gap: 8 }}>
-                <AppText style={{ fontSize: 13, color: colors.inkMuted }}>이렇게 물어보세요</AppText>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              <View style={{ gap: space.xs }}>
+                <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>이렇게 물어보세요</AppText>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
                   {EXAMPLE_PROMPTS.map((prompt) => (
                     <PressableScale
                       key={prompt}
                       onPress={() => handleSend(prompt)}
                       style={{
-                        paddingVertical: 7,
-                        paddingHorizontal: 12,
-                        borderRadius: 16,
+                        paddingVertical: space.xs,
+                        paddingHorizontal: space.sm,
+                        borderRadius: radius.lg,
                         backgroundColor: colors.bgMuted,
                       }}
                     >
-                      <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{prompt}</AppText>
+                      <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{prompt}</AppText>
                     </PressableScale>
                   ))}
                 </View>
@@ -412,7 +412,7 @@ export function ConversationSheet({
             )}
 
             {messages.map((message, index) => (
-              <View key={index} style={{ gap: 10 }}>
+              <View key={index} style={{ gap: space.sm }}>
                 <MessageBubble
                   message={message}
                   avatarState={
@@ -434,10 +434,10 @@ export function ConversationSheet({
             ))}
 
             {sending && (
-              <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 6 }}>
+              <View style={{ flexDirection: "row", alignItems: "flex-end", gap: space.xs }}>
                 <AssistantAvatar state="thinking" />
-                <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: colors.bgMuted }}>
-                  <AppText style={{ fontSize: 13, color: colors.inkMuted }}>생각하고 있어요</AppText>
+                <View style={{ paddingVertical: space.sm, paddingHorizontal: space.md, borderRadius: radius.md, backgroundColor: colors.bgMuted }}>
+                  <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>생각하고 있어요</AppText>
                 </View>
               </View>
             )}
@@ -445,21 +445,21 @@ export function ConversationSheet({
             {sendError && <ErrorText>{sendError}</ErrorText>}
 
             {turnLimitReached ? (
-              <View style={{ alignItems: "center", gap: 8, padding: 8 }}>
-                <AppText style={{ fontSize: 12, color: colors.inkMuted, textAlign: "center" }}>
+              <View style={{ alignItems: "center", gap: space.xs, padding: space.xs }}>
+                <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted, textAlign: "center" }}>
                   이번 대화의 최대 턴 수에 도달했어요.
                 </AppText>
                 <PressableScale
                   onPress={resetSession}
-                  style={{ paddingVertical: 9, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.accent }}
+                  style={{ paddingVertical: space.xs, paddingHorizontal: space.lg, borderRadius: radius.md, backgroundColor: colors.accent }}
                 >
-                  <AppText weight="medium" style={{ color: colors.onAccent, fontSize: 13 }}>
+                  <AppText weight="medium" style={{ color: colors.onAccent, fontSize: fontSize.footnote }}>
                     새로 시작하기
                   </AppText>
                 </PressableScale>
               </View>
             ) : (
-              <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 8 }}>
+              <View style={{ flexDirection: "row", alignItems: "flex-end", gap: space.xs }}>
                 <BottomSheetTextInput
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
                   value={input}
@@ -472,12 +472,12 @@ export function ConversationSheet({
                   style={{
                     flex: 1,
                     maxHeight: 90,
-                    padding: 10,
-                    borderRadius: 10,
+                    padding: space.sm,
+                    borderRadius: radius.md,
                     borderWidth: 1,
                     borderColor: colors.border,
                     backgroundColor: colors.bg,
-                    fontSize: 14,
+                    fontSize: fontSize.subheadline,
                     color: colors.ink,
                   }}
                 />
@@ -488,7 +488,7 @@ export function ConversationSheet({
                   style={{
                     width: 42,
                     height: 42,
-                    borderRadius: 10,
+                    borderRadius: radius.md,
                     backgroundColor: colors.accent,
                     justifyContent: "center",
                     alignItems: "center",

@@ -4,7 +4,7 @@ import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { kakaoMapUrl, openExternal, phoneUrl } from "@/lib/placeLinks";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 
 type PlaceRowItem = {
   id: number;
@@ -63,12 +63,12 @@ export function PlaceRow({
   const telUrl = showLinks ? phoneUrl(place) : null;
   const showDayPicker = editable && !!onOpenDayPicker;
   return (
-    <View style={{ gap: 4 }}>
+    <View style={{ gap: space.xxs }}>
       <View
         style={{
           flexDirection: "row",
-          gap: 12,
-          paddingVertical: 14,
+          gap: space.sm,
+          paddingVertical: space.md,
           borderTopWidth: index === 0 ? 0 : 1,
           borderTopColor: colors.borderSubtle,
         }}
@@ -77,58 +77,58 @@ export function PlaceRow({
           style={{
             width: 26,
             height: 26,
-            borderRadius: 13,
+            borderRadius: radius.full,
             backgroundColor: color,
             justifyContent: "center",
             alignItems: "center",
           }}
         >
-          <AppText weight="medium" style={{ color: colors.onAccent, fontSize: 12 }}>
+          <AppText weight="medium" style={{ color: colors.onAccent, fontSize: fontSize.caption1 }}>
             {index + 1}
           </AppText>
         </View>
-        <View style={{ flex: 1, gap: 6 }}>
+        <View style={{ flex: 1, gap: space.xs }}>
           <PressableScale onPress={onPressInfo} disabled={!onPressInfo}>
             <AppText weight="medium" numberOfLines={1}>
               {place.placeName}
             </AppText>
             {place.address && (
-              <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
                 {place.address}
               </AppText>
             )}
             {place.latitude === null && place.longitude === null && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
                 <Feather name="alert-triangle" size={11} color={colors.accent} />
-                <AppText style={{ fontSize: 11, color: colors.accent }}>위치 확인 안됨 · 지도에 안 뜰 수 있어요</AppText>
+                <AppText style={{ fontSize: fontSize.caption2, color: colors.accent }}>위치 확인 안됨 · 지도에 안 뜰 수 있어요</AppText>
               </View>
             )}
           </PressableScale>
           {(showDayPicker || mapUrl || telUrl) && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.md }}>
               {showDayPicker && (
                 <PressableScale onPress={onOpenDayPicker} disabled={disabled} hitSlop={{ top: 8, bottom: 8 }}>
-                  <AppText style={{ fontSize: 13, color: colors.inkMuted }}>다른 날로 이동</AppText>
+                  <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>다른 날로 이동</AppText>
                 </PressableScale>
               )}
               {mapUrl && (
                 <PressableScale
                   onPress={() => openExternal(mapUrl)}
                   hitSlop={{ top: 8, bottom: 8 }}
-                  style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
+                  style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}
                 >
                   <Feather name="map" size={12} color={colors.inkMuted} />
-                  <AppText style={{ fontSize: 13, color: colors.inkMuted }}>카카오맵</AppText>
+                  <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>카카오맵</AppText>
                 </PressableScale>
               )}
               {telUrl && (
                 <PressableScale
                   onPress={() => openExternal(telUrl)}
                   hitSlop={{ top: 8, bottom: 8 }}
-                  style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
+                  style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}
                 >
                   <Feather name="phone" size={12} color={colors.inkMuted} />
-                  <AppText style={{ fontSize: 13, color: colors.inkMuted }}>전화</AppText>
+                  <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>전화</AppText>
                 </PressableScale>
               )}
             </View>
@@ -140,7 +140,7 @@ export function PlaceRow({
             onPress={onOpenMenu}
             disabled={disabled}
             hitSlop={10}
-            style={{ justifyContent: "center", alignItems: "center", paddingHorizontal: 4 }}
+            style={{ justifyContent: "center", alignItems: "center", paddingHorizontal: space.xxs }}
           >
             <Feather name="more-vertical" size={18} color={colors.inkMuted} />
           </PressableScale>
@@ -150,14 +150,14 @@ export function PlaceRow({
             onPressIn={dragHandle.onPressIn}
             disabled={disabled}
             hitSlop={12}
-            style={{ justifyContent: "center", paddingHorizontal: 4, opacity: disabled ? 0.3 : 1 }}
+            style={{ justifyContent: "center", paddingHorizontal: space.xxs, opacity: disabled ? 0.3 : 1 }}
           >
-            <AppText style={{ fontSize: 18, color: colors.inkMuted }}>⠿</AppText>
+            <AppText style={{ fontSize: fontSize.body, color: colors.inkMuted }}>⠿</AppText>
           </PressableScale>
         )}
       </View>
       {!isLast && distanceKm !== null && (
-        <AppText style={{ fontSize: 11, color: colors.inkMuted, marginLeft: 38 }}>
+        <AppText style={{ fontSize: fontSize.caption2, color: colors.inkMuted, marginLeft: space.xxxl }}>
           다음 장소까지 {distanceKm.toFixed(1)}km
         </AppText>
       )}

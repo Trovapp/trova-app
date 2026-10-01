@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useEffect } from "react";
-import { colors } from "@/lib/theme";
+import { colors, radius, space } from "@/lib/theme";
 
 // 화면 위에서 밝기가 오르내리는 모양이라 "이동/변형" 계열 완화 곡선을 쓴다
 // (expo-animation 스킬: 화면 위 움직임엔 ease-in-out). withTiming의 easing은
@@ -32,14 +32,14 @@ export function Skeleton({ style }: { style?: ViewStyle }) {
 
   return (
     <Animated.View
-      style={[{ backgroundColor: colors.borderSubtle, borderRadius: 8 }, style, animatedStyle]}
+      style={[{ backgroundColor: colors.borderSubtle, borderRadius: radius.sm }, style, animatedStyle]}
     />
   );
 }
 
 export function SkeletonRow() {
   return (
-    <View style={{ paddingVertical: 14, gap: 6 }}>
+    <View style={{ paddingVertical: space.md, gap: space.xs }}>
       <Skeleton style={{ width: "55%", height: 15 }} />
       <Skeleton style={{ width: "35%", height: 12 }} />
     </View>

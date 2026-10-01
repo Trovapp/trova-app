@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { AppText } from "@/components/AppText";
 import { buildKakaoMapHtml } from "@/lib/kakaoMapHtml";
-import { colors } from "@/lib/theme";
+import { colors, radius } from "@/lib/theme";
 
 const KAKAO_MAP_JS_KEY = process.env.EXPO_PUBLIC_KAKAO_MAP_JS_KEY ?? "";
 
@@ -74,7 +74,7 @@ export function InlineMap({
   // 숨기면 빈 영역만 남으므로(예: 빈 찜 폴더) 지도를 그대로 두고 핀만 비운다.
   if (pins.length === 0 && !fill) return null;
 
-  const containerStyle = fill ? { flex: 1 as const } : { height, borderRadius: 12, overflow: "hidden" as const };
+  const containerStyle = fill ? { flex: 1 as const } : { height, borderRadius: radius.md, overflow: "hidden" as const };
 
   if (!KAKAO_MAP_JS_KEY) {
     return (

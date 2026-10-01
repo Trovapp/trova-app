@@ -15,7 +15,7 @@ import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { DISTINCT_COLORS } from "@/lib/colorPresets";
 import { createFolder, FOLDER_NAME_MAX_LENGTH, listFolders } from "@/lib/api/bookmarks";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 
 export function FolderPickerModal({
   visible,
@@ -82,14 +82,14 @@ export function FolderPickerModal({
       backgroundStyle={{ backgroundColor: colors.bg }}
       handleIndicatorStyle={{ backgroundColor: colors.border }}
     >
-      <BottomSheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 12, paddingBottom: 32 }}>
-        <AppText weight="medium" style={{ fontSize: 16 }}>
+      <BottomSheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.lg, gap: space.sm, paddingBottom: space.xxl }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.callout }}>
           어느 폴더에 저장할까요?
         </AppText>
 
         <PressableScale
           onPress={() => onPick(null)}
-          style={{ padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}
+          style={{ padding: space.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border }}
         >
           <AppText>미분류로 저장</AppText>
         </PressableScale>
@@ -111,23 +111,23 @@ export function FolderPickerModal({
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 10,
-                padding: 12,
-                borderRadius: 10,
+                gap: space.sm,
+                padding: space.sm,
+                borderRadius: radius.md,
                 borderWidth: 1,
                 borderColor: colors.border,
               }}
             >
-              <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: folder.color }} />
+              <View style={{ width: 12, height: 12, borderRadius: radius.full, backgroundColor: folder.color }} />
               <AppText style={{ flex: 1 }}>{folder.name}</AppText>
-              <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{folder.placeCount}개</AppText>
+              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{folder.placeCount}개</AppText>
             </PressableScale>
           ))}
 
         {error && <ErrorText>{error}</ErrorText>}
 
         {creating ? (
-          <View style={{ gap: 10, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}>
+          <View style={{ gap: space.sm, padding: space.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border }}>
             <BottomSheetTextInput
               maxFontSizeMultiplier={MAX_FONT_SCALE}
               autoFocus
@@ -138,13 +138,13 @@ export function FolderPickerModal({
               style={{
                 borderWidth: 1,
                 borderColor: colors.border,
-                borderRadius: 8,
-                paddingHorizontal: 10,
-                paddingVertical: 8,
-                fontSize: 14,
+                borderRadius: radius.sm,
+                paddingHorizontal: space.sm,
+                paddingVertical: space.xs,
+                fontSize: fontSize.subheadline,
               }}
             />
-            <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={{ flexDirection: "row", gap: space.xs }}>
               {DISTINCT_COLORS.map((color) => (
                 <PressableScale
                   key={color}
@@ -152,7 +152,7 @@ export function FolderPickerModal({
                   style={{
                     width: 28,
                     height: 28,
-                    borderRadius: 14,
+                    borderRadius: radius.md,
                     backgroundColor: color,
                     borderWidth: newColor === color ? 3 : 0,
                     borderColor: colors.ink,
@@ -165,7 +165,7 @@ export function FolderPickerModal({
               disabled={!newName.trim() || busy}
               style={{
                 height: 40,
-                borderRadius: 8,
+                borderRadius: radius.sm,
                 backgroundColor: colors.accent,
                 justifyContent: "center",
                 alignItems: "center",
@@ -180,7 +180,7 @@ export function FolderPickerModal({
         ) : (
           <PressableScale
             onPress={() => setCreating(true)}
-            style={{ padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, borderStyle: "dashed" }}
+            style={{ padding: space.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, borderStyle: "dashed" }}
           >
             <AppText style={{ color: colors.accent }}>+ 새 폴더 만들기</AppText>
           </PressableScale>

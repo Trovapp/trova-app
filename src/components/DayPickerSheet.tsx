@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView, type BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 
 type DayPickerSheetProps = {
   visible: boolean;
@@ -41,8 +41,8 @@ export function DayPickerSheet({ visible, dayNumbers, currentDay, onSelect, onCl
       backgroundStyle={{ backgroundColor: colors.bg }}
       handleIndicatorStyle={{ backgroundColor: colors.border }}
     >
-      <BottomSheetView style={{ padding: 16, paddingBottom: 32, gap: 4 }}>
-        <AppText weight="medium" style={{ fontSize: 16, marginBottom: 8 }}>
+      <BottomSheetView style={{ padding: space.md, paddingBottom: space.xxl, gap: space.xxs }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.callout, marginBottom: space.xs }}>
           어느 날로 옮길까요?
         </AppText>
         {dayNumbers.map((day) => (
@@ -54,9 +54,9 @@ export function DayPickerSheet({ visible, dayNumbers, currentDay, onSelect, onCl
             }}
             disabled={day === currentDay}
             style={{
-              paddingVertical: 12,
-              paddingHorizontal: 8,
-              borderRadius: 8,
+              paddingVertical: space.sm,
+              paddingHorizontal: space.xs,
+              borderRadius: radius.sm,
               backgroundColor: day === currentDay ? colors.bgMuted : "transparent",
             }}
           >

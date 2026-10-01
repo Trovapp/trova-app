@@ -5,7 +5,7 @@ import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { PressableScale } from "@/components/PressableScale";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 import { dismissNotification, listNotifications } from "@/lib/api/notifications";
 
 export function WeatherAlertBanner({
@@ -41,18 +41,18 @@ export function WeatherAlertBanner({
       style={{
         flexDirection: "row",
         alignItems: "center",
-        gap: 8,
-        padding: 12,
-        borderRadius: 12,
+        gap: space.xs,
+        padding: space.sm,
+        borderRadius: radius.md,
         backgroundColor: colors.accentBg,
       }}
     >
       <Feather name="cloud-rain" size={18} color={colors.accent} />
       <View style={{ flex: 1 }}>
-        <AppText weight="medium" style={{ fontSize: 13 }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.footnote }}>
           {target.title}
         </AppText>
-        <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={2}>
+        <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={2}>
           {target.body}
         </AppText>
         {dismissError && (

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { View, type StyleProp, type ViewStyle } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
-import { colors } from "@/lib/theme";
+import { colors, space } from "@/lib/theme";
 
 const FONT_SIZE = 13;
 const LINE_HEIGHT = 19;
@@ -13,7 +13,7 @@ const ICON_SIZE = 14;
 // 화면마다 12/13/기본으로 흩어져 있던 글자 크기를 하나로 맞춘다.
 export function ErrorText({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   return (
-    <View style={[{ flexDirection: "row", alignItems: "flex-start", gap: 6 }, style]}>
+    <View style={[{ flexDirection: "row", alignItems: "flex-start", gap: space.xs }, style]}>
       <Feather
         name="alert-circle"
         size={ICON_SIZE}

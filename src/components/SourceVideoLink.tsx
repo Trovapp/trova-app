@@ -3,7 +3,7 @@ import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import type { Place } from "@/lib/api/places";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, space } from "@/lib/theme";
 
 const PLATFORM_LABEL: Record<Place["sourcePlatform"], string> = {
   INSTAGRAM: "인스타그램",
@@ -18,10 +18,10 @@ export function SourceVideoLink({ url, platform }: { url: string; platform: Plac
     <PressableScale
       onPress={() => Linking.openURL(url).catch(() => {})}
       hitSlop={10}
-      style={{ flexDirection: "row", alignItems: "center", gap: 4, alignSelf: "flex-start" }}
+      style={{ flexDirection: "row", alignItems: "center", gap: space.xxs, alignSelf: "flex-start" }}
     >
       <Feather name="external-link" size={13} color={colors.inkMuted} />
-      <AppText style={{ fontSize: 13, color: colors.inkMuted }}>{PLATFORM_LABEL[platform]}에서 원본 보기</AppText>
+      <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>{PLATFORM_LABEL[platform]}에서 원본 보기</AppText>
     </PressableScale>
   );
 }

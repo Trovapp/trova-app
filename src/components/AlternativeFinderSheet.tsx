@@ -14,7 +14,7 @@ import { RatingBadge } from "@/components/RatingBadge";
 import { RecommendationReason } from "@/components/RecommendationReason";
 import { categoryLabel } from "@/lib/placeCategory";
 import { toUserMessage } from "@/lib/api/client";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 import {
   getAlternatives,
   invalidateTripPlaceChangeQueries,
@@ -79,24 +79,24 @@ function Chip({
     <PressableScale
       onPress={onPress}
       style={{
-        paddingVertical: 7,
-        paddingHorizontal: 13,
-        borderRadius: 16,
+        paddingVertical: space.xs,
+        paddingHorizontal: space.sm,
+        borderRadius: radius.lg,
         backgroundColor: active ? colors.accent : colors.bgMuted,
       }}
     >
-      <AppText style={{ fontSize: 12, color: active ? colors.onAccent : colors.inkMuted }}>{label}</AppText>
+      <AppText style={{ fontSize: fontSize.caption1, color: active ? colors.onAccent : colors.inkMuted }}>{label}</AppText>
     </PressableScale>
   );
 }
 
 function FilterSection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <View style={{ gap: 8 }}>
-      <AppText weight="medium" style={{ fontSize: 12, color: colors.inkMuted }}>
+    <View style={{ gap: space.xs }}>
+      <AppText weight="medium" style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
         {title}
       </AppText>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{children}</View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>{children}</View>
     </View>
   );
 }
@@ -239,23 +239,23 @@ export function AlternativeFinderSheet({
         onClose();
       }}
     >
-      <BottomSheetScrollView ref={scrollRef} contentContainerStyle={{ padding: 20, gap: 16 }}>
+      <BottomSheetScrollView ref={scrollRef} contentContainerStyle={{ padding: space.lg, gap: space.md }}>
         {reviewCandidateId !== null ? (
           <>
             <PressableScale
               onPress={() => setReviewCandidateId(null)}
               hitSlop={8}
-              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+              style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}
             >
               <Feather name="chevron-left" size={18} color={colors.accent} />
-              <AppText style={{ fontSize: 14, color: colors.accent }}>목록으로</AppText>
+              <AppText style={{ fontSize: fontSize.subheadline, color: colors.accent }}>목록으로</AppText>
             </PressableScale>
             <PlaceReviewContent placeId={reviewCandidateId} showMiniMap={false} />
           </>
         ) : (
           <>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <AppText weight="medium" style={{ fontSize: 16 }}>
+              <AppText weight="medium" style={{ fontSize: fontSize.callout }}>
                 대안 찾기
               </AppText>
               <SheetCloseButton onPress={onClose} />
@@ -267,12 +267,12 @@ export function AlternativeFinderSheet({
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                padding: 12,
-                borderRadius: 10,
+                padding: space.sm,
+                borderRadius: radius.md,
                 backgroundColor: colors.bgMuted,
               }}
             >
-              <AppText style={{ fontSize: 13, color: colors.inkMuted, flex: 1, marginRight: 8 }} numberOfLines={1}>
+              <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, flex: 1, marginRight: space.xs }} numberOfLines={1}>
                 {filterSummary}
               </AppText>
               <Feather name={filtersExpanded ? "chevron-up" : "chevron-down"} size={16} color={colors.inkMuted} />
@@ -327,13 +327,13 @@ export function AlternativeFinderSheet({
               </>
             )}
 
-            <View style={{ gap: 8 }}>
+            <View style={{ gap: space.xs }}>
               <PressableScale
                 onPress={handleSearch}
                 disabled={searching}
                 style={{
                   height: 48,
-                  borderRadius: 10,
+                  borderRadius: radius.md,
                   backgroundColor: colors.accent,
                   justifyContent: "center",
                   alignItems: "center",
@@ -346,7 +346,7 @@ export function AlternativeFinderSheet({
               </PressableScale>
               {searching && <ProgressBar percent={searchPercent} height={4} />}
               {searching && showSlowNotice && (
-                <AppText style={{ color: colors.inkMuted, fontSize: 12 }}>
+                <AppText style={{ color: colors.inkMuted, fontSize: fontSize.caption1 }}>
                   무료 API를 쓰고 있어서 가끔 평소보다 오래 걸릴 수 있어요.
                 </AppText>
               )}
@@ -355,13 +355,13 @@ export function AlternativeFinderSheet({
             {searchError && <ErrorText>{searchError}</ErrorText>}
 
             {candidates !== null && candidates.length === 0 && (
-              <AppText style={{ color: colors.inkMuted, textAlign: "center", padding: 12 }}>
+              <AppText style={{ color: colors.inkMuted, textAlign: "center", padding: space.sm }}>
                 조건에 맞는 대안을 찾지 못했어요.
               </AppText>
             )}
 
             {candidates !== null && candidates.length > 0 && (
-              <View style={{ gap: 10 }}>
+              <View style={{ gap: space.sm }}>
                 <View style={{ borderTopWidth: 1, borderTopColor: colors.border }} />
                 {candidates.map((candidate) => {
                   const isSelected = selected?.placeId === candidate.placeId;
@@ -369,20 +369,20 @@ export function AlternativeFinderSheet({
                     <View
                       key={candidate.placeId}
                       style={{
-                        padding: 12,
-                        borderRadius: 12,
+                        padding: space.sm,
+                        borderRadius: radius.md,
                         borderWidth: isSelected ? 2 : 1,
                         borderColor: isSelected ? colors.accent : colors.border,
-                        gap: 6,
+                        gap: space.xs,
                       }}
                     >
                       <PressableScale onPress={() => setSelected(isSelected ? null : candidate)}>
                         <AppText weight="medium" numberOfLines={1}>
                           {candidate.name}
                         </AppText>
-                        <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: space.xs }}>
                           {candidate.rating !== null && <RatingBadge rating={candidate.rating} />}
-                          <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                          <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
                             {[
                               categoryLabel(candidate.category),
                               candidate.distanceToNextKm !== null ? `다음 장소까지 ${candidate.distanceToNextKm.toFixed(1)}km` : null,
@@ -400,14 +400,14 @@ export function AlternativeFinderSheet({
                       <PressableScale
                         onPress={() => setReviewCandidateId(candidate.placeId)}
                         hitSlop={6}
-                        style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                        style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}
                       >
-                        <AppText style={{ fontSize: 12, color: colors.accent }}>리뷰 보기</AppText>
+                        <AppText style={{ fontSize: fontSize.caption1, color: colors.accent }}>리뷰 보기</AppText>
                         <Feather name="chevron-right" size={12} color={colors.accent} />
                       </PressableScale>
 
                       {isSelected && (
-                        <View style={{ gap: 8, marginTop: 4, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10 }}>
+                        <View style={{ gap: space.xs, marginTop: space.xxs, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: space.sm }}>
                           <InlineMap
                             pins={[{ id: "selected", latitude: candidate.latitude, longitude: candidate.longitude, color: colors.accent }]}
                             height={120}
@@ -419,7 +419,7 @@ export function AlternativeFinderSheet({
                             disabled={replacing}
                             style={{
                               height: 48,
-                              borderRadius: 10,
+                              borderRadius: radius.md,
                               backgroundColor: colors.accent,
                               justifyContent: "center",
                               alignItems: "center",
