@@ -1,8 +1,9 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { Alert, Platform, ScrollView, TextInput, View } from "react-native";
+import { Alert, Platform, TextInput, View } from "react-native";
+import BottomSheet, { BottomSheetFooter, BottomSheetScrollView, BottomSheetView, type BottomSheetFooterProps } from "@gorhom/bottom-sheet";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
-import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
@@ -32,6 +33,12 @@ import type { RootStackParamList } from "@/navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "VideoGroup">;
 
+// 지도를 뒤에 꽉 채우고 목록은 끌어올리는 시트에 담는다(2026-10, 참고: Plotline 지도+시트, 찜한 장소 화면과 같은 구성).
+const SHEET_DEFAULT_PERCENT = 55;
+const SHEET_SNAP_POINTS = ["18%", `${SHEET_DEFAULT_PERCENT}%`, "90%"];
+// 시트 아래 고정 버튼(52) + 위아래 여백만큼 목록 끝을 띄워 마지막 장소가 버튼에 가리지 않게 한다.
+const FOOTER_SPACE = 52 + space.md * 2 + 34; // 34: 홈 표시줄 높이(대략)
+
 export function VideoGroupScreen({ route, navigation }: Props) {
   const { jobId, justAnalyzed = false } = route.params;
   // 분석 직후 도착 연출(개수 세기·카드 순차 등장). 다시 들어올 때는 차분하게 둔다.
@@ -40,6 +47,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const arrivalDeadlineRef = useRef(Date.now() + 2500);
   const arrive = justAnalyzed && !reducedMotion && Date.now() < arrivalDeadlineRef.current;
   const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -328,322 +336,329 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     );
   }
 
+  const titleBlock = (
+    <View style={{ gap: space.xxs }}>
+      <AppText weight="medium" style={{ fontSize: fontSize.body }} numberOfLines={2}>
+        {title}
+      </AppText>
+      <SourceVideoLink url={group[0].sourceUrl} platform={group[0].sourcePlatform} />
+      {justAnalyzed && (
+        <CountUpText
+          value={group.length}
+          suffix="곳을 찾았어요"
+          animate={!reducedMotion}
+          weight="medium"
+          style={{ fontSize: fontSize.subheadline, color: colors.accent, marginTop: space.xxs }}
+        />
+      )}
+    </View>
+  );
+
+  const mapPins = (hasItinerary ? visibleActivePlaces : visibleGroup)
+    .filter((p) => p.latitude !== null && p.longitude !== null)
+    .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }));
+
+  // 시트 아래 고정 버튼 하나만 이 화면의 주 행동이다. 예전엔 위쪽 테두리 버튼이라 다른 칩·링크와 무게가 비슷했다.
+  const footer = !hasItinerary
+    ? { label: generating ? "일정 생성 중..." : "일정 짜기", onPress: handleGenerateItinerary, disabled: generating }
+    : existingTrip
+      ? // 이 영상으로 이미 만든 여행이 있으면 같은 곳으로 가는 카드를 따로 두지 않고 버튼에 여행 이름을 담는다.
+        { label: `만든 여행 보기 · ${existingTrip.title}`, onPress: () => navigation.navigate("TripDetail", { id: existingTrip.id }), disabled: false }
+      : showTripForm
+        ? { label: confirmingTrip ? "만드는 중..." : "이대로 여행 만들기", onPress: handleConfirmTrip, disabled: confirmingTrip }
+        : {
+            label: "여행으로 만들기",
+            onPress: () => {
+              setTripTitle(title);
+              setShowTripForm(true);
+            },
+            disabled: false,
+          };
+
+  function renderFooter(props: BottomSheetFooterProps) {
+    return (
+      // 버튼 영역 배경이 화면 맨 아래(홈 표시줄 뒤)까지 덮어야 목록이 버튼 아래로 비치지 않는다.
+      <BottomSheetFooter {...props}>
+        <View
+          style={{
+            paddingHorizontal: space.md,
+            paddingTop: space.md,
+            paddingBottom: insets.bottom + space.xs,
+            backgroundColor: colors.bg,
+            borderTopWidth: 1,
+            borderTopColor: colors.borderSubtle,
+          }}
+        >
+          <PressableScale
+            onPress={footer.onPress}
+            disabled={footer.disabled}
+            accessibilityRole="button"
+            style={{
+              height: 52,
+              borderRadius: radius.md,
+              backgroundColor: colors.accent,
+              justifyContent: "center",
+              alignItems: "center",
+              opacity: footer.disabled ? 0.6 : 1,
+            }}
+          >
+            <AppText weight="medium" numberOfLines={1} style={{ fontSize: fontSize.callout, color: colors.onAccent, paddingHorizontal: space.md }}>
+              {footer.label}
+            </AppText>
+          </PressableScale>
+        </View>
+      </BottomSheetFooter>
+    );
+  }
+
+  const map = (
+    <InlineMap
+      pins={mapPins}
+      fill
+      bottomInsetRatio={SHEET_DEFAULT_PERCENT / 100}
+      selectedId={reviewPlaceId !== null ? String(reviewPlaceId) : null}
+    />
+  );
+
   if (!hasItinerary) {
     return (
       <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: space.md, gap: space.sm }}>
-        <View style={{ gap: space.xxs }}>
-          <AppText weight="medium" style={{ fontSize: fontSize.body }} numberOfLines={2}>
-            {title}
-          </AppText>
-          <SourceVideoLink url={group[0].sourceUrl} platform={group[0].sourcePlatform} />
-          {justAnalyzed && (
-            <CountUpText
-              value={group.length}
-              suffix="곳을 찾았어요"
-              animate={!reducedMotion}
-              weight="medium"
-              style={{ fontSize: fontSize.subheadline, color: colors.accent, marginTop: space.xxs }}
-            />
-          )}
-        </View>
-        {filterChips}
-        <InlineMap
-          pins={visibleGroup
-            .filter((p) => p.latitude !== null && p.longitude !== null)
-            .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
-        />
-        <PressableScale
-          onPress={handleGenerateItinerary}
-          disabled={generating}
-          style={{
-            height: 48,
-            borderRadius: radius.md,
-            backgroundColor: colors.accent,
-            justifyContent: "center",
-            alignItems: "center",
-            opacity: generating ? 0.6 : 1,
-          }}
-        >
-          <AppText weight="medium" style={{ color: colors.onAccent }}>
-            {generating ? "일정 생성 중..." : "일정 짜기"}
-          </AppText>
-        </PressableScale>
-        {error && <ErrorText>{error}</ErrorText>}
-        <View>
-          {visibleGroup.map((place, index) => {
-            const isLast = index === visibleGroup.length - 1;
-            const next = visibleGroup[index + 1];
-            const distanceKm =
-              !isLast && place.latitude !== null && place.longitude !== null && next?.latitude !== null && next?.longitude !== null
-                ? haversineDistanceKm(place.latitude, place.longitude, next!.latitude!, next!.longitude!)
-                : null;
-            return (
-              <Animated.View
-                key={place.id}
-                entering={arrive ? FadeInDown.delay(250 + Math.min(index, 8) * 70).springify().damping(16) : undefined}
-              >
-                <PlaceRow
-                  place={place}
-                  index={index}
-                  number={group.indexOf(place) + 1}
-                  showCategory
-                  isLast={isLast}
-                  distanceKm={distanceKm}
-                  onPressInfo={() => setReviewPlaceId(place.id)}
-                />
-              </Animated.View>
-            );
-          })}
-        </View>
-      </ScrollView>
-      <SavedPlaceInfoSheet place={reviewPlace} onClose={() => setReviewPlaceId(null)} />
+        {map}
+        <BottomSheet index={1} snapPoints={SHEET_SNAP_POINTS} enableDynamicSizing={false} footerComponent={renderFooter}>
+          <BottomSheetScrollView contentContainerStyle={{ padding: space.md, paddingBottom: FOOTER_SPACE, gap: space.sm }}>
+            {titleBlock}
+            {error && <ErrorText>{error}</ErrorText>}
+            {filterChips}
+            <View>
+              {visibleGroup.map((place, index) => {
+                const isLast = index === visibleGroup.length - 1;
+                const next = visibleGroup[index + 1];
+                const distanceKm =
+                  !isLast && place.latitude !== null && place.longitude !== null && next?.latitude !== null && next?.longitude !== null
+                    ? haversineDistanceKm(place.latitude, place.longitude, next!.latitude!, next!.longitude!)
+                    : null;
+                return (
+                  <Animated.View
+                    key={place.id}
+                    entering={arrive ? FadeInDown.delay(250 + Math.min(index, 8) * 70).springify().damping(16) : undefined}
+                  >
+                    <PlaceRow
+                      place={place}
+                      index={index}
+                      number={group.indexOf(place) + 1}
+                      showCategory
+                      isLast={isLast}
+                      distanceKm={distanceKm}
+                      onPressInfo={() => setReviewPlaceId(place.id)}
+                    />
+                  </Animated.View>
+                );
+              })}
+            </View>
+          </BottomSheetScrollView>
+        </BottomSheet>
+        <SavedPlaceInfoSheet place={reviewPlace} onClose={() => setReviewPlaceId(null)} />
       </View>
     );
   }
 
   return (
     <View style={{ flex: 1 }}>
-    <DraggableFlatList keyboardShouldPersistTaps="handled"
-      data={visibleActivePlaces}
-      keyExtractor={(item) => String(item.id)}
-      onDragEnd={handleDragEnd}
-      renderItem={renderActivePlaceItem}
-      activationDistance={0}
-      contentContainerStyle={{ padding: space.md }}
-      ListHeaderComponent={
-        <View style={{ gap: space.sm, marginBottom: space.sm }}>
-          <View style={{ gap: space.xxs }}>
-            <AppText weight="medium" style={{ fontSize: fontSize.body }} numberOfLines={2}>
-              {title}
-            </AppText>
-            <SourceVideoLink url={group[0].sourceUrl} platform={group[0].sourcePlatform} />
-            {justAnalyzed && (
-              <CountUpText
-                value={group.length}
-                suffix="곳을 찾았어요"
-                animate={!reducedMotion}
-                weight="medium"
-                style={{ fontSize: fontSize.subheadline, color: colors.accent, marginTop: space.xxs }}
-              />
-            )}
-          </View>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
-            {dayNumbers.map((day) => (
-              <PressableScale
-                key={day}
-                onPress={() => setActiveDay(day)}
-                style={{
-                  paddingVertical: space.xs,
-                  paddingHorizontal: space.md,
-                  borderRadius: radius.full,
-                  backgroundColor: day === currentActiveDay ? colors.accent : colors.bgMuted,
-                }}
-              >
-                <AppText weight="medium" style={{ color: day === currentActiveDay ? colors.onAccent : colors.inkMuted, fontSize: fontSize.footnote }}>
-                  {day}일차
-                </AppText>
-              </PressableScale>
-            ))}
-            <PressableScale
-              onPress={handleAddDay}
-              style={{ paddingVertical: space.xs, paddingHorizontal: space.md, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border }}
-            >
-              <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>+ 날짜 추가</AppText>
-            </PressableScale>
-          </View>
-
-          {existingTrip ? (
-            <PressableRow
-              onPress={() => navigation.navigate("TripDetail", { id: existingTrip.id })}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: space.sm,
-                padding: space.sm,
-                borderRadius: radius.md,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
-            >
-              <Feather name="calendar" size={16} color={colors.accent} />
-              <View style={{ flex: 1 }}>
-                <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>이 영상으로 만든 여행</AppText>
-                <AppText weight="medium" numberOfLines={1}>
-                  {existingTrip.title}
-                </AppText>
-                {existingTrip.startDate && (
-                  <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
-                    {formatTripDates(existingTrip.startDate, existingTrip.endDate)}
-                  </AppText>
-                )}
-              </View>
-              <Feather name="chevron-right" size={18} color={colors.inkMuted} />
-            </PressableRow>
-          ) : !showTripForm ? (
-            <PressableScale
-              onPress={() => {
-                setTripTitle(title);
-                setShowTripForm(true);
-              }}
-              style={{ height: 44, borderRadius: radius.md, borderWidth: 1, borderColor: colors.accent, justifyContent: "center", alignItems: "center" }}
-            >
-              <AppText weight="medium" style={{ color: colors.accent }}>
-                여행으로 만들기
-              </AppText>
-            </PressableScale>
-          ) : (
-            <View style={{ gap: space.xs, padding: space.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md }}>
-              <TextInput
-                maxFontSizeMultiplier={MAX_FONT_SCALE}
-                value={tripTitle}
-                onChangeText={setTripTitle}
-                placeholder="여행 이름"
-                maxLength={TRIP_TITLE_MAX_LENGTH}
-                style={{
-                  height: 40,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  borderRadius: radius.sm,
-                  paddingHorizontal: space.sm,
-                  fontFamily: "NotoSansKR_400Regular",
-                }}
-              />
-              <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
-                <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>출발일</AppText>
-                <PressableScale
-                  onPress={() => setShowTripDatePicker((v) => !v)}
-                  style={{
-                    flex: 1,
-                    height: 40,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: radius.sm,
-                    paddingHorizontal: space.sm,
-                    justifyContent: "center",
-                  }}
-                >
-                  <AppText>{formatDateLabel(tripStartDate)}</AppText>
-                </PressableScale>
-              </View>
-              {showTripDatePicker && (
-                <View style={{ gap: space.xxs }}>
-                  <DateTimePicker
-                    value={tripStartDate}
-                    mode="date"
-                    // 새 여행 화면과 같은 규칙 — 오늘 이전 출발일은 고를 수 없다.
-                    minimumDate={new Date(new Date().setHours(0, 0, 0, 0))}
-                    locale="ko-KR"
-                    display={Platform.OS === "ios" ? "spinner" : "default"}
-                    onValueChange={(_, selected) => {
-                      // iOS 스피너는 스스로 닫히지 않아 아래 "확인"으로 닫는다(새 여행 화면과 동일).
-                      if (Platform.OS !== "ios") setShowTripDatePicker(false);
-                      setTripStartDate(selected);
-                    }}
-                    onDismiss={() => setShowTripDatePicker(false)}
-                  />
-                  {Platform.OS === "ios" && (
-                    <PressableScale onPress={() => setShowTripDatePicker(false)} style={{ alignSelf: "flex-end" }}>
-                      <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
-                        확인
+      {map}
+      {/* 시트 안 목록은 끌어서 순서를 바꾼다 — 목록을 끌 때 시트까지 움직이지 않게 시트는 위쪽 손잡이로만 움직인다. */}
+      <BottomSheet
+        index={1}
+        snapPoints={SHEET_SNAP_POINTS}
+        enableDynamicSizing={false}
+        enableContentPanningGesture={false}
+        footerComponent={renderFooter}
+      >
+        <BottomSheetView style={{ flex: 1 }}>
+          <DraggableFlatList
+            keyboardShouldPersistTaps="handled"
+            data={visibleActivePlaces}
+            keyExtractor={(item) => String(item.id)}
+            onDragEnd={handleDragEnd}
+            renderItem={renderActivePlaceItem}
+            activationDistance={0}
+            contentContainerStyle={{ padding: space.md, paddingBottom: FOOTER_SPACE }}
+            ListHeaderComponent={
+              <View style={{ gap: space.sm, marginBottom: space.sm }}>
+                {titleBlock}
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
+                  {dayNumbers.map((day) => (
+                    <PressableScale
+                      key={day}
+                      onPress={() => setActiveDay(day)}
+                      style={{
+                        paddingVertical: space.xs,
+                        paddingHorizontal: space.md,
+                        borderRadius: radius.full,
+                        backgroundColor: day === currentActiveDay ? colors.accent : colors.bgMuted,
+                      }}
+                    >
+                      <AppText weight="medium" style={{ color: day === currentActiveDay ? colors.onAccent : colors.inkMuted, fontSize: fontSize.footnote }}>
+                        {day}일차
                       </AppText>
                     </PressableScale>
-                  )}
+                  ))}
+                  <PressableScale
+                    onPress={handleAddDay}
+                    style={{ paddingVertical: space.xs, paddingHorizontal: space.md, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border }}
+                  >
+                    <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>+ 날짜 추가</AppText>
+                  </PressableScale>
+                  <PressableScale
+                    onPress={handleOptimizeRoute}
+                    disabled={actionPending || activePlaces.length < 2}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: space.xxs,
+                      paddingVertical: space.xs,
+                      paddingHorizontal: space.md,
+                      borderRadius: radius.full,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      opacity: actionPending || activePlaces.length < 2 ? 0.4 : 1,
+                    }}
+                  >
+                    <Feather name="shuffle" size={12} color={colors.accent} />
+                    <AppText style={{ fontSize: fontSize.footnote, color: colors.accent }}>동선 최적화</AppText>
+                  </PressableScale>
                 </View>
-              )}
-              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
-                {formatTripDates(toDateString(tripStartDate), toDateString(tripEndDate))}
-              </AppText>
-              <PressableScale
-                onPress={handleConfirmTrip}
-                disabled={confirmingTrip}
-                style={{
-                  height: 40,
-                  borderRadius: radius.sm,
-                  backgroundColor: colors.accent,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  opacity: confirmingTrip ? 0.6 : 1,
-                }}
-              >
-                <AppText weight="medium" style={{ color: colors.onAccent }}>
-                  {confirmingTrip ? "확정 중..." : "확정"}
-                </AppText>
-              </PressableScale>
-              {tripError && <ErrorText>{tripError}</ErrorText>}
-            </View>
-          )}
 
-          {currentActiveDay !== null && emptyDayNumbers.includes(currentActiveDay) && activePlaces.length === 0 && (
-            <PressableScale onPress={() => handleDeleteDay(currentActiveDay)} hitSlop={10}>
-              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>이 빈 날짜 삭제</AppText>
-            </PressableScale>
-          )}
+                {!existingTrip && showTripForm && (
+                  <View style={{ gap: space.xs, padding: space.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                      <AppText weight="medium" style={{ fontSize: fontSize.footnote }}>
+                        여행으로 만들기
+                      </AppText>
+                      <PressableScale onPress={() => setShowTripForm(false)} hitSlop={10}>
+                        <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>취소</AppText>
+                      </PressableScale>
+                    </View>
+                    <TextInput
+                      maxFontSizeMultiplier={MAX_FONT_SCALE}
+                      value={tripTitle}
+                      onChangeText={setTripTitle}
+                      placeholder="여행 이름"
+                      maxLength={TRIP_TITLE_MAX_LENGTH}
+                      style={{
+                        height: 40,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        borderRadius: radius.sm,
+                        paddingHorizontal: space.sm,
+                        fontFamily: "NotoSansKR_400Regular",
+                      }}
+                    />
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+                      <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>출발일</AppText>
+                      <PressableScale
+                        onPress={() => setShowTripDatePicker((v) => !v)}
+                        style={{
+                          flex: 1,
+                          height: 40,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          borderRadius: radius.sm,
+                          paddingHorizontal: space.sm,
+                          justifyContent: "center",
+                        }}
+                      >
+                        <AppText>{formatDateLabel(tripStartDate)}</AppText>
+                      </PressableScale>
+                    </View>
+                    {showTripDatePicker && (
+                      <View style={{ gap: space.xxs }}>
+                        <DateTimePicker
+                          value={tripStartDate}
+                          mode="date"
+                          // 새 여행 화면과 같은 규칙 — 오늘 이전 출발일은 고를 수 없다.
+                          minimumDate={new Date(new Date().setHours(0, 0, 0, 0))}
+                          locale="ko-KR"
+                          display={Platform.OS === "ios" ? "spinner" : "default"}
+                          onValueChange={(_, selected) => {
+                            // iOS 스피너는 스스로 닫히지 않아 아래 "확인"으로 닫는다(새 여행 화면과 동일).
+                            if (Platform.OS !== "ios") setShowTripDatePicker(false);
+                            setTripStartDate(selected);
+                          }}
+                          onDismiss={() => setShowTripDatePicker(false)}
+                        />
+                        {Platform.OS === "ios" && (
+                          <PressableScale onPress={() => setShowTripDatePicker(false)} style={{ alignSelf: "flex-end" }}>
+                            <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
+                              확인
+                            </AppText>
+                          </PressableScale>
+                        )}
+                      </View>
+                    )}
+                    <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
+                      {formatTripDates(toDateString(tripStartDate), toDateString(tripEndDate))}
+                    </AppText>
+                    {tripError && <ErrorText>{tripError}</ErrorText>}
+                  </View>
+                )}
 
-          <PressableScale
-            onPress={handleOptimizeRoute}
-            disabled={actionPending || activePlaces.length < 2}
-            style={{ opacity: actionPending || activePlaces.length < 2 ? 0.4 : 1 }}
-          >
-            <AppText style={{ fontSize: fontSize.footnote, color: colors.accent }}>동선 최적화</AppText>
-          </PressableScale>
+                {currentActiveDay !== null && emptyDayNumbers.includes(currentActiveDay) && activePlaces.length === 0 && (
+                  <PressableScale onPress={() => handleDeleteDay(currentActiveDay)} hitSlop={10}>
+                    <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>이 빈 날짜 삭제</AppText>
+                  </PressableScale>
+                )}
 
-          {itineraryError && <ErrorText>{itineraryError}</ErrorText>}
+                {itineraryError && <ErrorText>{itineraryError}</ErrorText>}
 
-          {filterChips}
-
-          <InlineMap
-            pins={visibleActivePlaces
-              .filter((p) => p.latitude !== null && p.longitude !== null)
-              .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
-          />
-        </View>
-      }
-      ListEmptyComponent={
-        <AppText style={{ textAlign: "center", color: colors.inkMuted, padding: space.md }}>
-          이 날짜엔 아직 장소가 없어요.
-        </AppText>
-      }
-      ListFooterComponent={
-        <View style={{ gap: space.sm, marginTop: space.sm }}>
-          {visibleUnassignedPlaces.length > 0 && (
-            <View style={{ gap: space.sm }}>
-              <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
-                아직 날짜가 없는 장소
-              </AppText>
-              <View>
-              {visibleUnassignedPlaces.map((place, index) => (
-                <PlaceRow
-                  key={place.id}
-                  place={place}
-                  index={index}
-                  number={unassignedPlaces.indexOf(place) + 1}
-                  showCategory
-                  isLast={index === visibleUnassignedPlaces.length - 1}
-                  distanceKm={null}
-                  editable
-                  disabled={actionPending}
-                  onOpenDayPicker={() => setDayPickerFor(place)}
-                  onPressInfo={() => setReviewPlaceId(place.id)}
-                />
-              ))}
+                {filterChips}
               </View>
-            </View>
-          )}
-
-          <DayPickerSheet
-            visible={dayPickerFor !== null}
-            dayNumbers={dayNumbers}
-            currentDay={dayPickerFor?.dayNumber ?? null}
-            onSelect={(day) => {
-              if (dayPickerFor) handleMoveDay(dayPickerFor, day);
-            }}
-            onClose={() => setDayPickerFor(null)}
+            }
+            ListEmptyComponent={
+              <AppText style={{ textAlign: "center", color: colors.inkMuted, padding: space.md }}>
+                이 날짜엔 아직 장소가 없어요.
+              </AppText>
+            }
+            ListFooterComponent={
+              <View style={{ gap: space.sm, marginTop: space.sm }}>
+                {visibleUnassignedPlaces.length > 0 && (
+                  <View style={{ gap: space.sm }}>
+                    <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
+                      아직 날짜가 없는 장소
+                    </AppText>
+                    <View>
+                      {visibleUnassignedPlaces.map((place, index) => (
+                        <PlaceRow
+                          key={place.id}
+                          place={place}
+                          index={index}
+                          number={unassignedPlaces.indexOf(place) + 1}
+                          showCategory
+                          isLast={index === visibleUnassignedPlaces.length - 1}
+                          distanceKm={null}
+                          editable
+                          disabled={actionPending}
+                          onOpenDayPicker={() => setDayPickerFor(place)}
+                          onPressInfo={() => setReviewPlaceId(place.id)}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </View>
+            }
           />
-        </View>
-      }
-    />
-    <SavedPlaceInfoSheet place={reviewPlace} onClose={() => setReviewPlaceId(null)} />
+        </BottomSheetView>
+      </BottomSheet>
+      <DayPickerSheet
+        visible={dayPickerFor !== null}
+        dayNumbers={dayNumbers}
+        currentDay={dayPickerFor?.dayNumber ?? null}
+        onSelect={(day) => {
+          if (dayPickerFor) handleMoveDay(dayPickerFor, day);
+        }}
+        onClose={() => setDayPickerFor(null)}
+      />
+      <SavedPlaceInfoSheet place={reviewPlace} onClose={() => setReviewPlaceId(null)} />
     </View>
   );
 }
