@@ -13,7 +13,17 @@ import { colors, fontSize, radius, space } from "@/lib/theme";
 // 넘겼는데, 그 시트는 장소 카탈로그(Place) id로 조회해서 번호가 같은 전혀 다른 장소가 떴다(실제 탭으로 확인).
 // SavedPlace는 장소 카탈로그·구글 장소와 연결 정보가 없어 리뷰 요약을 가져올 수 없으므로, 이미 저장된
 // 정보만 보여준다. 열려 있을 때만 마운트해 처음부터 열린 상태로 그린다(대안 찾기 시트와 같은 방식).
-export function SavedPlaceInfoSheet({ place, onClose }: { place: Place | null; onClose: () => void }) {
+// onMoveDay가 있으면(일정이 있는 영상) "다른 날로 이동"도 이 시트에서 한다. 예전엔 장소 행마다
+// "다른 날로 이동 · 카카오맵 · 전화" 글자 버튼이 붙어 목록이 복잡했다(2026-10, 행동을 장소 시트로 모음).
+export function SavedPlaceInfoSheet({
+  place,
+  onClose,
+  onMoveDay,
+}: {
+  place: Place | null;
+  onClose: () => void;
+  onMoveDay?: () => void;
+}) {
   if (!place) return null;
 
   const mapUrl = kakaoMapUrl(place);
@@ -40,8 +50,26 @@ export function SavedPlaceInfoSheet({ place, onClose }: { place: Place | null; o
           <SheetCloseButton onPress={onClose} />
         </View>
 
-        {(mapUrl || telUrl) && (
-          <View style={{ flexDirection: "row", gap: space.xs }}>
+        {(mapUrl || telUrl || onMoveDay) && (
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
+            {onMoveDay && (
+              <PressableScale
+                onPress={onMoveDay}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: space.xs,
+                  paddingVertical: space.sm,
+                  paddingHorizontal: space.md,
+                  borderRadius: radius.md,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <Feather name="calendar" size={14} color={colors.ink} />
+                <AppText style={{ fontSize: fontSize.footnote }}>다른 날로 이동</AppText>
+              </PressableScale>
+            )}
             {mapUrl && (
               <PressableScale
                 onPress={() => openExternal(mapUrl)}

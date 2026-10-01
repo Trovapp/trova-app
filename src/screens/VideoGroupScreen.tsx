@@ -325,11 +325,10 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             showCategory
             isLast={isLast}
             distanceKm={distanceKm}
-            editable
+            showLinks={false}
             disabled={actionPending}
             dragHandle={categoryFilter === null ? { onPressIn: drag } : undefined}
             onPressInfo={() => setReviewPlaceId(place.id)}
-            onOpenDayPicker={() => setDayPickerFor(place)}
           />
         </View>
       </Animated.View>
@@ -449,6 +448,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                       showCategory
                       isLast={isLast}
                       distanceKm={distanceKm}
+                      showLinks={false}
                       onPressInfo={() => setReviewPlaceId(place.id)}
                     />
                   </Animated.View>
@@ -635,9 +635,8 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                           showCategory
                           isLast={index === visibleUnassignedPlaces.length - 1}
                           distanceKm={null}
-                          editable
+                          showLinks={false}
                           disabled={actionPending}
-                          onOpenDayPicker={() => setDayPickerFor(place)}
                           onPressInfo={() => setReviewPlaceId(place.id)}
                         />
                       ))}
@@ -658,7 +657,18 @@ export function VideoGroupScreen({ route, navigation }: Props) {
         }}
         onClose={() => setDayPickerFor(null)}
       />
-      <SavedPlaceInfoSheet place={reviewPlace} onClose={() => setReviewPlaceId(null)} />
+      <SavedPlaceInfoSheet
+        place={reviewPlace}
+        onClose={() => setReviewPlaceId(null)}
+        onMoveDay={
+          reviewPlace
+            ? () => {
+                setReviewPlaceId(null);
+                setDayPickerFor(reviewPlace);
+              }
+            : undefined
+        }
+      />
     </View>
   );
 }
