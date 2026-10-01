@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { View } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { kakaoMapUrl, openExternal, phoneUrl } from "@/lib/placeLinks";
+import { categoryGroupInfo } from "@/lib/placeCategory";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 
 type PlaceRowItem = {
@@ -18,6 +19,7 @@ type PlaceRowItem = {
   // 영상에서 뽑은 장소(Place)는 둘 다, 여행 장소(TripPlace)는 phone만 내려온다.
   phone?: string | null;
   kakaoPlaceUrl?: string | null;
+  category?: string | null;
 };
 
 
@@ -41,6 +43,10 @@ type PlaceRowProps = {
   // 카카오맵/전화 링크 줄. 행 아래에 편집 줄(children)과 "⋮" 메뉴가 따로 있는 화면(여행 상세)은
   // 줄이 너무 많아지므로 끄고 메뉴 쪽에 넣는다.
   showLinks?: boolean;
+  // 번호 원에 보일 숫자. 분류 필터로 일부만 보일 때도 원래 순서 번호를 유지하려고 따로 받는다(기본: index + 1).
+  number?: number;
+  // 주소 앞에 분류 아이콘과 이름을 붙인다(영상 속 장소 결과 화면). 여행 상세 등 다른 화면은 지금 모습을 유지한다.
+  showCategory?: boolean;
   children?: ReactNode;
 };
 
@@ -57,8 +63,11 @@ export function PlaceRow({
   onOpenMenu,
   color = colors.accent,
   showLinks = true,
+  number,
+  showCategory = false,
   children,
 }: PlaceRowProps) {
+  const categoryInfo = showCategory ? categoryGroupInfo(place.category) : null;
   const mapUrl = showLinks ? kakaoMapUrl(place) : null;
   const telUrl = showLinks ? phoneUrl(place) : null;
   const showDayPicker = editable && !!onOpenDayPicker;
@@ -84,7 +93,7 @@ export function PlaceRow({
           }}
         >
           <AppText weight="medium" style={{ color: colors.onAccent, fontSize: fontSize.caption1 }}>
-            {index + 1}
+            {number ?? index + 1}
           </AppText>
         </View>
         <View style={{ flex: 1, gap: space.xs }}>
@@ -92,10 +101,21 @@ export function PlaceRow({
             <AppText weight="medium" numberOfLines={1}>
               {place.placeName}
             </AppText>
-            {place.address && (
-              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
-                {place.address}
-              </AppText>
+            {(categoryInfo || place.address) && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
+                {categoryInfo && (
+                  <>
+                    <MaterialCommunityIcons name={categoryInfo.icon} size={12} color={colors.accent} />
+                    <AppText style={{ fontSize: fontSize.caption1, color: colors.accent }}>{categoryInfo.label}</AppText>
+                    {place.address && <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>·</AppText>}
+                  </>
+                )}
+                {place.address && (
+                  <AppText style={{ flexShrink: 1, fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
+                    {place.address}
+                  </AppText>
+                )}
+              </View>
             )}
             {place.latitude === null && place.longitude === null && (
               <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>

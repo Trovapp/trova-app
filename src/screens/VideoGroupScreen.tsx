@@ -13,6 +13,8 @@ import { DayPickerSheet } from "@/components/DayPickerSheet";
 import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
 import { CountUpText } from "@/components/CountUpText";
+import { CategoryFilterChips } from "@/components/CategoryFilterChips";
+import { categoryGroup, type CategoryGroup } from "@/lib/placeCategory";
 import { SavedPlaceInfoSheet } from "@/components/SavedPlaceInfoSheet";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
@@ -61,6 +63,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const [confirmingTrip, setConfirmingTrip] = useState(false);
   const [tripError, setTripError] = useState<string | null>(null);
   const [reviewPlaceId, setReviewPlaceId] = useState<number | null>(null);
+  // 분류 필터(보기 전용). 목록과 지도 핀을 함께 거르고, 동선 최적화·여행 만들기는 항상 전체 장소로 한다.
+  const [categoryFilter, setCategoryFilter] = useState<CategoryGroup | null>(null);
+  const matchesFilter = (p: Place) => categoryFilter === null || categoryGroup(p.category) === categoryFilter;
 
   const group = (placesQuery.data ?? []).filter((p) => p.jobId === jobId);
   // 장소 정보 시트는 SavedPlace 자체를 넘긴다(리뷰 요약 시트에 SavedPlace id를 넘기면 다른 장소가 조회됐다).
@@ -114,7 +119,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const tripEndDate = new Date(tripStartDate.getFullYear(), tripStartDate.getMonth(), tripStartDate.getDate() + tripDayCount - 1);
   const currentActiveDay = activeDay ?? dayNumbers[0] ?? null;
   const activePlaces = currentActiveDay !== null ? days.get(currentActiveDay) ?? [] : [];
+  const visibleActivePlaces = activePlaces.filter(matchesFilter);
   const unassignedPlaces = itineraryPlaces.filter((p) => p.dayNumber === null);
+  const visibleUnassignedPlaces = unassignedPlaces.filter(matchesFilter);
 
   async function handleGenerateItinerary() {
     if (group.length === 0 || generating) return;
@@ -167,7 +174,8 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   // 이동하는 API(reorderPlace)를 옮긴 칸 수만큼 순차 호출해서 처리한다 — 여행
   // 상세 화면(TripDetailScreen)의 드래그 저장 방식과 동일하다.
   async function handleDragEnd({ data, from, to }: { data: Place[]; from: number; to: number }) {
-    if (from === to || actionPending) return;
+    // 걸러진 목록에서 옮기면 서버에 보내는 칸 수가 실제 순서와 어긋난다 — 필터 중엔 손잡이도 숨긴다.
+    if (from === to || actionPending || categoryFilter !== null) return;
     haptics.light();
     const previous = itineraryPlaces;
     setItineraryError(null);
@@ -275,11 +283,23 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   }
 
   const title = group.find((p) => p.title)?.title ?? "제목 없음";
+  const visibleGroup = group.filter(matchesFilter);
+
+  const filterChips = (
+    <View style={{ gap: space.xxs }}>
+      <CategoryFilterChips categories={group.map((p) => p.category)} value={categoryFilter} onChange={setCategoryFilter} />
+      {categoryFilter !== null && (
+        <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
+          보기만 걸러요. 순서 바꾸기는 전체에서 할 수 있어요
+        </AppText>
+      )}
+    </View>
+  );
 
   function renderActivePlaceItem({ item: place, getIndex, drag, isActive }: RenderItemParams<Place>) {
     const index = getIndex() ?? 0;
-    const isLast = index === activePlaces.length - 1;
-    const next = activePlaces[index + 1];
+    const isLast = index === visibleActivePlaces.length - 1;
+    const next = visibleActivePlaces[index + 1];
     const distanceKm =
       !isLast && place.latitude !== null && place.longitude !== null && next?.latitude !== null && next?.longitude !== null
         ? haversineDistanceKm(place.latitude, place.longitude, next!.latitude!, next!.longitude!)
@@ -293,11 +313,13 @@ export function VideoGroupScreen({ route, navigation }: Props) {
           <PlaceRow
             place={place}
             index={index}
+            number={activePlaces.indexOf(place) + 1}
+            showCategory
             isLast={isLast}
             distanceKm={distanceKm}
             editable
             disabled={actionPending}
-            dragHandle={{ onPressIn: drag }}
+            dragHandle={categoryFilter === null ? { onPressIn: drag } : undefined}
             onPressInfo={() => setReviewPlaceId(place.id)}
             onOpenDayPicker={() => setDayPickerFor(place)}
           />
@@ -325,8 +347,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             />
           )}
         </View>
+        {filterChips}
         <InlineMap
-          pins={group
+          pins={visibleGroup
             .filter((p) => p.latitude !== null && p.longitude !== null)
             .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
         />
@@ -348,9 +371,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
         </PressableScale>
         {error && <ErrorText>{error}</ErrorText>}
         <View>
-          {group.map((place, index) => {
-            const isLast = index === group.length - 1;
-            const next = group[index + 1];
+          {visibleGroup.map((place, index) => {
+            const isLast = index === visibleGroup.length - 1;
+            const next = visibleGroup[index + 1];
             const distanceKm =
               !isLast && place.latitude !== null && place.longitude !== null && next?.latitude !== null && next?.longitude !== null
                 ? haversineDistanceKm(place.latitude, place.longitude, next!.latitude!, next!.longitude!)
@@ -363,6 +386,8 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                 <PlaceRow
                   place={place}
                   index={index}
+                  number={group.indexOf(place) + 1}
+                  showCategory
                   isLast={isLast}
                   distanceKm={distanceKm}
                   onPressInfo={() => setReviewPlaceId(place.id)}
@@ -380,7 +405,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   return (
     <View style={{ flex: 1 }}>
     <DraggableFlatList keyboardShouldPersistTaps="handled"
-      data={activePlaces}
+      data={visibleActivePlaces}
       keyExtractor={(item) => String(item.id)}
       onDragEnd={handleDragEnd}
       renderItem={renderActivePlaceItem}
@@ -565,8 +590,10 @@ export function VideoGroupScreen({ route, navigation }: Props) {
 
           {itineraryError && <ErrorText>{itineraryError}</ErrorText>}
 
+          {filterChips}
+
           <InlineMap
-            pins={activePlaces
+            pins={visibleActivePlaces
               .filter((p) => p.latitude !== null && p.longitude !== null)
               .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
           />
@@ -579,18 +606,20 @@ export function VideoGroupScreen({ route, navigation }: Props) {
       }
       ListFooterComponent={
         <View style={{ gap: space.sm, marginTop: space.sm }}>
-          {unassignedPlaces.length > 0 && (
+          {visibleUnassignedPlaces.length > 0 && (
             <View style={{ gap: space.sm }}>
               <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
                 아직 날짜가 없는 장소
               </AppText>
               <View>
-              {unassignedPlaces.map((place, index) => (
+              {visibleUnassignedPlaces.map((place, index) => (
                 <PlaceRow
                   key={place.id}
                   place={place}
                   index={index}
-                  isLast={index === unassignedPlaces.length - 1}
+                  number={unassignedPlaces.indexOf(place) + 1}
+                  showCategory
+                  isLast={index === visibleUnassignedPlaces.length - 1}
                   distanceKm={null}
                   editable
                   disabled={actionPending}

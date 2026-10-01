@@ -111,3 +111,41 @@ export function categoryLabel(category: string | null | undefined): string | nul
   if (!category) return null;
   return CATEGORY_LABELS[category] ?? fallbackLabel(category);
 }
+
+// 결과 화면의 분류 표시·필터용 묶음(2026-10). 영상 장소 추출이 쓰는 6가지 분류를 기준으로,
+// 구글 세부 타입도 같은 묶음으로 모은다. 필터 칩이 너무 잘게 나뉘지 않게 하려는 것이다.
+export type CategoryGroup = "attraction" | "restaurant" | "cafe" | "lodging" | "shopping" | "other";
+
+// 아이콘은 MaterialCommunityIcons 이름이다 — 기능 아이콘(Feather)에는 숟가락·포크, 침대 같은 분류 모양이 없다.
+export const CATEGORY_GROUPS: {
+  key: CategoryGroup;
+  label: string;
+  icon: "camera-outline" | "silverware-fork-knife" | "coffee-outline" | "bed-outline" | "shopping-outline" | "map-marker-outline";
+}[] = [
+  { key: "attraction", label: "관광명소", icon: "camera-outline" },
+  { key: "restaurant", label: "음식점", icon: "silverware-fork-knife" },
+  { key: "cafe", label: "카페", icon: "coffee-outline" },
+  { key: "lodging", label: "숙소", icon: "bed-outline" },
+  { key: "shopping", label: "쇼핑", icon: "shopping-outline" },
+  { key: "other", label: "기타", icon: "map-marker-outline" },
+];
+
+const GROUP_OF: Record<string, CategoryGroup> = {
+  attraction: "attraction", tourist_attraction: "attraction", museum: "attraction", history_museum: "attraction",
+  art_gallery: "attraction", cultural_landmark: "attraction", historical_landmark: "attraction", monument: "attraction",
+  park: "attraction", national_park: "attraction", amusement_park: "attraction", zoo: "attraction", aquarium: "attraction",
+  restaurant: "restaurant", fast_food_restaurant: "restaurant", bar: "restaurant", meal_takeaway: "restaurant", food: "restaurant",
+  cafe: "cafe", coffee_shop: "cafe", bakery: "cafe", ice_cream_shop: "cafe", dessert_shop: "cafe",
+  lodging: "lodging", hotel: "lodging", guest_house: "lodging", campground: "lodging",
+  shopping: "shopping", store: "shopping", shopping_mall: "shopping", department_store: "shopping", clothing_store: "shopping",
+  book_store: "shopping", home_goods_store: "shopping", supermarket: "shopping", convenience_store: "shopping",
+};
+
+export function categoryGroup(category: string | null | undefined): CategoryGroup {
+  return (category && GROUP_OF[category]) || "other";
+}
+
+export function categoryGroupInfo(category: string | null | undefined) {
+  const key = categoryGroup(category);
+  return CATEGORY_GROUPS.find((g) => g.key === key)!;
+}
