@@ -20,7 +20,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { formatTripDates, toDateString } from "@/lib/date";
 import { groupTripsByDate } from "@/lib/tripSections";
 import { toUserMessage } from "@/lib/api/client";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 import { isSupportedShareUrl, sourceVideoKey, UNSUPPORTED_SHARE_URL_MESSAGE } from "@/lib/shareUrl";
 import type { MainTabScreenProps } from "@/navigation/types";
 
@@ -168,15 +168,15 @@ export function HomeScreen({ navigation }: Props) {
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={{ padding: 24, gap: 28 }}
+        contentContainerStyle={{ padding: space.xl, gap: space.xxl }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        <View style={{ gap: 16 }}>
-          <AppText weight="bold" style={{ fontSize: 26, lineHeight: 34 }}>
+        <View style={{ gap: space.md }}>
+          <AppText weight="bold" style={{ fontSize: fontSize.title1, lineHeight: 36 }}>
             {user?.nickname ?? "여행자"}님,{"\n"}어디로 떠나볼까요?
           </AppText>
 
-          <View style={{ gap: 10 }}>
+          <View style={{ gap: space.sm }}>
             <TextInput
               maxFontSizeMultiplier={MAX_FONT_SCALE}
               value={url}
@@ -194,8 +194,8 @@ export function HomeScreen({ navigation }: Props) {
                 height: 52,
                 borderWidth: 1,
                 borderColor: colors.border,
-                borderRadius: 14,
-                paddingHorizontal: 18,
+                borderRadius: radius.md,
+                paddingHorizontal: space.lg,
                 fontFamily: "NotoSansKR_400Regular",
                 color: colors.ink,
               }}
@@ -205,14 +205,14 @@ export function HomeScreen({ navigation }: Props) {
               disabled={!url.trim() || submitting}
               style={{
                 height: 52,
-                borderRadius: 14,
+                borderRadius: radius.md,
                 backgroundColor: colors.accent,
                 justifyContent: "center",
                 alignItems: "center",
                 opacity: !url.trim() || submitting ? 0.6 : 1,
               }}
             >
-              <AppText weight="medium" style={{ color: colors.onAccent, fontSize: 16 }}>
+              <AppText weight="medium" style={{ color: colors.onAccent, fontSize: fontSize.callout }}>
                 {submitting ? "추출 중..." : "장소 추출하기"}
               </AppText>
             </PressableScale>
@@ -229,15 +229,15 @@ export function HomeScreen({ navigation }: Props) {
         {isFirstVisit && <FirstVisitGuide />}
 
         {bookmarksQuery.isLoading ? (
-          <View style={{ gap: 10 }}>
+          <View style={{ gap: space.sm }}>
             <Skeleton style={{ width: 100, height: 17 }} />
-            <Skeleton style={{ width: "100%", height: 160, borderRadius: 12 }} />
+            <Skeleton style={{ width: "100%", height: 160, borderRadius: radius.md }} />
           </View>
         ) : bookmarksQuery.isError ? (
           <QueryErrorView message="찜한 장소를 불러오지 못했어요." onRetry={() => bookmarksQuery.refetch()} />
         ) : (
           pins.length > 0 && (
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: space.sm }}>
               <PressableScale
                 onPress={() => navigation.navigate("SavedPlaces")}
                 style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
@@ -252,7 +252,7 @@ export function HomeScreen({ navigation }: Props) {
 
         {tripsQuery.isLoading ? (
           <View>
-            <Skeleton style={{ width: 80, height: 17, marginBottom: 10 }} />
+            <Skeleton style={{ width: 80, height: 17, marginBottom: space.sm }} />
             <SkeletonRow />
             <SkeletonRow />
           </View>
@@ -261,7 +261,7 @@ export function HomeScreen({ navigation }: Props) {
         ) : (
           recentTrips.length > 0 && (
             <View>
-              <AppText weight="medium" style={{ marginBottom: 10 }}>
+              <AppText weight="medium" style={{ marginBottom: space.sm }}>
                 {recentTripsTitle}
               </AppText>
               {recentTrips.map((trip, i) => (
@@ -275,17 +275,17 @@ export function HomeScreen({ navigation }: Props) {
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      paddingVertical: 14,
+                      paddingVertical: space.md,
                       borderTopWidth: i === 0 ? 0 : 1,
                       borderTopColor: colors.borderSubtle,
                     }}
                   >
-                    <View style={{ flex: 1, gap: 2 }}>
+                    <View style={{ flex: 1, gap: space.xxxs }}>
                       <AppText weight="medium" numberOfLines={1}>
                         {trip.title}
                       </AppText>
                       {trip.startDate && (
-                        <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                        <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
                           {formatTripDates(trip.startDate, trip.endDate)}
                         </AppText>
                       )}
@@ -311,15 +311,15 @@ const GUIDE_STEPS: { icon: ComponentProps<typeof Feather>["name"]; title: string
 
 function FirstVisitGuide() {
   return (
-    <View style={{ gap: 14, padding: 18, borderRadius: 14, backgroundColor: colors.bgMuted }}>
+    <View style={{ gap: space.md, padding: space.lg, borderRadius: radius.md, backgroundColor: colors.bgMuted }}>
       <AppText weight="medium">이렇게 시작해보세요</AppText>
       {GUIDE_STEPS.map((step, index) => (
-        <View key={step.title} style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
+        <View key={step.title} style={{ flexDirection: "row", gap: space.sm, alignItems: "flex-start" }}>
           <View
             style={{
               width: 30,
               height: 30,
-              borderRadius: 15,
+              borderRadius: radius.full,
               backgroundColor: colors.accentBg,
               justifyContent: "center",
               alignItems: "center",
@@ -327,11 +327,11 @@ function FirstVisitGuide() {
           >
             <Feather name={step.icon} size={15} color={colors.accent} />
           </View>
-          <View style={{ flex: 1, gap: 2 }}>
-            <AppText weight="medium" style={{ fontSize: 14 }}>
+          <View style={{ flex: 1, gap: space.xxxs }}>
+            <AppText weight="medium" style={{ fontSize: fontSize.subheadline }}>
               {index + 1}. {step.title}
             </AppText>
-            <AppText style={{ fontSize: 13, color: colors.inkMuted }}>{step.body}</AppText>
+            <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>{step.body}</AppText>
           </View>
         </View>
       ))}

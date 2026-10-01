@@ -38,7 +38,7 @@ import { searchPlaces, type RecommendedPlace } from "@/lib/api/recommendations";
 import { categoryLabel } from "@/lib/placeCategory";
 import { formatCount } from "@/lib/number";
 import { toUserMessage } from "@/lib/api/client";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 
 const UNSORTED_ID = -1; // "미분류" 가상 폴더 id — 실제 폴더 id는 항상 양수(DB IDENTITY)라 겹치지 않는다.
 
@@ -83,13 +83,13 @@ export function SavedPlacesScreen() {
   if (bookmarksQuery.isLoading || foldersQuery.isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-          <Skeleton style={{ height: 40, borderRadius: 10 }} />
+        <View style={{ padding: space.sm, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+          <Skeleton style={{ height: 40, borderRadius: radius.md }} />
         </View>
         <Skeleton style={{ flex: 1 }} />
-        <View style={{ padding: 16, gap: 12, backgroundColor: colors.bg }}>
-          <Skeleton style={{ height: 60, borderRadius: 12 }} />
-          <Skeleton style={{ height: 60, borderRadius: 12 }} />
+        <View style={{ padding: space.md, gap: space.sm, backgroundColor: colors.bg }}>
+          <Skeleton style={{ height: 60, borderRadius: radius.md }} />
+          <Skeleton style={{ height: 60, borderRadius: radius.md }} />
         </View>
       </View>
     );
@@ -245,7 +245,7 @@ export function SavedPlacesScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={{ flexDirection: "row", gap: 8, padding: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+      <View style={{ flexDirection: "row", gap: space.xs, padding: space.sm, borderBottomWidth: 1, borderBottomColor: colors.border }}>
         <TextInput
           maxFontSizeMultiplier={MAX_FONT_SCALE}
           value={query}
@@ -258,8 +258,8 @@ export function SavedPlacesScreen() {
             height: 40,
             borderWidth: 1,
             borderColor: colors.border,
-            borderRadius: 10,
-            paddingHorizontal: 12,
+            borderRadius: radius.md,
+            paddingHorizontal: space.sm,
             fontFamily: "NotoSansKR_400Regular",
           }}
         />
@@ -268,8 +268,8 @@ export function SavedPlacesScreen() {
           disabled={searching || !query.trim()}
           style={{
             height: 40,
-            paddingHorizontal: 14,
-            borderRadius: 10,
+            paddingHorizontal: space.md,
+            borderRadius: radius.md,
             backgroundColor: colors.accent,
             justifyContent: "center",
             alignItems: "center",
@@ -295,7 +295,7 @@ export function SavedPlacesScreen() {
           // 네이버 지도처럼: 장소 정보를 별도 모달이 아니라 이 바텀시트 안에서 보여준다 —
           // 그래야 시트 밖(지도) 영역이 계속 터치되고, 시트를 살짝 내려도(스냅포인트만
           // 바뀔 뿐) 선택 상태(reviewPlaceId)와 지도 하이라이트가 그대로 유지된다.
-          <BottomSheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 12 }}>
+          <BottomSheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.lg, gap: space.sm }}>
             <PressableScale onPress={() => setReviewPlaceId(null)} hitSlop={8} style={{ alignSelf: "flex-end" }}>
               <Feather name="x" size={18} color={colors.inkMuted} />
             </PressableScale>
@@ -305,10 +305,10 @@ export function SavedPlacesScreen() {
           <BottomSheetFlatList keyboardShouldPersistTaps="handled"
             data={searchResults}
             keyExtractor={(item: RecommendedPlace) => String(item.id)}
-            contentContainerStyle={{ padding: 16 }}
+            contentContainerStyle={{ padding: space.md }}
             ListHeaderComponent={
-              <View style={{ gap: 8, marginBottom: 12 }}>
-                <PressableScale onPress={clearSearch} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <View style={{ gap: space.xs, marginBottom: space.sm }}>
+                <PressableScale onPress={clearSearch} style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
                   <Feather name="x" size={14} color={colors.accent} />
                   <AppText style={{ color: colors.accent }}>검색 결과 닫기</AppText>
                 </PressableScale>
@@ -317,7 +317,7 @@ export function SavedPlacesScreen() {
             }
             ListEmptyComponent={
               searchError ? null : (
-                <AppText style={{ textAlign: "center", marginTop: 24, color: colors.inkMuted }}>
+                <AppText style={{ textAlign: "center", marginTop: space.xl, color: colors.inkMuted }}>
                   '{searchedQuery}' 검색 결과가 없어요.{"\n"}다른 이름으로 검색해보세요.
                 </AppText>
               )
@@ -326,27 +326,27 @@ export function SavedPlacesScreen() {
               <Animated.View entering={entranceFor(item.id, index)}>
                 <View
                   style={{
-                    paddingVertical: 14,
+                    paddingVertical: space.md,
                     borderTopWidth: index === 0 ? 0 : 1,
                     borderTopColor: colors.borderSubtle,
-                    gap: 6,
+                    gap: space.xs,
                   }}
                 >
-                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space.xs }}>
                     <View style={{ flex: 1 }}>
                       <AppText weight="medium" numberOfLines={1}>
                         {item.name}
                       </AppText>
                       {item.address && (
-                        <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+                        <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
                           {item.address}
                         </AppText>
                       )}
                       {item.rating !== null && (
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
                           <RatingBadge rating={item.rating} />
                           {item.userRatingCount !== null && (
-                            <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                            <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
                               (리뷰 {formatCount(item.userRatingCount)}개)
                             </AppText>
                           )}
@@ -362,7 +362,7 @@ export function SavedPlacesScreen() {
                     </PressableScale>
                   </View>
                   <PressableScale onPress={() => setReviewPlaceId(item.id)} hitSlop={{ top: 10, bottom: 10, right: 10 }}>
-                    <AppText style={{ fontSize: 12, color: colors.accent }}>상세보기</AppText>
+                    <AppText style={{ fontSize: fontSize.caption1, color: colors.accent }}>상세보기</AppText>
                   </PressableScale>
                 </View>
               </Animated.View>
@@ -372,18 +372,18 @@ export function SavedPlacesScreen() {
           <BottomSheetFlatList keyboardShouldPersistTaps="handled"
             data={[{ id: UNSORTED_ID, name: "미분류", color: colors.inkMuted, placeCount: unsortedCount }, ...folders]}
             keyExtractor={(item: BookmarkFolder) => String(item.id)}
-            contentContainerStyle={{ padding: 16 }}
+            contentContainerStyle={{ padding: space.md }}
             ListHeaderComponent={
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "flex-end",
-                  marginBottom: 12,
+                  marginBottom: space.sm,
                 }}
               >
                 <PressableScale onPress={() => setFolderPickerTarget({ mode: "create" })} hitSlop={8}>
-                  <AppText style={{ fontSize: 13, color: colors.accent }}>+ 새 폴더</AppText>
+                  <AppText style={{ fontSize: fontSize.footnote, color: colors.accent }}>+ 새 폴더</AppText>
                 </PressableScale>
               </View>
             }
@@ -394,15 +394,15 @@ export function SavedPlacesScreen() {
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 10,
-                    paddingVertical: 14,
+                    gap: space.sm,
+                    paddingVertical: space.md,
                     borderTopWidth: index === 0 ? 0 : 1,
                     borderTopColor: colors.borderSubtle,
                   }}
                 >
-                  <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: item.color }} />
+                  <View style={{ width: 14, height: 14, borderRadius: radius.full, backgroundColor: item.color }} />
                   <AppText style={{ flex: 1 }}>{item.name}</AppText>
-                  <AppText style={{ fontSize: 12, color: colors.inkMuted }}>{item.placeCount}개</AppText>
+                  <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{item.placeCount}개</AppText>
                   <Feather name="chevron-right" size={16} color={colors.inkMuted} />
                 </PressableRow>
               </Animated.View>
@@ -412,19 +412,19 @@ export function SavedPlacesScreen() {
           <BottomSheetFlatList keyboardShouldPersistTaps="handled"
             data={visibleBookmarks}
             keyExtractor={(item: Bookmark) => String(item.id)}
-            contentContainerStyle={{ padding: 16 }}
+            contentContainerStyle={{ padding: space.md }}
             ListHeaderComponent={
-              <View style={{ gap: 8, marginBottom: 12 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <View style={{ gap: space.xs, marginBottom: space.sm }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
                   <View
                     style={{
                       width: 14,
                       height: 14,
-                      borderRadius: 7,
+                      borderRadius: radius.full,
                       backgroundColor: activeFolder?.color ?? colors.inkMuted,
                     }}
                   />
-                  <AppText weight="medium" style={{ fontSize: 16, flex: 1 }} numberOfLines={1}>
+                  <AppText weight="medium" style={{ fontSize: fontSize.callout, flex: 1 }} numberOfLines={1}>
                     {activeFolder?.name ?? "미분류"}
                   </AppText>
                   {activeFolderId !== UNSORTED_ID && (
@@ -441,7 +441,7 @@ export function SavedPlacesScreen() {
               </View>
             }
             ListEmptyComponent={
-              <AppText style={{ color: colors.inkMuted, textAlign: "center", padding: 16 }}>
+              <AppText style={{ color: colors.inkMuted, textAlign: "center", padding: space.md }}>
                 이 폴더엔 아직 저장한 장소가 없어요.{"\n"}위 검색창에서 장소를 찾아 ☆를 눌러 찜해보세요.
               </AppText>
             }
@@ -452,30 +452,30 @@ export function SavedPlacesScreen() {
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 8,
-                    paddingVertical: 14,
+                    gap: space.xs,
+                    paddingVertical: space.md,
                     borderTopWidth: index === 0 ? 0 : 1,
                     borderTopColor: colors.borderSubtle,
                   }}
                 >
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
+                  <View style={{ flex: 1, gap: space.xxxs }}>
+                    <View style={{ flexDirection: "row", alignItems: "baseline", gap: space.xs }}>
                       <AppText weight="medium" numberOfLines={1} style={{ flexShrink: 1 }}>
                         {item.placeName}
                       </AppText>
                       {categoryLabel(item.category) && (
-                        <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+                        <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
                           {categoryLabel(item.category)}
                         </AppText>
                       )}
                     </View>
                     {item.address && (
-                      <AppText style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+                      <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
                         {item.address}
                       </AppText>
                     )}
                   </View>
-                  <PressableScale onPress={() => openBookmarkMenu(item.id)} hitSlop={10} style={{ paddingHorizontal: 4 }}>
+                  <PressableScale onPress={() => openBookmarkMenu(item.id)} hitSlop={10} style={{ paddingHorizontal: space.xxs }}>
                     <Feather name="more-vertical" size={18} color={colors.inkMuted} />
                   </PressableScale>
                 </PressableRow>
@@ -504,8 +504,8 @@ export function SavedPlacesScreen() {
         backgroundStyle={{ backgroundColor: colors.bg }}
         handleIndicatorStyle={{ backgroundColor: colors.border }}
       >
-        <BottomSheetView style={{ padding: 8, paddingBottom: 32 }}>
-          <AppText weight="medium" numberOfLines={1} style={{ padding: 12, color: colors.inkMuted, fontSize: 13 }}>
+        <BottomSheetView style={{ padding: space.xs, paddingBottom: space.xxl }}>
+          <AppText weight="medium" numberOfLines={1} style={{ padding: space.sm, color: colors.inkMuted, fontSize: fontSize.footnote }}>
             {menuBookmark?.placeName}
           </AppText>
           <PressableScale
@@ -514,7 +514,7 @@ export function SavedPlacesScreen() {
               setFolderPickerTarget({ mode: "move", bookmarkId: menuBookmark.id });
               menuSheetRef.current?.dismiss();
             }}
-            style={{ padding: 14 }}
+            style={{ padding: space.md }}
           >
             <AppText>다른 폴더로 이동</AppText>
           </PressableScale>
@@ -529,7 +529,7 @@ export function SavedPlacesScreen() {
                 { text: "해제", style: "destructive", onPress: () => handleRemove(target.id) },
               ]);
             }}
-            style={{ padding: 14 }}
+            style={{ padding: space.md }}
           >
             <AppText style={{ color: colors.accent }}>찜 해제</AppText>
           </PressableScale>

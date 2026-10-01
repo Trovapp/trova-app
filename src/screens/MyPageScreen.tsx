@@ -7,7 +7,7 @@ import { PressableRow } from "@/components/PressableRow";
 import { haptics } from "@/lib/haptics";
 import { withdraw } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 import type { RootStackParamList } from "@/navigation/types";
 import appConfig from "../../app.json";
 
@@ -55,30 +55,30 @@ export function MyPageScreen() {
   }
 
   return (
-    <View style={{ flex: 1, padding: 24 }}>
-      <View style={{ alignItems: "center", marginTop: 12, marginBottom: 36 }}>
+    <View style={{ flex: 1, padding: space.xl }}>
+      <View style={{ alignItems: "center", marginTop: space.sm, marginBottom: space.xxxl }}>
         {user?.profileImageUrl && !avatarFailed ? (
           <Image
             source={{ uri: user.profileImageUrl }}
             onError={() => setAvatarFailed(true)}
-            style={{ width: 72, height: 72, borderRadius: 36, marginBottom: 14 }}
+            style={{ width: 72, height: 72, borderRadius: radius.full, marginBottom: space.md }}
           />
         ) : (
           <View
             style={{
               width: 72,
               height: 72,
-              borderRadius: 36,
+              borderRadius: radius.full,
               backgroundColor: colors.accentBg,
               justifyContent: "center",
               alignItems: "center",
-              marginBottom: 14,
+              marginBottom: space.md,
             }}
           >
             <Feather name="user" size={28} color={colors.accent} />
           </View>
         )}
-        <AppText weight="bold" style={{ fontSize: 20 }}>
+        <AppText weight="bold" style={{ fontSize: fontSize.title3 }}>
           {user?.nickname ?? "여행자"}
         </AppText>
       </View>
@@ -90,7 +90,7 @@ export function MyPageScreen() {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingVertical: 16,
+            paddingVertical: space.md,
             borderTopWidth: 1,
             borderTopColor: colors.borderSubtle,
           }}
@@ -104,7 +104,7 @@ export function MyPageScreen() {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingVertical: 16,
+            paddingVertical: space.md,
             borderTopWidth: 1,
             borderTopColor: colors.borderSubtle,
           }}
@@ -119,7 +119,7 @@ export function MyPageScreen() {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingVertical: 16,
+            paddingVertical: space.md,
             borderTopWidth: 1,
             borderTopColor: colors.borderSubtle,
             opacity: withdrawing ? 0.6 : 1,
@@ -130,7 +130,7 @@ export function MyPageScreen() {
         </PressableRow>
       </View>
 
-      <AppText style={{ marginTop: "auto", textAlign: "center", fontSize: 12, color: colors.inkMuted }}>
+      <AppText style={{ marginTop: "auto", textAlign: "center", fontSize: fontSize.caption1, color: colors.inkMuted }}>
         버전 {appConfig.expo.version}
       </AppText>
     </View>

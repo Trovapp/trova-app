@@ -16,7 +16,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { haptics } from "@/lib/haptics";
 import { describeSourceUrl } from "@/lib/shareUrl";
 import { toUserMessage } from "@/lib/api/client";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 import { deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob, type Place } from "@/lib/api/places";
 import type { MainTabScreenProps } from "@/navigation/types";
 
@@ -95,10 +95,10 @@ function PendingJobCard({
         : job.stageMessage ?? "처리 대기 중이에요";
 
   return (
-    <View style={{ padding: 16, borderRadius: 12, backgroundColor: colors.bgMuted }}>
+    <View style={{ padding: space.md, borderRadius: radius.md, backgroundColor: colors.bgMuted }}>
       <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
         <View style={{ flex: 1 }}>
-          <AppText style={{ fontSize: 11, color: colors.inkMuted, marginBottom: 2 }}>
+          <AppText style={{ fontSize: fontSize.caption2, color: colors.inkMuted, marginBottom: space.xxxs }}>
             {PLATFORM_LABEL[job.sourcePlatform]}
           </AppText>
           <AppText weight="medium" numberOfLines={1}>
@@ -114,25 +114,25 @@ function PendingJobCard({
               ])
             }
             hitSlop={10}
-            style={{ paddingLeft: 8 }}
+            style={{ paddingLeft: space.xs }}
           >
             <Feather name="trash-2" size={16} color={colors.inkMuted} />
           </PressableScale>
         )}
       </View>
-      <View style={{ marginTop: 4, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <AppText style={{ fontSize: 12, color: isFailed ? colors.accent : colors.inkMuted }}>{message}</AppText>
+      <View style={{ marginTop: space.xxs, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <AppText style={{ fontSize: fontSize.caption1, color: isFailed ? colors.accent : colors.inkMuted }}>{message}</AppText>
         {/* 장소를 못 찾은 영상은 다시 해도 결과가 같아서 다시 시도를 두지 않는다(삭제로 정리). */}
         {isFailed && !noPlaces && onRetry && (
           <PressableScale onPress={() => onRetry(job)} hitSlop={10}>
-            <AppText weight="medium" style={{ fontSize: 12, color: colors.ink }}>
+            <AppText weight="medium" style={{ fontSize: fontSize.caption1, color: colors.ink }}>
               다시 시도
             </AppText>
           </PressableScale>
         )}
       </View>
       {!isFailed && (
-        <View style={{ marginTop: 10 }}>
+        <View style={{ marginTop: space.sm }}>
           <ProgressBar percent={percent} />
         </View>
       )}
@@ -159,17 +159,17 @@ function VideoGroupCard({
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingVertical: 14,
+          paddingVertical: space.md,
           borderTopWidth: isFirst ? 0 : 1,
           borderTopColor: colors.borderSubtle,
         }}
       >
-        <View style={{ flex: 1, gap: 2 }}>
-          <AppText style={{ fontSize: 11, color: colors.inkMuted }}>{PLATFORM_LABEL[group.sourcePlatform]}</AppText>
+        <View style={{ flex: 1, gap: space.xxxs }}>
+          <AppText style={{ fontSize: fontSize.caption2, color: colors.inkMuted }}>{PLATFORM_LABEL[group.sourcePlatform]}</AppText>
           <AppText weight="medium" numberOfLines={1}>
             {group.title ?? describeSourceUrl(group.sourceUrl)}
           </AppText>
-          <AppText mono style={{ fontSize: 12, color: colors.inkMuted }} numberOfLines={1}>
+          <AppText mono style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
             {placePreview(group.places)}
           </AppText>
         </View>
@@ -244,7 +244,7 @@ export function PlacesListScreen({ navigation }: Props) {
 
   if (placesQuery.isLoading || pendingQuery.isLoading) {
     return (
-      <View style={{ padding: 16 }}>
+      <View style={{ padding: space.md }}>
         <SkeletonRow />
         <SkeletonRow />
         <SkeletonRow />
@@ -270,13 +270,13 @@ export function PlacesListScreen({ navigation }: Props) {
   return (
     <FlatList
       ref={listRef}
-      contentContainerStyle={{ padding: 16 }}
+      contentContainerStyle={{ padding: space.md }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       data={videoGroups}
       keyExtractor={(item) => String(item.jobId)}
       ListHeaderComponent={
         pendingJobs.length > 0 ? (
-          <View style={{ gap: 12, marginBottom: 20 }}>
+          <View style={{ gap: space.sm, marginBottom: space.lg }}>
             {pendingJobs.map((job) => (
               <PendingJobCard
                 key={job.jobId}
@@ -292,11 +292,11 @@ export function PlacesListScreen({ navigation }: Props) {
       ListEmptyComponent={
         // 처리 중인 영상이 있으면 "링크 넣으러 가기"는 어색하다 — 곧 여기에 나타난다고만 안내.
         pendingJobs.length > 0 ? (
-          <AppText style={{ textAlign: "center", marginTop: 16, color: colors.inkMuted }}>
+          <AppText style={{ textAlign: "center", marginTop: space.md, color: colors.inkMuted }}>
             처리가 끝나면 영상이 여기에 표시돼요.
           </AppText>
         ) : (
-          <View style={{ alignItems: "center", gap: 16, marginTop: 32 }}>
+          <View style={{ alignItems: "center", gap: space.md, marginTop: space.xxl }}>
             <AppText style={{ textAlign: "center" }}>
               아직 저장한 영상이 없어요.{"\n"}
               <AppText style={{ color: colors.inkMuted }}>여행 영상 링크를 넣으면 장소를 뽑아 정리해드려요.</AppText>
@@ -305,15 +305,15 @@ export function PlacesListScreen({ navigation }: Props) {
               onPress={() => navigation.navigate("Home")}
               style={{
                 height: 44,
-                paddingHorizontal: 20,
-                borderRadius: 10,
+                paddingHorizontal: space.lg,
+                borderRadius: radius.md,
                 borderWidth: 1,
                 borderColor: colors.accent,
                 justifyContent: "center",
                 alignItems: "center",
               }}
             >
-              <AppText weight="medium" style={{ color: colors.accent, fontSize: 14 }}>
+              <AppText weight="medium" style={{ color: colors.accent, fontSize: fontSize.subheadline }}>
                 링크 넣으러 가기
               </AppText>
             </PressableScale>

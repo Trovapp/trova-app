@@ -7,7 +7,7 @@ import { MyPageScreen } from "@/screens/MyPageScreen";
 import { PlacesListScreen } from "@/screens/PlacesListScreen";
 import { SavedPlacesScreen } from "@/screens/SavedPlacesScreen";
 import { TripsListScreen } from "@/screens/TripsListScreen";
-import { colors } from "@/lib/theme";
+import { colors, fontSize } from "@/lib/theme";
 import type { MainTabParamList } from "@/navigation/types";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -67,7 +67,7 @@ export function MainTabs() {
           title: "영상 기록",
           tabBarLabel: TAB_LABEL.PlacesList,
           tabBarBadge: inProgressCount > 0 ? inProgressCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: colors.accent, color: colors.onAccent, fontSize: 11 },
+          tabBarBadgeStyle: { backgroundColor: colors.accent, color: colors.onAccent, fontSize: fontSize.caption2 },
         }}
       />
       <Tab.Screen name="TripsList" component={TripsListScreen} options={{ title: "내 여행", tabBarLabel: TAB_LABEL.TripsList }} />

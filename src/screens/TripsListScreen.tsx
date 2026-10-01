@@ -14,7 +14,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { listTrips, type Trip } from "@/lib/api/trips";
 import { formatTripDates, toDateString } from "@/lib/date";
 import { groupTripsByDate } from "@/lib/tripSections";
-import { colors } from "@/lib/theme";
+import { colors, fontSize, radius, space } from "@/lib/theme";
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"TripsList">;
@@ -32,8 +32,8 @@ export function TripsListScreen({ navigation }: Props) {
 
   if (tripsQuery.isLoading) {
     return (
-      <View style={{ padding: 16 }}>
-        <Skeleton style={{ height: 48, borderRadius: 12, marginBottom: 20 }} />
+      <View style={{ padding: space.md }}>
+        <Skeleton style={{ height: 48, borderRadius: radius.md, marginBottom: space.lg }} />
         <SkeletonRow />
         <SkeletonRow />
         <SkeletonRow />
@@ -59,11 +59,11 @@ export function TripsListScreen({ navigation }: Props) {
     <SectionList
       ref={listRef}
       stickySectionHeadersEnabled={false}
-      contentContainerStyle={{ padding: 16 }}
+      contentContainerStyle={{ padding: space.md }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       sections={sections}
       renderSectionHeader={({ section }) => (
-        <AppText weight="medium" style={{ fontSize: 13, color: colors.inkMuted, marginTop: 8, marginBottom: 4 }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted, marginTop: space.xs, marginBottom: space.xxs }}>
           {section.title}
         </AppText>
       )}
@@ -73,9 +73,9 @@ export function TripsListScreen({ navigation }: Props) {
         <PressableScale
           onPress={() => navigation.navigate("NewTrip")}
           style={{
-            marginBottom: 20,
+            marginBottom: space.lg,
             height: 48,
-            borderRadius: 12,
+            borderRadius: radius.md,
             backgroundColor: colors.accent,
             justifyContent: "center",
             alignItems: "center",
@@ -88,7 +88,7 @@ export function TripsListScreen({ navigation }: Props) {
       }
       ListEmptyComponent={
         // 바로 위에 "새 여행 만들기" 버튼이 있으니 버튼을 또 두지 않고, 다른 경로(영상 기록)만 알려준다.
-        <AppText style={{ textAlign: "center", marginTop: 32 }}>
+        <AppText style={{ textAlign: "center", marginTop: space.xxl }}>
           아직 만든 여행이 없어요.{"\n"}
           <AppText style={{ color: colors.inkMuted }}>영상 기록에서 영상 속 장소로 바로 여행을 만들 수도 있어요.</AppText>
         </AppText>
@@ -101,17 +101,17 @@ export function TripsListScreen({ navigation }: Props) {
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              paddingVertical: 14,
+              paddingVertical: space.md,
               borderTopWidth: index === 0 ? 0 : 1,
               borderTopColor: colors.borderSubtle,
             }}
           >
-            <View style={{ flex: 1, gap: 2 }}>
+            <View style={{ flex: 1, gap: space.xxxs }}>
               <AppText weight="medium" numberOfLines={1}>
                 {item.title}
               </AppText>
               {item.startDate && (
-                <AppText style={{ fontSize: 12, color: colors.inkMuted }}>
+                <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
                   {formatTripDates(item.startDate, item.endDate)}
                 </AppText>
               )}
