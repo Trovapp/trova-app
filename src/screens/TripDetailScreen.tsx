@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Alert, Platform, RefreshControl, TextInput, View } from "react-native";
+import { Alert, Platform, RefreshControl, ScrollView, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
-import {
+import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetModal,
+  BottomSheetTextInput,
   BottomSheetView,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
@@ -54,6 +55,10 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TripDetail">;
+
+// 지도를 뒤에 꽉 채우고 일정은 끌어올리는 시트에 담는다(2026-10, 영상 속 장소 화면과 같은 구성. 참고: Plotline 일정 화면).
+const SHEET_DEFAULT_PERCENT = 55;
+const SHEET_SNAP_POINTS = ["18%", `${SHEET_DEFAULT_PERCENT}%`, "90%"];
 
 const TRANSPORT_LABEL: Record<"WALK" | "TRANSIT" | "CAR", string> = {
   WALK: "도보",
@@ -534,7 +539,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
           )}
 
           {editingField?.placeId === place.id && editingField.field === "memo" && (
-            <TextInput
+            <BottomSheetTextInput
               maxFontSizeMultiplier={MAX_FONT_SCALE}
               autoFocus
               defaultValue={memoDraft}
@@ -612,62 +617,108 @@ export function TripDetailScreen({ route, navigation }: Props) {
     );
   }
 
+  const actionChip = {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: space.xxs,
+    paddingVertical: space.xs,
+    paddingHorizontal: space.md,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+  };
+
   return (
     <View style={{ flex: 1 }}>
+    <InlineMap
+      pins={places
+        .filter((p) => p.latitude !== null && p.longitude !== null)
+        .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
+      fill
+      bottomInsetRatio={SHEET_DEFAULT_PERCENT / 100}
+      selectedId={reviewTarget?.kind === "tripPlace" ? String(reviewTarget.id) : null}
+    />
+    {/* 시트 안 목록은 끌어서 순서를 바꾼다 — 목록을 끌 때 시트까지 움직이지 않게 시트는 위쪽 손잡이로만 움직인다. */}
+    <BottomSheet index={1} snapPoints={SHEET_SNAP_POINTS} enableDynamicSizing={false} enableContentPanningGesture={false}>
+    <BottomSheetView style={{ flex: 1 }}>
     <DraggableFlatList keyboardShouldPersistTaps="handled"
       data={places}
       keyExtractor={(item) => String(item.id)}
       onDragEnd={handleDragEnd}
       renderItem={renderPlaceItem}
       activationDistance={0}
-      contentContainerStyle={{ padding: space.md }}
+      contentContainerStyle={{ padding: space.md, paddingBottom: space.xxxl }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       ListHeaderComponent={
-        <View style={{ gap: space.md, marginBottom: space.md }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs, flex: 1 }}>
-              {trip.days.map((d) => (
+        <View style={{ gap: space.sm, marginBottom: space.sm }}>
+          {/* 일차 칩: 날짜와 그날 장소 수를 함께 보여주고 가로로 넘긴다(참고: Plotline 일정의 날짜 칩). */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
+            {trip.days.map((d) => {
+              const selected = d.day === currentActiveDay;
+              return (
                 <PressableScale
                   key={d.day}
                   onPress={() => setActiveDay(d.day)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
                   style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: space.xs,
                     paddingVertical: space.xs,
                     paddingHorizontal: space.md,
                     borderRadius: radius.full,
-                    backgroundColor: d.day === currentActiveDay ? colors.accent : colors.bgMuted,
+                    backgroundColor: selected ? colors.accent : colors.bgMuted,
                   }}
                 >
-                  <AppText weight="medium" style={{ color: d.day === currentActiveDay ? colors.onAccent : colors.inkMuted, fontSize: fontSize.footnote }}>
-                    {d.day}일차{d.date ? ` (${d.date.slice(5)})` : ""}
+                  <AppText weight="medium" style={{ color: selected ? colors.onAccent : colors.ink, fontSize: fontSize.footnote }}>
+                    {d.day}일차{d.date ? ` · ${d.date.slice(5).replace("-", "/")}` : ""}
                   </AppText>
+                  <View
+                    style={{
+                      minWidth: 20,
+                      paddingHorizontal: space.xxs,
+                      borderRadius: radius.full,
+                      backgroundColor: selected ? "rgba(255,255,255,0.25)" : colors.bg,
+                      alignItems: "center",
+                    }}
+                  >
+                    <AppText style={{ fontSize: fontSize.caption2, color: selected ? colors.onAccent : colors.inkMuted }}>{d.places.length}</AppText>
+                  </View>
                 </PressableScale>
-              ))}
-            </View>
-            <PressableScale onPress={handleCheckWeather} disabled={busy || !activeDayData?.date}>
-              <AppText style={{ fontSize: fontSize.footnote, color: colors.accent, opacity: !activeDayData?.date ? 0.4 : 1 }}>날씨 확인</AppText>
-            </PressableScale>
-          </View>
+              );
+            })}
+          </ScrollView>
 
-          <PressableScale
-            onPress={handleStartReplan}
-            disabled={replanStarting || totalPlaceCount === 0}
-            style={{
-              flexDirection: "row",
-              height: 44,
-              borderRadius: radius.md,
-              borderWidth: 1,
-              borderColor: colors.accent,
-              justifyContent: "center",
-              alignItems: "center",
-              gap: space.xs,
-              opacity: replanStarting || totalPlaceCount === 0 ? 0.4 : 1,
-            }}
-          >
-            {!replanStarting && <Feather name="refresh-cw" size={15} color={colors.accent} />}
-            <AppText weight="medium" style={{ color: colors.accent, fontSize: fontSize.subheadline }}>
-              {replanStarting ? "시작하는 중..." : "전체 일정 재구성"}
-            </AppText>
-          </PressableScale>
+          {/* 예전엔 날씨 확인(글자), 전체 일정 재구성(큰 테두리 버튼), 동선 최적화(글자)가 세 줄로 쌓였다. 한 줄 칩으로 모은다. */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
+            <PressableScale
+              onPress={handleStartReplan}
+              disabled={replanStarting || totalPlaceCount === 0}
+              style={{ ...actionChip, borderColor: colors.accent, opacity: replanStarting || totalPlaceCount === 0 ? 0.4 : 1 }}
+            >
+              <Feather name="refresh-cw" size={12} color={colors.accent} />
+              <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
+                {replanStarting ? "시작하는 중..." : "전체 일정 재구성"}
+              </AppText>
+            </PressableScale>
+            <PressableScale
+              onPress={handleOptimizeRoute}
+              disabled={busy || places.length < 2}
+              style={{ ...actionChip, opacity: busy || places.length < 2 ? 0.4 : 1 }}
+            >
+              <Feather name="shuffle" size={12} color={colors.ink} />
+              <AppText style={{ fontSize: fontSize.footnote }}>동선 최적화</AppText>
+            </PressableScale>
+            <PressableScale
+              onPress={handleCheckWeather}
+              disabled={busy || !activeDayData?.date}
+              style={{ ...actionChip, opacity: busy || !activeDayData?.date ? 0.4 : 1 }}
+            >
+              <Feather name="cloud" size={12} color={colors.ink} />
+              <AppText style={{ fontSize: fontSize.footnote }}>날씨 확인</AppText>
+            </PressableScale>
+          </ScrollView>
 
           <WeatherAlertBanner
             tripId={tripId}
@@ -684,20 +735,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             </View>
           )}
 
-          <PressableScale onPress={handleOptimizeRoute} disabled={busy || places.length < 2}>
-            <AppText style={{ fontSize: fontSize.footnote, color: colors.accent, opacity: places.length < 2 ? 0.4 : 1 }}>
-              동선 최적화
-            </AppText>
-          </PressableScale>
-
           {error && <ErrorText>{error}</ErrorText>}
-
-          <InlineMap
-            pins={places
-              .filter((p) => p.latitude !== null && p.longitude !== null)
-              .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }))}
-            selectedId={reviewTarget?.kind === "tripPlace" ? String(reviewTarget.id) : null}
-          />
         </View>
       }
       ListEmptyComponent={
@@ -722,7 +760,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
           {activeTab === "search" ? (
             <View style={{ gap: space.sm }}>
               <View style={{ flexDirection: "row", gap: space.xs }}>
-                <TextInput
+                <BottomSheetTextInput
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
                   value={query}
                   onChangeText={setQuery}
@@ -898,6 +936,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
         </View>
       }
     />
+    </BottomSheetView>
+    </BottomSheet>
     <PlaceReviewSheet
       placeId={reviewTarget?.kind === "place" ? reviewTarget.id : null}
       tripPlaceId={reviewTarget?.kind === "tripPlace" ? reviewTarget.id : null}
