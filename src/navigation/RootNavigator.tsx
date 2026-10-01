@@ -11,7 +11,10 @@ import { TripReplanScreen } from "@/screens/TripReplanScreen";
 import { LicensesScreen } from "@/screens/LicensesScreen";
 import { AppText } from "@/components/AppText";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
+import { OnboardingScreen } from "@/screens/OnboardingScreen";
+import { hasSeenOnboarding, markOnboardingSeen } from "@/lib/onboardingStorage";
 import type { MainTabParamList, RootStackParamList } from "@/navigation/types";
 
 export type { RootStackParamList };
@@ -20,8 +23,30 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
   const { user, loading, authError, refresh } = useAuth();
+  // null = 아직 기기 저장소를 읽는 중
+  const [onboardingSeen, setOnboardingSeen] = useState<boolean | null>(null);
+  // 개발 중 로그인한 채로 온보딩을 확인하는 미리보기 스위치. 배포 빌드(__DEV__ false)에서는 항상 꺼진다.
+  const [previewOnboarding, setPreviewOnboarding] = useState(
+    __DEV__ && process.env.EXPO_PUBLIC_PREVIEW_ONBOARDING === "1",
+  );
 
-  if (loading) {
+  useEffect(() => {
+    hasSeenOnboarding()
+      .then(setOnboardingSeen)
+      // 저장소를 못 읽으면 온보딩을 건너뛴다 — 로그인 자체를 막으면 안 된다.
+      .catch(() => setOnboardingSeen(true));
+  }, []);
+
+  function finishOnboarding() {
+    setOnboardingSeen(true);
+    markOnboardingSeen().catch(() => {});
+  }
+
+  if (previewOnboarding) {
+    return <OnboardingScreen onDone={() => setPreviewOnboarding(false)} />;
+  }
+
+  if (loading || (!user && onboardingSeen === null)) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <AppText>불러오는 중...</AppText>
@@ -45,7 +70,13 @@ export function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerTitleAlign: "center" }}>
       {!user ? (
-        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        onboardingSeen ? (
+          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        ) : (
+          <Stack.Screen name="Onboarding" options={{ headerShown: false }}>
+            {() => <OnboardingScreen onDone={finishOnboarding} />}
+          </Stack.Screen>
+        )
       ) : (
         <>
           <Stack.Screen

@@ -14,6 +14,7 @@ export type MainTabParamList = {
 };
 
 export type RootStackParamList = {
+  Onboarding: undefined;
   Login: undefined;
   MainTabs: undefined;
   Processing: { jobId: number };
