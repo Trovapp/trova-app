@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type ElementRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ElementRef } from "react";
 import { ScrollView, View } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { useSharedValue, type SharedValue } from "react-native-reanimated";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
@@ -200,13 +201,18 @@ function CandidateRow({
 
 // 비서 쪽 말풍선에만 붙이는 작은 아이콘 — 양쪽에 다 붙이면 오히려 산만해져서
 // 비서 쪽에만 둬서 "누가 말하는지"를 한눈에 구분되게 한다.
-// 비서의 "몸" — 영상 분석·재구성 화면과 같은 빛 점 무리. 움직이는 비서는 한 명만 두고(지금 말하는 쪽),
-// 지나간 답변 옆의 아바타는 같은 모양으로 멈춰 있게 한다.
+// 비서의 "몸" — 영상 분석·재구성 화면과 같은 빛 점 무리. 움직이는 비서는 한 명만, 항상 최신 줄(생각 중 또는
+// 최신 답변)에 둔다. 예전엔 지난 답변 옆 비서가 굳은 모양으로 남고 새 줄의 비서가 처음부터 다시 움직여
+// "꺼졌다가 다른 데서 켜지는" 느낌이었다(2026-10 사용자 의견). 지난 답변 옆은 빈 자리만 남겨 말풍선 위치를 유지하고,
+// 움직임의 시계는 시트가 들고 있다가 새 자리의 비서에게 넘겨 박자가 이어지게 한다.
+const AvatarClockContext = createContext<SharedValue<number> | null>(null);
+
 function AssistantAvatar({ state }: { state?: OrbState }) {
+  const clock = useContext(AvatarClockContext) ?? undefined;
   // 배경 원 없이 점 무리만 둔다 — 원 안에 가두면 도장처럼 보여서 "떠 있는 존재" 느낌이 사라진다.
   return (
     <View style={{ width: 28, height: 28, justifyContent: "center", alignItems: "center", overflow: "visible" }}>
-      <Orb state={state ?? "waiting"} size={22} still={state === undefined} label="여행 비서" />
+      {state !== undefined && <Orb state={state} size={22} clock={clock} label="여행 비서" />}
     </View>
   );
 }
@@ -251,6 +257,8 @@ export function ConversationSheet({
   const sheetRef = useRef<BottomSheet>(null);
   const scrollRef = useRef<ElementRef<typeof BottomSheetScrollView>>(null);
   const queryClient = useQueryClient();
+  // 움직이는 비서가 줄을 옮겨 다녀도 같은 박자로 이어 움직이게 하는 시계(AvatarClockContext 참고)
+  const avatarClock = useSharedValue(0);
   const sessionIdRef = useRef<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -356,6 +364,7 @@ export function ConversationSheet({
   const lastAssistantIndex = messages.map((m) => m.role).lastIndexOf("assistant");
 
   return (
+    <AvatarClockContext.Provider value={avatarClock}>
     <BottomSheet
       ref={sheetRef}
       index={-1}
@@ -381,7 +390,7 @@ export function ConversationSheet({
           <>
             <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
               {/* 대화 전엔 제목 옆 비서가 떠다니며 기다리고, 대화가 시작되면 움직임은 대화 속 비서로 넘어간다. */}
-              <AssistantAvatar state={messages.length === 0 && !sending ? "waiting" : undefined} />
+              {messages.length === 0 && !sending && <AssistantAvatar state="waiting" />}
               <AppText weight="medium" style={{ fontSize: fontSize.callout, flex: 1 }}>
                 비서에게 물어보기
               </AppText>
@@ -503,5 +512,6 @@ export function ConversationSheet({
         )}
       </BottomSheetScrollView>
     </BottomSheet>
+    </AvatarClockContext.Provider>
   );
 }

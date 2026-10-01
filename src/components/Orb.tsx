@@ -120,12 +120,16 @@ export function Orb({
   size = 160,
   label = "분석 중",
   still = false,
+  clock: sharedClock,
 }: {
   state: OrbState;
   size?: number;
   label?: string;
   // 같은 존재를 여러 곳에 그릴 때(지나간 대화의 아바타 등) 움직이는 건 하나만 두려고 멈춘 모습으로 그린다.
   still?: boolean;
+  // 바깥에서 시계를 넘기면 그 시계로 움직인다. 같은 존재가 다른 자리로 옮겨 그려질 때(대화의 다음 줄)
+  // 새로 마운트돼도 움직임이 처음부터 다시 시작하지 않고 이어진다(2026-10).
+  clock?: SharedValue<number>;
 }) {
   const reducedMotion = useReducedMotion() || still;
   const motion = MOTION[state];
@@ -133,7 +137,8 @@ export function Orb({
   const particles = useMemo(() => makeParticles(size < 32 ? 6 : size < 48 ? 7 : 28), [size]);
   const dotSize = Math.max(size < 32 ? 2.6 : 3, size * 0.055);
 
-  const clock = useSharedValue(0);
+  const ownClock = useSharedValue(0);
+  const clock = sharedClock ?? ownClock;
   const speed = useSharedValue(motion.speed);
   const spread = useSharedValue(motion.spread);
   const pulse = useSharedValue(motion.pulse);
