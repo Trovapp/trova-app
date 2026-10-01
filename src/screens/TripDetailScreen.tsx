@@ -450,6 +450,20 @@ export function TripDetailScreen({ route, navigation }: Props) {
     }
   }
 
+  // 행의 값이나 ⋮ 메뉴에서 시간·이동수단·메모 편집을 연다(행 안의 편집기는 그대로 쓴다).
+  function startEditing(place: TripPlace, field: "time" | "transport" | "memo") {
+    if (field === "time") {
+      setEditingField({ placeId: place.id, field: "time" });
+      setTimeDraft(parseTimeToDate(place.visitStartTime));
+      setShowTimePicker(true);
+    } else if (field === "transport") {
+      setEditingField(editingField?.placeId === place.id && editingField.field === "transport" ? null : { placeId: place.id, field: "transport" });
+    } else {
+      setMemoDraft(place.memo ?? "");
+      setEditingField({ placeId: place.id, field: "memo" });
+    }
+  }
+
   function renderPlaceItem({ item: place, getIndex, drag, isActive }: RenderItemParams<TripPlace>) {
     const index = getIndex() ?? 0;
     const gap = (gapRecommendationsQuery.data ?? []).find((g) => g.beforePlaceId === place.id);
@@ -471,44 +485,32 @@ export function TripDetailScreen({ route, navigation }: Props) {
           onOpenMenu={() => openPlaceMenu(place.id)}
           showLinks={false}
         >
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm, alignItems: "center", marginTop: space.xxs }}>
-            <PressableScale
-              onPress={() => {
-                setEditingField({ placeId: place.id, field: "time" });
-                setTimeDraft(parseTimeToDate(place.visitStartTime));
-                setShowTimePicker(true);
-              }}
-            >
-              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
-                {place.visitStartTime ? `${place.visitStartTime.slice(0, 5)} 도착` : "시간 추가"}
-              </AppText>
-            </PressableScale>
-
-            <PressableScale
-              onPress={() =>
-                setEditingField(
-                  editingField?.placeId === place.id && editingField.field === "transport"
-                    ? null
-                    : { placeId: place.id, field: "transport" }
-                )
-              }
-            >
-              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
-                {place.arrivalTransportMode ? TRANSPORT_LABEL[place.arrivalTransportMode] : "이동수단 추가"}
-              </AppText>
-            </PressableScale>
-
-            <PressableScale
-              onPress={() => {
-                setMemoDraft(place.memo ?? "");
-                setEditingField({ placeId: place.id, field: "memo" });
-              }}
-            >
-              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
-                {place.memo || "메모 추가"}
-              </AppText>
-            </PressableScale>
-          </View>
+          {/* 예전엔 장소마다 "시간 추가 · 이동수단 추가 · 메모 추가" 글자 버튼이 붙어 장소 하나가 여러 줄이 됐다(2026-10).
+              정하는 동작은 ⋮ 메뉴로 모으고, 행에는 이미 정한 값만 보여준다. 값을 누르면 바로 고칠 수 있다. */}
+          {(place.visitStartTime || place.arrivalTransportMode || place.memo) && (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm, alignItems: "center", marginTop: space.xxs }}>
+              {place.visitStartTime && (
+                <PressableScale onPress={() => startEditing(place, "time")} style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
+                  <Feather name="clock" size={12} color={colors.inkMuted} />
+                  <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{place.visitStartTime.slice(0, 5)} 도착</AppText>
+                </PressableScale>
+              )}
+              {place.arrivalTransportMode && (
+                <PressableScale onPress={() => startEditing(place, "transport")} style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
+                  <Feather name="navigation" size={12} color={colors.inkMuted} />
+                  <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{TRANSPORT_LABEL[place.arrivalTransportMode]}</AppText>
+                </PressableScale>
+              )}
+              {place.memo && (
+                <PressableScale onPress={() => startEditing(place, "memo")} style={{ flexDirection: "row", alignItems: "center", gap: space.xxs, flexShrink: 1 }}>
+                  <Feather name="edit-3" size={12} color={colors.inkMuted} />
+                  <AppText style={{ flexShrink: 1, fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
+                    {place.memo}
+                  </AppText>
+                </PressableScale>
+              )}
+            </View>
+          )}
 
           {editingField?.placeId === place.id && editingField.field === "transport" && (
             <View style={{ flexDirection: "row", gap: space.xs, marginTop: space.xs }}>
@@ -935,6 +937,27 @@ export function TripDetailScreen({ route, navigation }: Props) {
         <AppText weight="medium" numberOfLines={1} style={{ padding: space.sm, color: colors.inkMuted, fontSize: fontSize.footnote }}>
           {menuPlace?.placeName}
         </AppText>
+        {/* 일정 정하기(시간·이동수단·메모)는 행에서 빼고 여기 맨 위에 모았다. */}
+        {menuPlace &&
+          ([
+            { field: "time", icon: "clock", label: menuPlace.visitStartTime ? "도착 시간 바꾸기" : "도착 시간 정하기" },
+            { field: "transport", icon: "navigation", label: menuPlace.arrivalTransportMode ? "이동수단 바꾸기" : "이동수단 정하기" },
+            { field: "memo", icon: "edit-3", label: menuPlace.memo ? "메모 고치기" : "메모 쓰기" },
+          ] as const).map((item) => (
+            <PressableScale
+              key={item.field}
+              onPress={() => {
+                const target = menuPlace;
+                menuSheetRef.current?.dismiss();
+                startEditing(target, item.field);
+              }}
+              style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
+            >
+              <Feather name={item.icon} size={16} color={colors.inkMuted} />
+              <AppText>{item.label}</AppText>
+            </PressableScale>
+          ))}
+        <View style={{ height: 1, marginHorizontal: space.md, backgroundColor: colors.borderSubtle }} />
         <PressableScale
           onPress={() => {
             if (!menuPlace) return;
