@@ -8,7 +8,7 @@ import { PressableScale } from "@/components/PressableScale";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
+import { AppText, FONT, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { DayPickerSheet } from "@/components/DayPickerSheet";
 import { InlineMap } from "@/components/InlineMap";
@@ -550,7 +550,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                         borderColor: colors.border,
                         borderRadius: radius.sm,
                         paddingHorizontal: space.sm,
-                        fontFamily: "NotoSansKR_400Regular",
+                        fontFamily: FONT.regular,
                       }}
                     />
                     <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>

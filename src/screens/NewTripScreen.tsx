@@ -3,7 +3,7 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } fr
 import { usePreventRemove } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
-import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
+import { AppText, FONT, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { PressableScale } from "@/components/PressableScale";
 import { haptics } from "@/lib/haptics";
@@ -80,7 +80,7 @@ export function NewTripScreen({ navigation }: Props) {
           borderColor: colors.border,
           borderRadius: radius.md,
           paddingHorizontal: space.md,
-          fontFamily: "NotoSansKR_400Regular",
+          fontFamily: FONT.regular,
         }}
       />
 

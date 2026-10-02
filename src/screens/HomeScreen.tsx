@@ -4,7 +4,7 @@ import { useScrollToTop } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
-import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
+import { AppText, FONT, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { InlineMap } from "@/components/InlineMap";
 import { PressableRow } from "@/components/PressableRow";
@@ -206,7 +206,7 @@ export function HomeScreen({ navigation }: Props) {
                 borderColor: colors.border,
                 borderRadius: radius.md,
                 paddingHorizontal: space.lg,
-                fontFamily: "NotoSansKR_400Regular",
+                fontFamily: FONT.regular,
                 color: colors.ink,
               }}
             />

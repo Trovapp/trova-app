@@ -13,7 +13,7 @@ import DraggableFlatList, { type RenderItemParams } from "react-native-draggable
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { AlternativeFinderSheet } from "@/components/AlternativeFinderSheet";
-import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
+import { AppText, FONT, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { ConversationSheet } from "@/components/ConversationSheet";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
@@ -845,7 +845,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                     borderColor: colors.border,
                     borderRadius: radius.md,
                     paddingHorizontal: space.sm,
-                    fontFamily: "NotoSansKR_400Regular",
+                    fontFamily: FONT.regular,
                   }}
                 />
                 <PressableScale

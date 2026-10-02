@@ -12,7 +12,7 @@ import BottomSheet, {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
-import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
+import { AppText, FONT, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { FolderPickerModal } from "@/components/FolderPickerModal";
 import { InlineMap } from "@/components/InlineMap";
@@ -260,7 +260,7 @@ export function SavedPlacesScreen() {
             borderColor: colors.border,
             borderRadius: radius.md,
             paddingHorizontal: space.sm,
-            fontFamily: "NotoSansKR_400Regular",
+            fontFamily: FONT.regular,
           }}
         />
         <PressableScale

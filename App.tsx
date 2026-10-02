@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { AppState } from "react-native";
 import { useFonts as useMonoFonts, IBMPlexMono_400Regular, IBMPlexMono_500Medium } from "@expo-google-fonts/ibm-plex-mono";
-import { useFonts as useSansFonts, NotoSansKR_400Regular, NotoSansKR_500Medium, NotoSansKR_700Bold } from "@expo-google-fonts/noto-sans-kr";
-import { useFonts as useEmojiFonts } from "expo-font";
+import { useFonts as useEmojiFonts, useFonts as useSansFonts } from "expo-font";
+import { FONT } from "@/components/AppText";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -40,9 +40,9 @@ export default function App() {
     IBMPlexMono_500Medium,
   });
   const [sansFontsLoaded] = useSansFonts({
-    NotoSansKR_400Regular,
-    NotoSansKR_500Medium,
-    NotoSansKR_700Bold,
+    [FONT.regular]: require("./assets/fonts/pretendard/Pretendard-Regular.otf"),
+    [FONT.medium]: require("./assets/fonts/pretendard/Pretendard-Medium.otf"),
+    [FONT.bold]: require("./assets/fonts/pretendard/Pretendard-Bold.otf"),
   });
   // 별점/팁/리뷰 반응처럼 감성적인 자리에만 쓰는 이모지 폰트 — 토스가 자체
   // 스타일로 다시 그린 이모지 세트 (github.com/toss/tossface, 라이선스는
