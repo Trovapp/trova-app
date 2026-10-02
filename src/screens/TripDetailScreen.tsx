@@ -698,8 +698,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
     paddingVertical: space.xs,
     paddingHorizontal: space.md,
     borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
+    // 테두리만 있는 버튼이 많아 화면이 선으로 가득해 보였다(2026-10 QA, "Wireframe Borders") — 옅은 채움으로 바꿨다.
+    // 새 색을 만들면 웹 토큰도 바꿔야 해서 기존 토큰을 쓴다(bgMuted는 흰 배경과 거의 구분되지 않음).
+    backgroundColor: colors.borderSubtle,
   };
 
   return (
@@ -769,7 +770,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             <PressableScale
               onPress={handleStartReplan}
               disabled={replanStarting || totalPlaceCount === 0}
-              style={{ ...actionChip, borderColor: colors.accent, opacity: replanStarting || totalPlaceCount === 0 ? 0.4 : 1 }}
+              style={{ ...actionChip, backgroundColor: colors.accentBg, opacity: replanStarting || totalPlaceCount === 0 ? 0.4 : 1 }}
             >
               <Feather name="refresh-cw" size={12} color={colors.accent} />
               <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
@@ -1051,7 +1052,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
         <AppText weight="medium" numberOfLines={1} style={{ padding: space.sm, color: colors.inkMuted, fontSize: fontSize.footnote }}>
           {menuPlace?.placeName}
         </AppText>
-        {/* 일정 정하기(시간·이동수단·메모)는 행에서 빼고 여기 맨 위에 모았다. */}
+        {/* 일정 정하기(시간·이동수단·메모)는 행에서 빼고 여기 맨 위에 모았다. 아래 동작들도 같은 모양으로 아이콘을 붙인다
+            (위 4개만 아이콘이 있어 두 묶음이 다른 메뉴처럼 보였다, 2026-10 QA). */}
         {menuPlace &&
           ([
             { field: "time", icon: "clock", label: menuPlace.visitStartTime ? "도착 시간 바꾸기" : "도착 시간 정하기" },
@@ -1081,8 +1083,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
             setAlternativeTargetId(menuPlace.id);
             menuSheetRef.current?.dismiss();
           }}
-          style={{ padding: space.md }}
+          style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
         >
+          <Feather name="search" size={16} color={colors.inkMuted} />
           <AppText>대안 찾기</AppText>
         </PressableScale>
         <PressableScale
@@ -1093,8 +1096,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
             setAssistantTargetId(menuPlace.id);
             menuSheetRef.current?.dismiss();
           }}
-          style={{ padding: space.md }}
+          style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
         >
+          <Feather name="message-circle" size={16} color={colors.inkMuted} />
           <AppText>비서에게 물어보기</AppText>
         </PressableScale>
         {/* 행에 링크 줄까지 붙으면 장소 하나가 네 줄이 돼서, 가끔 쓰는 외부 링크는 메뉴로 옮겼다. */}
@@ -1105,8 +1109,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
               menuSheetRef.current?.dismiss();
               if (url) openExternal(url);
             }}
-            style={{ padding: space.md }}
+            style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
           >
+            <Feather name="map" size={16} color={colors.inkMuted} />
             <AppText>카카오맵에서 보기</AppText>
           </PressableScale>
         )}
@@ -1117,8 +1122,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
               menuSheetRef.current?.dismiss();
               if (url) openExternal(url);
             }}
-            style={{ padding: space.md }}
+            style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
           >
+            <Feather name="phone" size={16} color={colors.inkMuted} />
             <AppText>전화 걸기</AppText>
           </PressableScale>
         )}
@@ -1132,8 +1138,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
               { text: "삭제", style: "destructive", onPress: () => handleRemove(target.id) },
             ]);
           }}
-          style={{ padding: space.md }}
+          style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
         >
+          <Feather name="trash-2" size={16} color={colors.accent} />
           <AppText style={{ color: colors.accent }}>삭제</AppText>
         </PressableScale>
       </BottomSheetView>

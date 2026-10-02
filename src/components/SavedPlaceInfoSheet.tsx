@@ -62,6 +62,7 @@ export function SavedPlaceInfoSheet({
           <SheetCloseButton onPress={onClose} />
         </View>
 
+        {/* 동작 버튼은 테두리 대신 옅은 채움(여행 상세 동작 칩과 같은 규칙, 2026-10 QA) */}
         {(mapUrl || telUrl || onMoveDay) && (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
             {onMoveDay && (
@@ -74,8 +75,7 @@ export function SavedPlaceInfoSheet({
                   paddingVertical: space.sm,
                   paddingHorizontal: space.md,
                   borderRadius: radius.md,
-                  borderWidth: 1,
-                  borderColor: colors.border,
+                  backgroundColor: colors.borderSubtle,
                 }}
               >
                 <Feather name="calendar" size={14} color={colors.ink} />
@@ -92,8 +92,7 @@ export function SavedPlaceInfoSheet({
                   paddingVertical: space.sm,
                   paddingHorizontal: space.md,
                   borderRadius: radius.md,
-                  borderWidth: 1,
-                  borderColor: colors.border,
+                  backgroundColor: colors.borderSubtle,
                 }}
               >
                 <Feather name="map" size={14} color={colors.ink} />
@@ -110,8 +109,7 @@ export function SavedPlaceInfoSheet({
                   paddingVertical: space.sm,
                   paddingHorizontal: space.md,
                   borderRadius: radius.md,
-                  borderWidth: 1,
-                  borderColor: colors.border,
+                  backgroundColor: colors.borderSubtle,
                 }}
               >
                 <Feather name="phone" size={14} color={colors.ink} />

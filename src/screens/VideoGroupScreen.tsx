@@ -504,9 +504,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                   ))}
                   <PressableScale
                     onPress={handleAddDay}
-                    style={{ paddingVertical: space.xs, paddingHorizontal: space.md, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border }}
+                    style={{ paddingVertical: space.xs, paddingHorizontal: space.md, borderRadius: radius.full, backgroundColor: colors.borderSubtle }}
                   >
-                    <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>+ 날짜 추가</AppText>
+                    <AppText style={{ fontSize: fontSize.footnote, color: colors.ink }}>+ 날짜 추가</AppText>
                   </PressableScale>
                   <PressableScale
                     onPress={handleOptimizeRoute}
@@ -518,8 +518,8 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                       paddingVertical: space.xs,
                       paddingHorizontal: space.md,
                       borderRadius: radius.full,
-                      borderWidth: 1,
-                      borderColor: colors.border,
+                      // 테두리 대신 옅은 채움(여행 상세의 동작 칩과 같은 규칙, 2026-10 QA)
+                      backgroundColor: colors.accentBg,
                       opacity: actionPending || activePlaces.length < 2 ? 0.4 : 1,
                     }}
                   >
