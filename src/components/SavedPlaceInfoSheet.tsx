@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
@@ -34,7 +34,19 @@ export function SavedPlaceInfoSheet({
   const hasLocation = place.latitude !== null && place.longitude !== null;
 
   return (
-    <BottomSheet index={0} snapPoints={["45%"]} enableDynamicSizing={false} enablePanDownToClose onClose={onClose}>
+    <BottomSheet
+      index={0}
+      snapPoints={["45%"]}
+      enableDynamicSizing={false}
+      enablePanDownToClose
+      onClose={onClose}
+      // 영상 시트 위에 그대로 겹쳐 손잡이가 두 개 보이고 뒤 시트 제목이 반쯤 잘렸다(2026-10 QA). 뒤를 어둡게 해
+      // 위 시트가 앞에 떠 있다는 걸 구분하고, 바깥을 누르면 닫는다. 열 때 지도가 이 장소 핀으로 옮겨 가므로
+      // ⋮ 메뉴(기본 0.5)보다 옅게 해 핀이 보이게 둔다.
+      backdropComponent={(props: BottomSheetBackdropProps) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.3} pressBehavior="close" />
+      )}
+    >
       <BottomSheetView style={{ padding: space.lg, gap: space.md }}>
         <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.sm }}>
           <View style={{ flex: 1, gap: space.xxs }}>

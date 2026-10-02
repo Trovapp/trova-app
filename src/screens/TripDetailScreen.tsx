@@ -132,6 +132,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
       ]);
     }
     navigation.setOptions({
+      // 화면 어디에도 여행 이름이 없어 어떤 여행을 보고 있는지 알 수 없었다(2026-10 QA) — 헤더 제목으로 보여준다.
+      // 긴 이름은 iOS 헤더가 말줄임표로 줄인다. 불러오기 전에는 원래 제목을 둔다.
+      title: tripTitle ?? "여행 상세",
       headerRight: () => (
         <PressableScale onPress={confirmDeleteTrip} hitSlop={10} disabled={!tripTitle}>
           <Feather name="trash-2" size={19} color={colors.inkMuted} />
