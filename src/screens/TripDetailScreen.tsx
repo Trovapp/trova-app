@@ -68,7 +68,35 @@ const TRANSPORT_LABEL: Record<"WALK" | "TRANSIT" | "CAR", string> = {
 
 const UNSORTED_ID = -1; // "미분류" 가상 폴더 id — 저장 장소 화면(SavedPlacesScreen)과 동일한 규칙.
 
-type EditingField = { placeId: number; field: "time" | "transport" | "memo" } | null;
+type EditingField = { placeId: number; field: "time" | "stay" | "transport" | "memo" } | null;
+
+// 머무는 시간 선택지(분). 떠나는 시간 = 도착 + 머무는 시간으로 저장한다.
+// 빈 시간 추천은 "앞 장소 떠나는 시간 ~ 다음 장소 도착 시간"이 30분 넘을 때만 뜨는데, 앱에 떠나는 시간을 넣는 곳이
+// 없어 실제 사용자에게는 한 번도 뜰 수 없었다(2026-10 확인: 운영 여행 장소 24곳 중 떠나는 시간 2곳, 모두 API로 넣은 시험값).
+const STAY_OPTIONS = [30, 60, 90, 120, 180] as const;
+
+function formatStay(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h === 0 ? `${m}분` : m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
+}
+
+function toMinutes(hhmm: string): number {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+}
+
+// 자정을 넘기면 23:59로 맞춘다(서버의 시간 칸은 날짜 없는 시각이라 다음 날로 넘길 수 없다).
+function addMinutes(hhmm: string, minutes: number): string {
+  const total = Math.min(toMinutes(hhmm) + minutes, 23 * 60 + 59);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+function stayMinutes(place: { visitStartTime: string | null; visitEndTime: string | null }): number | null {
+  if (!place.visitStartTime || !place.visitEndTime) return null;
+  const diff = toMinutes(place.visitEndTime.slice(0, 5)) - toMinutes(place.visitStartTime.slice(0, 5));
+  return diff > 0 ? diff : null;
+}
 
 export function TripDetailScreen({ route, navigation }: Props) {
   const { id, weatherAlertTripPlaceId } = route.params;
@@ -398,7 +426,10 @@ export function TripDetailScreen({ route, navigation }: Props) {
   // 도착 시간 하나만 받는다 — 종료 시간은 이 화면 어디에도 쓰이지 않아서(캘린더형
   // 블록 뷰가 아니라 리스트) 입력만 두 번 시키고 버려지는 값이었다.
   async function commitTime(place: TripPlace, selected: Date) {
-    await handleUpdateDetails(place.id, { visitStartTime: toTimeString(selected) });
+    const start = toTimeString(selected);
+    // 머무는 시간을 이미 정했으면 도착 시간을 옮길 때 떠나는 시간도 같이 옮긴다 — 떠나는 시간이 도착보다 앞서지 않게.
+    const stay = stayMinutes(place);
+    await handleUpdateDetails(place.id, stay !== null ? { visitStartTime: start, visitEndTime: addMinutes(start, stay) } : { visitStartTime: start });
     closeTimePicker();
   }
 
@@ -456,8 +487,14 @@ export function TripDetailScreen({ route, navigation }: Props) {
   }
 
   // 행의 값이나 ⋮ 메뉴에서 시간·이동수단·메모 편집을 연다(행 안의 편집기는 그대로 쓴다).
-  function startEditing(place: TripPlace, field: "time" | "transport" | "memo") {
-    if (field === "time") {
+  function startEditing(place: TripPlace, field: "time" | "stay" | "transport" | "memo") {
+    // 머무는 시간은 도착 시간을 기준으로 계산한다 — 도착 시간이 없으면 도착 시간부터 정하게 한다.
+    if (field === "stay" && !place.visitStartTime) {
+      field = "time";
+    }
+    if (field === "stay") {
+      setEditingField(editingField?.placeId === place.id && editingField.field === "stay" ? null : { placeId: place.id, field: "stay" });
+    } else if (field === "time") {
       setEditingField({ placeId: place.id, field: "time" });
       setTimeDraft(parseTimeToDate(place.visitStartTime));
       setShowTimePicker(true);
@@ -497,7 +534,11 @@ export function TripDetailScreen({ route, navigation }: Props) {
               {place.visitStartTime && (
                 <PressableScale onPress={() => startEditing(place, "time")} style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
                   <Feather name="clock" size={12} color={colors.inkMuted} />
-                  <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{place.visitStartTime.slice(0, 5)} 도착</AppText>
+                  <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
+                    {stayMinutes(place) !== null
+                      ? `${place.visitStartTime.slice(0, 5)}–${place.visitEndTime!.slice(0, 5)} (${formatStay(stayMinutes(place)!)})`
+                      : `${place.visitStartTime.slice(0, 5)} 도착`}
+                  </AppText>
                 </PressableScale>
               )}
               {place.arrivalTransportMode && (
@@ -514,6 +555,36 @@ export function TripDetailScreen({ route, navigation }: Props) {
                   </AppText>
                 </PressableScale>
               )}
+            </View>
+          )}
+
+          {editingField?.placeId === place.id && editingField.field === "stay" && place.visitStartTime && (
+            <View style={{ marginTop: space.xs, gap: space.xxs }}>
+              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
+                머무는 시간 · {place.visitStartTime.slice(0, 5)} 도착
+              </AppText>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
+                {STAY_OPTIONS.map((minutes) => {
+                  const selected = stayMinutes(place) === minutes;
+                  return (
+                    <PressableScale
+                      key={minutes}
+                      onPress={() => handleUpdateDetails(place.id, { visitEndTime: addMinutes(place.visitStartTime!.slice(0, 5), minutes) })}
+                      disabled={busy}
+                      style={{
+                        paddingVertical: space.xxs,
+                        paddingHorizontal: space.sm,
+                        borderRadius: radius.md,
+                        backgroundColor: selected ? colors.accent : colors.bgMuted,
+                      }}
+                    >
+                      <AppText style={{ fontSize: fontSize.caption2, color: selected ? colors.onAccent : colors.inkMuted }}>
+                        {formatStay(minutes)}
+                      </AppText>
+                    </PressableScale>
+                  );
+                })}
+              </View>
             </View>
           )}
 
@@ -981,6 +1052,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
         {menuPlace &&
           ([
             { field: "time", icon: "clock", label: menuPlace.visitStartTime ? "도착 시간 바꾸기" : "도착 시간 정하기" },
+            { field: "stay", icon: "watch", label: stayMinutes(menuPlace) !== null ? "머무는 시간 바꾸기" : "머무는 시간 정하기" },
             { field: "transport", icon: "navigation", label: menuPlace.arrivalTransportMode ? "이동수단 바꾸기" : "이동수단 정하기" },
             { field: "memo", icon: "edit-3", label: menuPlace.memo ? "메모 고치기" : "메모 쓰기" },
           ] as const).map((item) => (
