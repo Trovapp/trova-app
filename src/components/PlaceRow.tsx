@@ -170,9 +170,11 @@ export function PlaceRow({
             onPressIn={dragHandle.onPressIn}
             disabled={disabled}
             hitSlop={12}
-            style={{ justifyContent: "center", paddingHorizontal: space.xxs, opacity: disabled ? 0.3 : 1 }}
+            // 점자 글자(⠿)를 손잡이로 쓰던 것을 iOS 목록 순서 바꾸기와 같은 가로줄 3개 아이콘으로 바꿨다(2026-10 QA).
+            // 바로 옆 ⋮ 메뉴와 구분되게 왼쪽에 간격을 조금 더 둔다.
+            style={{ justifyContent: "center", paddingHorizontal: space.xxs, marginLeft: space.xxs, opacity: disabled ? 0.3 : 1 }}
           >
-            <AppText style={{ fontSize: fontSize.body, color: colors.inkMuted }}>⠿</AppText>
+            <Feather name="menu" size={18} color={colors.inkMuted} />
           </PressableScale>
         )}
       </View>

@@ -43,6 +43,7 @@ type Props = MainTabScreenProps<"Home">;
 export function HomeScreen({ navigation }: Props) {
   const { user } = useAuth();
   const [url, setUrl] = useState("");
+  const [urlFocused, setUrlFocused] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const reducedMotion = useReducedMotion();
@@ -189,6 +190,10 @@ export function HomeScreen({ navigation }: Props) {
           <View style={{ gap: space.sm }}>
             <TextInput
               maxFontSizeMultiplier={MAX_FONT_SCALE}
+              // 눌러도 테두리가 그대로라 입력 중인지 알기 어려웠다(2026-10 QA) — 입력 중엔 강조색 테두리.
+              onFocus={() => setUrlFocused(true)}
+              onBlur={() => setUrlFocused(false)}
+              selectionColor={colors.accent}
               value={url}
               onChangeText={(text) => {
                 setUrl(text);
@@ -203,7 +208,7 @@ export function HomeScreen({ navigation }: Props) {
               style={{
                 height: 52,
                 borderWidth: 1,
-                borderColor: colors.border,
+                borderColor: urlFocused ? colors.accent : colors.border,
                 borderRadius: radius.md,
                 paddingHorizontal: space.lg,
                 fontFamily: FONT.regular,

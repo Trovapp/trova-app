@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import BottomSheet, {
   BottomSheetBackdrop,
@@ -245,41 +245,36 @@ export function SavedPlacesScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={{ flexDirection: "row", gap: space.xs, padding: space.sm, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-        <TextInput
-          maxFontSizeMultiplier={MAX_FONT_SCALE}
-          value={query}
-          onChangeText={setQuery}
-          placeholder="장소 이름으로 검색 (예: 경복궁)"
-          returnKeyType="search"
-          onSubmitEditing={handleSearch}
+      {/* 검색창 옆 "검색" 버튼을 따로 눌러야 했다(2026-10 QA). iOS 검색창처럼 돋보기·지우기 버튼을 두고 키보드의
+          검색 키로 찾는다. 입력할 때마다 찾지 않는 건 장소 검색 API 호출을 늘리지 않기 위해서다. */}
+      <View style={{ padding: space.sm, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+        <View
           style={{
-            flex: 1,
-            height: 40,
-            borderWidth: 1,
-            borderColor: colors.border,
-            borderRadius: radius.md,
-            paddingHorizontal: space.sm,
-            fontFamily: FONT.regular,
-          }}
-        />
-        <PressableScale
-          onPress={handleSearch}
-          disabled={searching || !query.trim()}
-          style={{
-            height: 40,
-            paddingHorizontal: space.md,
-            borderRadius: radius.md,
-            backgroundColor: colors.accent,
-            justifyContent: "center",
+            flexDirection: "row",
             alignItems: "center",
-            opacity: searching || !query.trim() ? 0.6 : 1,
+            gap: space.xs,
+            height: 40,
+            paddingHorizontal: space.sm,
+            borderRadius: radius.md,
+            backgroundColor: colors.bgMuted,
           }}
         >
-          <AppText weight="medium" style={{ color: colors.onAccent }}>
-            {searching ? "검색 중..." : "검색"}
-          </AppText>
-        </PressableScale>
+          <Feather name="search" size={16} color={colors.inkMuted} />
+          <TextInput
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            value={query}
+            onChangeText={setQuery}
+            placeholder="장소 이름으로 검색 (예: 경복궁)"
+            returnKeyType="search"
+            enablesReturnKeyAutomatically
+            clearButtonMode="while-editing"
+            selectionColor={colors.accent}
+            onSubmitEditing={handleSearch}
+            editable={!searching}
+            style={{ flex: 1, height: "100%", fontFamily: FONT.regular, color: colors.ink }}
+          />
+          {searching && <ActivityIndicator size="small" color={colors.inkMuted} />}
+        </View>
       </View>
 
       <View style={{ flex: 1 }}>

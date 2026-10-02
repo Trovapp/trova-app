@@ -109,8 +109,8 @@ export function MyPageScreen() {
             borderTopColor: colors.borderSubtle,
           }}
         >
+          {/* 화살표(>)는 다른 화면으로 간다는 뜻인데 이 행은 확인창을 띄운다(2026-10 QA) — 동작 행에는 두지 않는다 */}
           <AppText>로그아웃</AppText>
-          <Feather name="chevron-right" size={18} color={colors.inkMuted} />
         </PressableRow>
         <PressableRow
           onPress={confirmWithdraw}
@@ -126,7 +126,6 @@ export function MyPageScreen() {
           }}
         >
           <AppText style={{ color: colors.inkMuted }}>회원 탈퇴</AppText>
-          <Feather name="chevron-right" size={18} color={colors.inkMuted} />
         </PressableRow>
       </View>
 
