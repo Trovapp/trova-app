@@ -80,6 +80,15 @@ export function HomeScreen({ navigation }: Props) {
     navigation.navigate("Processing", { jobId });
   }
 
+  // 서버가 이미 분석한 영상이라고 알려주면(앱의 확인이 놓친 경우) 분석 화면을 거치지 않고 결과로 바로 간다.
+  function openShareResult(jobId: number, alreadyAnalyzed?: boolean) {
+    if (alreadyAnalyzed) {
+      navigation.navigate("VideoGroup", { jobId });
+      return;
+    }
+    navigation.navigate("Processing", { jobId });
+  }
+
   // 확인창에서 "다시 분석"을 눌렀을 때 — 제출 흐름(handleSubmit)이 이미 끝난 뒤라 진행 상태를 따로 관리한다.
   async function retryFailedShare(failedSame: PendingJob[]) {
     setSubmitting(true);
@@ -93,12 +102,13 @@ export function HomeScreen({ navigation }: Props) {
     }
   }
 
-  async function submitNewShare(sourceUrl: string) {
+  // reanalyze: "이미 저장한 영상이에요"에서 "새로 분석"을 고른 경우. 서버는 이 표시가 없으면 이미 있는 결과를 돌려준다.
+  async function submitNewShare(sourceUrl: string, reanalyze = false) {
     setSubmitting(true);
     setError(null);
     try {
-      const { jobId } = await createShare(sourceUrl);
-      navigation.navigate("Processing", { jobId });
+      const { jobId, alreadyAnalyzed } = await createShare(sourceUrl, { reanalyze });
+      openShareResult(jobId, alreadyAnalyzed);
     } catch (err) {
       setError(toUserMessage(err, "요청에 실패했어요. 잠시 후 다시 시도해주세요."));
     } finally {
@@ -135,7 +145,7 @@ export function HomeScreen({ navigation }: Props) {
       if (savedPlace) {
         Alert.alert("이미 저장한 영상이에요", "이 영상에서 뽑은 장소가 영상 기록에 있어요.", [
           { text: "취소", style: "cancel" },
-          { text: "새로 분석", onPress: () => submitNewShare(trimmed) },
+          { text: "새로 분석", onPress: () => submitNewShare(trimmed, true) },
           { text: "보러 가기", onPress: () => navigation.navigate("VideoGroup", { jobId: savedPlace.jobId }) },
         ]);
         return;
@@ -155,8 +165,8 @@ export function HomeScreen({ navigation }: Props) {
         await retryFailedJobs(failedSame);
         return;
       }
-      const { jobId } = await createShare(trimmed);
-      navigation.navigate("Processing", { jobId });
+      const { jobId, alreadyAnalyzed } = await createShare(trimmed);
+      openShareResult(jobId, alreadyAnalyzed);
     } catch (err) {
       setError(toUserMessage(err, "요청에 실패했어요. 잠시 후 다시 시도해주세요."));
     } finally {

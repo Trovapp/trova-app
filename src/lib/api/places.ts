@@ -39,11 +39,16 @@ export type PendingJob = {
   failureReason?: "NO_PLACES" | "AI_QUOTA" | "SOURCE_RATE_LIMITED" | null;
 };
 
-export async function createShare(url: string): Promise<{ jobId: number }> {
+// alreadyAnalyzed: 서버가 새로 분석하지 않고 이미 있는 결과(jobId)를 알려준 경우 true(백엔드 #87).
+// reanalyze: 이미 분석한 영상이라도 새로 분석한다("새로 분석"을 고른 경우). 없으면 서버가 기존 결과를 돌려준다.
+export async function createShare(
+  url: string,
+  options: { reanalyze?: boolean } = {},
+): Promise<{ jobId: number; alreadyAnalyzed?: boolean }> {
   const res = await apiFetch("/api/shares", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({ url, reanalyze: options.reanalyze ?? false }),
   });
   if (res.status === 401) {
     throw new Error("로그인이 필요해요.");
@@ -78,7 +83,8 @@ export async function deletePendingJob(jobId: number): Promise<void> {
 // 새 작업이 만들어진 뒤에만 이전 실패 기록을 지우고, 그 정리가 실패해도 재시도 자체는 성공으로 본다.
 // 일정 생성 단계에서 실패한 작업(이미 장소가 저장된 작업)에는 쓰면 안 된다 — 영상을 처음부터 다시 추출하게 된다.
 export async function resubmitFailedJob(job: PendingJob): Promise<{ jobId: number }> {
-  const created = await createShare(job.sourceUrl);
+  // 실패한 영상을 다시 시도하는 건 사용자가 직접 고른 재분석이다 — 같은 영상의 예전 성공 결과로 돌아가지 않게 한다.
+  const created = await createShare(job.sourceUrl, { reanalyze: true });
   await deletePendingJob(job.jobId).catch(() => {});
   return created;
 }
