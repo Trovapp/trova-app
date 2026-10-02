@@ -337,10 +337,13 @@ export function VideoGroupScreen({ route, navigation }: Props) {
 
   const titleBlock = (
     <View style={{ gap: space.xxs }}>
-      <AppText weight="medium" style={{ fontSize: fontSize.body }} numberOfLines={2}>
-        {title}
-      </AppText>
-      <SourceVideoLink url={group[0].sourceUrl} platform={group[0].sourcePlatform} />
+      {/* 제목 한 줄 + 원본 영상 원형 버튼. 예전엔 제목 두 줄 + "원본 보기" 글자 줄이라 시트 첫 높이에 장소가 1곳 반만 보였다(C3). */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+        <AppText weight="medium" style={{ flex: 1, fontSize: fontSize.body }} numberOfLines={1}>
+          {title}
+        </AppText>
+        <SourceVideoLink url={group[0].sourceUrl} platform={group[0].sourcePlatform} compact />
+      </View>
       {justAnalyzed && (
         <CountUpText
           value={group.length}
