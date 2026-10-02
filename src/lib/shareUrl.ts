@@ -51,3 +51,15 @@ export function sourceKindLabel(url: string): string {
   }
   return "영상";
 }
+
+// 영상 기록 목록의 썸네일(2026-10 QA C4). 유튜브는 API 키 없이 쓰는 공개 썸네일 주소가 있어 비용이 들지 않는다.
+// hqdefault(480x360, 약 20KB)를 쓴다 — 쇼츠도 가운데에 세로 화면, 양옆은 흐린 배경이라 정사각형으로 잘라도 자연스럽다.
+// 인스타그램은 키 없이 받을 수 있는 썸네일 주소가 없어 null(호출부가 아이콘 타일로 대신한다).
+export function youtubeThumbnailUrl(url: string): string | null {
+  for (const [pattern, , platform] of SOURCE_PATTERNS) {
+    if (platform !== "yt") continue;
+    const match = pattern.exec(url);
+    if (match) return `https://i.ytimg.com/vi/${match[1]}/hqdefault.jpg`;
+  }
+  return null;
+}
