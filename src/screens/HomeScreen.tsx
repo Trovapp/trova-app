@@ -260,7 +260,8 @@ export function HomeScreen({ navigation }: Props) {
                 <AppText weight="medium">찜한 장소</AppText>
                 <Feather name="chevron-right" size={18} color={colors.inkMuted} />
               </PressableScale>
-              <InlineMap pins={pins} height={160} showPath={false} />
+              {/* 찜한 장소 미리보기 — 순서가 없어 찜한 장소 탭 전체 보기처럼 번호 대신 색 점(2026-10 QA) */}
+              <InlineMap pins={pins} height={160} showPath={false} numbered={false} />
             </View>
           )
         )}

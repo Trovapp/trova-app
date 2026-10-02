@@ -7,7 +7,7 @@ import { colors, radius } from "@/lib/theme";
 
 const KAKAO_MAP_JS_KEY = process.env.EXPO_PUBLIC_KAKAO_MAP_JS_KEY ?? "";
 
-type Pin = { id: string; latitude: number; longitude: number; color?: string };
+type Pin = { id: string; latitude: number; longitude: number; color?: string; label?: string };
 
 export function InlineMap({
   pins,
@@ -16,6 +16,7 @@ export function InlineMap({
   showPath = true,
   fill = false,
   bottomInsetRatio = 0,
+  numbered = true,
 }: {
   pins: Pin[];
   height?: number;
@@ -27,6 +28,8 @@ export function InlineMap({
   fill?: boolean;
   // 지도 아래쪽이 바텀시트 등으로 가려지는 비율(0~1). 핀을 가려지지 않는 영역 안에 배치한다.
   bottomInsetRatio?: number;
+  // false면 핀에 번호 없이 작은 색 점만 그린다(순서가 없는 찜한 장소 전체 보기).
+  numbered?: boolean;
 }) {
   const webviewRef = useRef<WebView>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -38,9 +41,9 @@ export function InlineMap({
   // 그래서 참조가 아니라 "핀 내용"을 직렬화한 문자열을 의존성으로 쓴다 —
   // 내용이 실제로 바뀔 때만 새 메시지가 나간다.
   const pinsKey = JSON.stringify(
-    pins.map((pin) => ({ id: pin.id, latitude: pin.latitude, longitude: pin.longitude, color: pin.color ?? null }))
+    pins.map((pin) => ({ id: pin.id, latitude: pin.latitude, longitude: pin.longitude, color: pin.color ?? null, label: pin.label ?? null }))
   );
-  const payload = JSON.stringify({ pins: pins.length > 0 ? JSON.parse(pinsKey) : [], selectedId, showPath, bottomInsetRatio });
+  const payload = JSON.stringify({ pins: pins.length > 0 ? JSON.parse(pinsKey) : [], selectedId, showPath, bottomInsetRatio, numbered });
 
   // pins가 []이 되면 아래 early return으로 WebView가 언마운트된다. 이 컴포넌트
   // 자체(그리고 isMapLoaded state)는 살아있으니, 이후 pins가 다시 채워지면
@@ -57,7 +60,7 @@ export function InlineMap({
     if (!isMapLoaded || mapError || (pinsKey === "[]" && !fill)) return;
     webviewRef.current?.postMessage(payload);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMapLoaded, mapError, pinsKey, selectedId, showPath, fill]);
+  }, [isMapLoaded, mapError, pinsKey, selectedId, showPath, fill, numbered]);
 
   function handleMessage(event: WebViewMessageEvent) {
     try {

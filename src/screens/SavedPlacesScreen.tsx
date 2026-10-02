@@ -144,13 +144,18 @@ export function SavedPlacesScreen() {
             color: colors.accent,
           }))
       : visibleBookmarks
-          .filter((b) => b.latitude !== null && b.longitude !== null)
-          .map((b) => ({
+          // 번호는 좌표로 거르기 전에 매긴다 — 폴더 목록 행 번호(index + 1)와 핀 번호가 같아야 어느 핀이 어느 장소인지 안다.
+          .map((b, index) => ({ b, label: String(index + 1) }))
+          .filter(({ b }) => b.latitude !== null && b.longitude !== null)
+          .map(({ b, label }) => ({
             id: String(b.placeId),
             latitude: b.latitude as number,
             longitude: b.longitude as number,
             color: b.folderId !== null ? folderColorById.get(b.folderId) : colors.inkMuted,
+            label,
           }));
+  // 폴더를 열기 전(전체 보기)에는 장소에 순서가 없어 번호 대신 폴더 색 점으로 보여준다. 검색 결과는 지금처럼 번호.
+  const pinsNumbered = searchResults.length > 0 || activeFolderId !== null;
 
   const unsortedCount = bookmarks.filter((b) => b.folderId === null).length;
   const bookmarkedPlaceIds = new Set(bookmarks.map((b) => b.placeId));
@@ -283,6 +288,7 @@ export function SavedPlacesScreen() {
           fill
           showPath={false}
           bottomInsetRatio={SHEET_DEFAULT_PERCENT / 100}
+          numbered={pinsNumbered}
           selectedId={reviewPlaceId !== null ? String(reviewPlaceId) : null} />
 
         <BottomSheet index={1} snapPoints={snapPoints} enableDynamicSizing={false}>
@@ -453,6 +459,21 @@ export function SavedPlacesScreen() {
                     borderTopColor: colors.borderSubtle,
                   }}
                 >
+                  {/* 지도 핀과 같은 번호·색(2026-10 QA) — 좌표가 없는 장소는 핀이 없어도 번호는 그대로 둔다 */}
+                  <View
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: radius.full,
+                      backgroundColor: activeFolder?.color ?? colors.inkMuted,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <AppText weight="medium" style={{ fontSize: fontSize.caption2, color: colors.onAccent }}>
+                      {index + 1}
+                    </AppText>
+                  </View>
                   <View style={{ flex: 1, gap: space.xxxs }}>
                     <View style={{ flexDirection: "row", alignItems: "baseline", gap: space.xs }}>
                       <AppText weight="medium" numberOfLines={1} style={{ flexShrink: 1 }}>

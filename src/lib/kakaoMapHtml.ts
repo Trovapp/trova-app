@@ -90,7 +90,7 @@ export function buildKakaoMapHtml(appKey: string): string {
       if (highlightOverlay) highlightOverlay.setMap(null);
     }
 
-    function renderPins(pins, selectedId, showPath) {
+    function renderPins(pins, selectedId, showPath, numbered) {
       pins = pins || [];
       kakao.maps.load(function () {
         var container = document.getElementById('map');
@@ -135,10 +135,17 @@ export function buildKakaoMapHtml(appKey: string): string {
           var pinColor = pin.color || '#FF6B4A';
           positions[pin.id] = position;
           var el = document.createElement('div');
-          el.textContent = String(index + 1);
-          el.style.cssText = 'width:26px;height:26px;border-radius:9999px;background:' + pinColor + ';' +
-            'color:#fff;display:flex;align-items:center;justify-content:center;' +
-            'font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.35);';
+          if (numbered) {
+            // 호출부가 번호(label)를 주면 그대로 쓴다 — 목록 행 번호와 맞추기 위해서(좌표 없는 장소가 끼면 순서가 어긋남).
+            el.textContent = pin.label != null ? String(pin.label) : String(index + 1);
+            el.style.cssText = 'width:26px;height:26px;border-radius:9999px;background:' + pinColor + ';' +
+              'color:#fff;display:flex;align-items:center;justify-content:center;' +
+              'font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.35);';
+          } else {
+            // 순서가 없는 핀(찜한 장소 전체 보기)은 숫자 없이 색 점으로 — 숫자가 순서인지 개수인지 헷갈렸다(2026-10 QA).
+            el.style.cssText = 'width:16px;height:16px;border-radius:9999px;background:' + pinColor + ';' +
+              'border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.35);';
+          }
           if (!landedPinIds[pin.id]) {
             el.className = 'trova-pin-drop';
             el.style.animationDelay = (firstRender ? Math.min(index, 12) * 50 : 0) + 'ms';
@@ -181,7 +188,7 @@ export function buildKakaoMapHtml(appKey: string): string {
       }
       try {
         bottomInsetRatio = payload.bottomInsetRatio || 0;
-        renderPins(payload.pins, payload.selectedId, payload.showPath !== false);
+        renderPins(payload.pins, payload.selectedId, payload.showPath !== false, payload.numbered !== false);
       } catch (e) {
         window.ReactNativeWebView && window.ReactNativeWebView.postMessage(
           JSON.stringify({ type: 'render-error', message: String(e && e.message) })
