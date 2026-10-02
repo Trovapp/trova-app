@@ -14,6 +14,7 @@ import {
   PlatformTabs,
   type DemoPlatform,
 } from "@/components/onboarding/LinkPasteDemo";
+import { FitToSpace } from "@/components/onboarding/FitToSpace";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 
 // 로그인 전 온보딩(2026-10). 참고: ScreensDesign의 Plotline 온보딩 — 가입보다 먼저 "전과 후" 그림 한 장으로
@@ -67,9 +68,9 @@ function IntroPage({ onNext, onSkip }: { onNext: () => void; onSkip: () => void 
         </AppText>
       </View>
 
-      <View style={{ flex: 1, justifyContent: "center" }}>
+      <FitToSpace>
         <FeedToMapIllustration />
-      </View>
+      </FitToSpace>
 
       <Animated.View entering={FadeInDown.delay(500).duration(500)} style={{ gap: space.sm, marginBottom: space.xxl }}>
         <AppText weight="bold" style={{ fontSize: fontSize.title1, lineHeight: 36 }}>
@@ -129,9 +130,9 @@ function DemoPage({ onBack, onDone }: { onBack: () => void; onDone: () => void }
         <PlatformTabs value={platform} onChange={choosePlatform} />
       </View>
 
-      <View style={{ flex: 1, justifyContent: "center" }}>
+      <FitToSpace>
         <LinkPasteDemo platform={platform} step={step} onSelectStep={setStep} />
-      </View>
+      </FitToSpace>
 
       <PrimaryButton label="로그인하고 시작하기" onPress={onDone} />
     </Animated.View>

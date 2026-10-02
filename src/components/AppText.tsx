@@ -11,6 +11,9 @@ import { colors } from "@/lib/theme";
 // 크기에서 높이가 고정된 버튼/입력창(40~52pt) 안의 글자가 위아래로 잘린다(시뮬레이터 실측).
 // 1.4배면 가장 큰 버튼 글자(16pt)도 22pt로 52pt 버튼 안에 들어간다. TextInput도 같은 값을 쓴다.
 export const MAX_FONT_SCALE = 1.4;
+// 한글을 글자 단위가 아니라 단어(어절) 단위로 줄바꿈한다(iOS). 기본값은 "여행 영 / 상을", "찾 / 아"처럼
+// 단어 중간에서 끊겼다(작은 화면·큰 글자에서 실측). 화면에서 따로 지정하면 그 값이 이긴다.
+const LINE_BREAK = { lineBreakStrategyIOS: "hangul-word" } as const;
 
 export function AppText({
   weight = "regular",
@@ -25,5 +28,5 @@ export function AppText({
       : weight === "medium"
         ? "NotoSansKR_500Medium"
         : "NotoSansKR_400Regular";
-  return <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[{ fontFamily, color: colors.ink }, style]} {...props} />;
+  return <Text maxFontSizeMultiplier={MAX_FONT_SCALE} {...LINE_BREAK} style={[{ fontFamily, color: colors.ink }, style]} {...props} />;
 }

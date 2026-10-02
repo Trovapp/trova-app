@@ -206,8 +206,8 @@ export function LinkPasteDemo({
         </Animated.View>
       </View>
 
-      {/* 단계 이름: 누르면 그 단계로 간다 */}
-      <View style={{ flexDirection: "row", gap: space.xs }}>
+      {/* 단계 이름: 누르면 그 단계로 간다. 큰 글자에서 한 줄에 안 들어가면 줄바꿈한다(가로로 넘치면 FitToSpace가 크기를 못 잰다) */}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: space.xs }}>
         {DEMO_STEPS.map((label, i) => (
           <Pressable
             key={label}
