@@ -19,6 +19,8 @@ export type Place = {
   roadAddress: string | null;
   kakaoCategoryName: string | null;
   kakaoPlaceUrl: string | null;
+  // 영상에서 이 장소에 대해 말하거나 보여준 구체 정보(추천 메뉴·가격·웨이팅 등, 서버 #104). 예전 서버는 이 칸이 없다.
+  videoNotes?: string[];
 };
 
 export type PendingJob = {

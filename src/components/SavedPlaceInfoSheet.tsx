@@ -119,6 +119,23 @@ export function SavedPlaceInfoSheet({
           </View>
         )}
 
+        {/* 영상에서 말한 내용(#104) — 사용자 메모와 섞이지 않게 출처를 제목으로 밝힌다. 없으면 예전 안내만. */}
+        {place.videoNotes && place.videoNotes.length > 0 && (
+          <View style={{ gap: space.xs }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
+              <Feather name="film" size={13} color={colors.inkMuted} />
+              <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
+                영상에서 말한 내용
+              </AppText>
+            </View>
+            {place.videoNotes.map((note) => (
+              <AppText key={note} style={{ fontSize: fontSize.subheadline }}>
+                · {note}
+              </AppText>
+            ))}
+          </View>
+        )}
+
         <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
           영상에서 찾은 장소라 리뷰 요약은 아직 볼 수 없어요.
         </AppText>
