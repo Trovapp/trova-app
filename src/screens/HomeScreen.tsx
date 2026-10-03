@@ -45,6 +45,20 @@ export function HomeScreen({ navigation }: Props) {
   const [url, setUrl] = useState("");
   const [urlFocused, setUrlFocused] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // 화면 상태(submitting)는 다음 렌더에야 바뀌어서, 그 사이 빠른 두 번 누르기나 키보드 "이동" 키와 버튼이 함께 눌리면
+  // 제출이 두 번 나갔다(#97, 서버도 같은 영상 동시 제출을 막지만 쓸데없는 요청 자체를 줄인다). ref는 즉시 바뀐다.
+  const submittingRef = useRef(false);
+  function beginSubmit(): boolean {
+    if (submittingRef.current) return false;
+    submittingRef.current = true;
+    setSubmitting(true);
+    setError(null);
+    return true;
+  }
+  function endSubmit() {
+    submittingRef.current = false;
+    setSubmitting(false);
+  }
   const [error, setError] = useState<string | null>(null);
   const reducedMotion = useReducedMotion();
 
@@ -92,40 +106,37 @@ export function HomeScreen({ navigation }: Props) {
 
   // 확인창에서 "다시 분석"을 눌렀을 때 — 제출 흐름(handleSubmit)이 이미 끝난 뒤라 진행 상태를 따로 관리한다.
   async function retryFailedShare(failedSame: PendingJob[]) {
-    setSubmitting(true);
-    setError(null);
+    if (!beginSubmit()) return;
     try {
       await retryFailedJobs(failedSame);
     } catch (err) {
       setError(toUserMessage(err, "요청에 실패했어요. 잠시 후 다시 시도해주세요."));
     } finally {
-      setSubmitting(false);
+      endSubmit();
     }
   }
 
   // reanalyze: "이미 저장한 영상이에요"에서 "새로 분석"을 고른 경우. 서버는 이 표시가 없으면 이미 있는 결과를 돌려준다.
   async function submitNewShare(sourceUrl: string, reanalyze = false) {
-    setSubmitting(true);
-    setError(null);
+    if (!beginSubmit()) return;
     try {
       const { jobId, alreadyAnalyzed } = await createShare(sourceUrl, { reanalyze });
       openShareResult(jobId, alreadyAnalyzed);
     } catch (err) {
       setError(toUserMessage(err, "요청에 실패했어요. 잠시 후 다시 시도해주세요."));
     } finally {
-      setSubmitting(false);
+      endSubmit();
     }
   }
 
   async function handleSubmit() {
     const trimmed = url.trim();
-    if (!trimmed || submitting) return;
+    if (!trimmed || submittingRef.current) return;
     if (!isSupportedShareUrl(trimmed)) {
       setError(UNSUPPORTED_SHARE_URL_MESSAGE);
       return;
     }
-    setSubmitting(true);
-    setError(null);
+    if (!beginSubmit()) return;
     try {
       // 같은 영상을 다시 넣으면 새 작업이 또 만들어져 기록이 중복되던 문제 — 제출 전에 영상 ID로 비교한다
       // (쇼츠/watch/youtu.be처럼 주소 모양이 달라도 같은 영상이면 같은 키).
@@ -171,7 +182,7 @@ export function HomeScreen({ navigation }: Props) {
     } catch (err) {
       setError(toUserMessage(err, "요청에 실패했어요. 잠시 후 다시 시도해주세요."));
     } finally {
-      setSubmitting(false);
+      endSubmit();
     }
   }
 
