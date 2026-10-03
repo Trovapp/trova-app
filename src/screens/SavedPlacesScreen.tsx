@@ -297,10 +297,7 @@ export function SavedPlacesScreen() {
           // 그래야 시트 밖(지도) 영역이 계속 터치되고, 시트를 살짝 내려도(스냅포인트만
           // 바뀔 뿐) 선택 상태(reviewPlaceId)와 지도 하이라이트가 그대로 유지된다.
           <BottomSheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.lg, gap: space.sm }}>
-            <PressableScale onPress={() => setReviewPlaceId(null)} hitSlop={8} style={{ alignSelf: "flex-end" }}>
-              <Feather name="x" size={18} color={colors.inkMuted} />
-            </PressableScale>
-            <PlaceReviewContent placeId={reviewPlaceId} showMiniMap={false} />
+            <PlaceReviewContent placeId={reviewPlaceId} showMiniMap={false} onClose={() => setReviewPlaceId(null)} showMapLink />
           </BottomSheetScrollView>
         ) : searchedQuery !== null ? (
           <BottomSheetFlatList keyboardShouldPersistTaps="handled"

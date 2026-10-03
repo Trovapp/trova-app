@@ -13,6 +13,7 @@ import { RatingBadge } from "@/components/RatingBadge";
 import { getPlaceDetails } from "@/lib/api/recommendations";
 import { getTripPlaceDetails } from "@/lib/api/trips";
 import { categoryLabel } from "@/lib/placeCategory";
+import { kakaoMapUrl, openExternal } from "@/lib/placeLinks";
 import { formatCount } from "@/lib/number";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 
@@ -52,6 +53,8 @@ export function PlaceReviewContent({
   placeId = null,
   tripPlaceId = null,
   showMiniMap = true,
+  onClose,
+  showMapLink = false,
 }: {
   // 검색결과("장소 카탈로그")에서 상세보기 할 때는 placeId, 여행 상세의 장소 카드에서
   // 볼 때는 tripPlaceId — 둘은 서로 다른 id 공간이라 백엔드 엔드포인트도 다르다.
@@ -61,6 +64,11 @@ export function PlaceReviewContent({
   // 처럼) 미니맵이 중복이니 false로 끈다. 메인 지도가 스크롤에 가려질 수 있는 화면
   // (여행 상세, 영상 속 장소)에서는 기본값 true를 그대로 쓴다.
   showMiniMap?: boolean;
+  // 있으면 닫기(×)를 장소 이름과 같은 줄 오른쪽에 둔다. 찜한 장소 화면은 ×가 혼자 한 줄을 차지해 제목이 밀렸다(2026-10 QA S6).
+  onClose?: () => void;
+  // 카카오맵에서 보기 버튼. 영상 속 장소 상세(SavedPlaceInfoSheet)와 같은 모양(2026-10 QA S3).
+  // 이 상세 데이터(장소 카탈로그)에는 전화번호가 없어 전화 버튼은 둘 수 없다.
+  showMapLink?: boolean;
 }) {
   const [showRawReviews, setShowRawReviews] = useState(false);
   const detailQuery = useQuery({
@@ -70,6 +78,7 @@ export function PlaceReviewContent({
     enabled: placeId !== null || tripPlaceId !== null,
   });
   const detail = detailQuery.data;
+  const mapUrl = detail ? kakaoMapUrl({ placeName: detail.name, latitude: detail.latitude, longitude: detail.longitude }) : null;
 
   const [loadingPercent, setLoadingPercent] = useState(0);
   const [showSlowNotice, setShowSlowNotice] = useState(false);
@@ -109,9 +118,12 @@ export function PlaceReviewContent({
   return (
     <>
       <View style={{ gap: space.xxs }}>
-        <AppText weight="medium" style={{ fontSize: fontSize.callout }}>
-          {detail.name}
-        </AppText>
+        <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.sm }}>
+          <AppText weight="medium" style={{ flex: 1, fontSize: fontSize.callout }}>
+            {detail.name}
+          </AppText>
+          {onClose && <SheetCloseButton onPress={onClose} />}
+        </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
           {categoryLabel(detail.category) && (
             <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{categoryLabel(detail.category)}</AppText>
@@ -130,6 +142,24 @@ export function PlaceReviewContent({
         </View>
         {detail.address && <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{detail.address}</AppText>}
       </View>
+      {showMapLink && mapUrl && (
+        <PressableScale
+          onPress={() => openExternal(mapUrl)}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            alignSelf: "flex-start",
+            gap: space.xs,
+            paddingVertical: space.sm,
+            paddingHorizontal: space.md,
+            borderRadius: radius.md,
+            backgroundColor: colors.borderSubtle,
+          }}
+        >
+          <Feather name="map" size={14} color={colors.ink} />
+          <AppText style={{ fontSize: fontSize.footnote }}>카카오맵에서 보기</AppText>
+        </PressableScale>
+      )}
       {/* 메인 지도가 화면 밖으로 스크롤된 상태에서 카드를 열어도 위치를 볼 수 있게,
           장소 상세 카드/시트 안에 그 장소 하나만 보여주는 작은 지도를 함께 넣는다
           (에어비앤비/옐프 등 장소 상세 화면의 흔한 패턴 — 메인 지도와 별개로 동작). */}
