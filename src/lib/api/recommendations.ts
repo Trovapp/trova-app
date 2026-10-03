@@ -32,6 +32,8 @@ export type PlaceReviewSummary = Omit<RecommendedPlace, "mood" | "space"> & {
   tips: string[];
   checklist: string[];
   reviewSnippets: string[];
+  // Google 장소 상세의 국내 전화번호(없으면 null). 서버 #99부터 내려온다 — 그 전 서버는 이 칸이 없다(undefined).
+  phone?: string | null;
 };
 
 export async function getPlaceDetails(id: number): Promise<PlaceReviewSummary> {

@@ -43,6 +43,8 @@ export type TripPlaceReviewSummary = {
   tips: string[];
   checklist: string[];
   reviewSnippets: string[];
+  // 장소 상세와 같은 전화번호(서버 #99부터, 없으면 null).
+  phone?: string | null;
 };
 
 export async function getTripPlaceDetails(id: number): Promise<TripPlaceReviewSummary> {
