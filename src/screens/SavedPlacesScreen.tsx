@@ -75,6 +75,8 @@ export function SavedPlacesScreen() {
   // 누를 때 바로 present()한다 — effect로 열고 닫으면 닫힘(onDismiss→null) 뒤 이미 닫힌 시트에 dismiss()가
   // 한 번 더 불려 이후 메뉴가 다시 안 열렸다(여행 상세에서 실제 탭으로 재현한 것과 같은 구조).
   const menuSheetRef = useRef<BottomSheetModal>(null);
+  // 폴더 ⋮ 메뉴. 폴더 삭제가 닫기(×) 바로 옆 휴지통이라 잘못 누르기 쉬웠다(2026-10 QA S4) — 메뉴 안으로 옮겼다.
+  const folderMenuSheetRef = useRef<BottomSheetModal>(null);
   function openBookmarkMenu(bookmarkId: number) {
     setMenuBookmarkId(bookmarkId);
     menuSheetRef.current?.present();
@@ -372,14 +374,18 @@ export function SavedPlacesScreen() {
             keyExtractor={(item: BookmarkFolder) => String(item.id)}
             contentContainerStyle={{ padding: space.md }}
             ListHeaderComponent={
+              // "+ 새 폴더"가 제목 없이 오른쪽 위에 혼자 떠 있었다(2026-10 QA S5) — 목록 제목과 한 줄로 둔다.
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "flex-end",
+                  justifyContent: "space-between",
                   marginBottom: space.sm,
                 }}
               >
+                <AppText weight="medium" style={{ fontSize: fontSize.callout }}>
+                  내 폴더
+                </AppText>
                 <PressableScale onPress={() => setFolderPickerTarget({ mode: "create" })} hitSlop={8}>
                   <AppText style={{ fontSize: fontSize.footnote, color: colors.accent }}>+ 새 폴더</AppText>
                 </PressableScale>
@@ -426,8 +432,8 @@ export function SavedPlacesScreen() {
                     {activeFolder?.name ?? "미분류"}
                   </AppText>
                   {activeFolderId !== UNSORTED_ID && (
-                    <PressableScale onPress={confirmDeleteFolder} hitSlop={8}>
-                      <Feather name="trash-2" size={17} color={colors.inkMuted} />
+                    <PressableScale onPress={() => folderMenuSheetRef.current?.present()} hitSlop={8} accessibilityLabel="폴더 메뉴">
+                      <Feather name="more-vertical" size={18} color={colors.inkMuted} />
                     </PressableScale>
                   )}
                   <PressableScale onPress={() => setActiveFolderId(null)} hitSlop={8}>
@@ -527,8 +533,9 @@ export function SavedPlacesScreen() {
               setFolderPickerTarget({ mode: "move", bookmarkId: menuBookmark.id });
               menuSheetRef.current?.dismiss();
             }}
-            style={{ padding: space.md }}
+            style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
           >
+            <Feather name="folder" size={16} color={colors.inkMuted} />
             <AppText>다른 폴더로 이동</AppText>
           </PressableScale>
           <PressableScale
@@ -542,9 +549,36 @@ export function SavedPlacesScreen() {
                 { text: "해제", style: "destructive", onPress: () => handleRemove(target.id) },
               ]);
             }}
-            style={{ padding: space.md }}
+            style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
           >
+            <Feather name="star" size={16} color={colors.accent} />
             <AppText style={{ color: colors.accent }}>찜 해제</AppText>
+          </PressableScale>
+        </BottomSheetView>
+      </BottomSheetModal>
+
+      <BottomSheetModal
+        ref={folderMenuSheetRef}
+        enableDynamicSizing
+        backdropComponent={(props: BottomSheetBackdropProps) => (
+          <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+        )}
+        backgroundStyle={{ backgroundColor: colors.bg }}
+        handleIndicatorStyle={{ backgroundColor: colors.border }}
+      >
+        <BottomSheetView style={{ padding: space.xs, paddingBottom: space.xxl }}>
+          <AppText weight="medium" numberOfLines={1} style={{ padding: space.sm, color: colors.inkMuted, fontSize: fontSize.footnote }}>
+            {activeFolder?.name}
+          </AppText>
+          <PressableScale
+            onPress={() => {
+              folderMenuSheetRef.current?.dismiss();
+              confirmDeleteFolder();
+            }}
+            style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
+          >
+            <Feather name="trash-2" size={16} color={colors.accent} />
+            <AppText style={{ color: colors.accent }}>폴더 삭제</AppText>
           </PressableScale>
         </BottomSheetView>
       </BottomSheetModal>
