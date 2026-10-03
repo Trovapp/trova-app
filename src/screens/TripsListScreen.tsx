@@ -70,10 +70,10 @@ export function TripsListScreen({ navigation }: Props) {
       renderSectionFooter={() => <View style={{ height: 16 }} />}
       keyExtractor={(item) => String(item.id)}
       ListHeaderComponent={
+        <View style={{ marginBottom: space.lg, gap: space.xs }}>
         <PressableScale
-          onPress={() => navigation.navigate("NewTrip")}
+          onPress={() => navigation.navigate("PlanTrip")}
           style={{
-            marginBottom: space.lg,
             height: 48,
             borderRadius: radius.md,
             backgroundColor: colors.accent,
@@ -82,9 +82,24 @@ export function TripsListScreen({ navigation }: Props) {
           }}
         >
           <AppText weight="medium" style={{ color: colors.onAccent }}>
-            새 여행 만들기
+            영상으로 일정 짜기
           </AppText>
         </PressableScale>
+        {/* 빈 여행을 직접 만드는 길은 남겨두되, 영상으로 짜는 쪽을 주 버튼으로 둔다(#106). */}
+        <PressableScale
+          onPress={() => navigation.navigate("NewTrip")}
+          style={{
+            height: 48,
+            borderRadius: radius.md,
+            borderWidth: 1,
+            borderColor: colors.border,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <AppText weight="medium">빈 여행 만들기</AppText>
+        </PressableScale>
+        </View>
       }
       ListEmptyComponent={
         // 바로 위에 "새 여행 만들기" 버튼이 있으니 버튼을 또 두지 않고, 다른 경로(영상 기록)만 알려준다.

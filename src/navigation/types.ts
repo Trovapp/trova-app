@@ -21,6 +21,8 @@ export type RootStackParamList = {
   // justAnalyzed: 영상 분석 화면에서 막 넘어왔을 때만 도착 연출(개수 세기·카드 순차 등장)을 한다.
   VideoGroup: { jobId: number; justAnalyzed?: boolean };
   NewTrip: undefined;
+  // 고른 영상들 + 요청 문장으로 일정 초안을 만들고 승인하는 흐름(백엔드 #106).
+  PlanTrip: undefined;
   // weatherAlertTripPlaceId: 홈의 날씨 알림에서 들어올 때 — 해당 장소의 날짜로 이동해 실내 대안 찾기를 바로 연다.
   TripDetail: { id: number; weatherAlertTripPlaceId?: number };
   TripReplan: { tripId: number; jobId: number };

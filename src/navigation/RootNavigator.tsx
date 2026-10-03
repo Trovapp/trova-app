@@ -6,6 +6,7 @@ import { MainTabs, TAB_LABEL } from "@/navigation/MainTabs";
 import { ProcessingScreen } from "@/screens/ProcessingScreen";
 import { VideoGroupScreen } from "@/screens/VideoGroupScreen";
 import { NewTripScreen } from "@/screens/NewTripScreen";
+import { PlanTripScreen } from "@/screens/PlanTripScreen";
 import { TripDetailScreen } from "@/screens/TripDetailScreen";
 import { TripReplanScreen } from "@/screens/TripReplanScreen";
 import { LicensesScreen } from "@/screens/LicensesScreen";
@@ -92,6 +93,7 @@ export function RootNavigator() {
           <Stack.Screen name="Processing" component={ProcessingScreen} options={{ headerShown: false }} />
           <Stack.Screen name="VideoGroup" component={VideoGroupScreen} options={{ title: "영상 속 장소" }} />
           <Stack.Screen name="NewTrip" component={NewTripScreen} options={{ title: "새 여행" }} />
+          <Stack.Screen name="PlanTrip" component={PlanTripScreen} options={{ title: "영상으로 일정 짜기" }} />
           <Stack.Screen name="TripDetail" component={TripDetailScreen} options={{ title: "여행 상세" }} />
           <Stack.Screen name="TripReplan" component={TripReplanScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Licenses" component={LicensesScreen} options={{ title: "오픈소스 라이선스" }} />
