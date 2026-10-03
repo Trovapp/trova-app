@@ -10,6 +10,7 @@ import { Emoji } from "@/components/Emoji";
 import { InlineMap } from "@/components/InlineMap";
 import { ProgressBar } from "@/components/ProgressBar";
 import { RatingBadge } from "@/components/RatingBadge";
+import { ApiError, toUserMessage } from "@/lib/api/errors";
 import { getPlaceDetails } from "@/lib/api/recommendations";
 import { getTripPlaceDetails } from "@/lib/api/trips";
 import { categoryLabel } from "@/lib/placeCategory";
@@ -110,6 +111,19 @@ export function PlaceReviewContent({
     }, 150);
     return () => clearInterval(timer);
   }, [detailQuery.isLoading, placeId, tripPlaceId]);
+
+  // 상세를 못 받으면(장소를 못 찾음 404 등) 예전엔 "만들고 있어요 0%"에서 멈춰 있었다(#101). 이유를 알려준다.
+  if (detailQuery.isError) {
+    const notFound = detailQuery.error instanceof ApiError && detailQuery.error.status === 404;
+    return (
+      <View style={{ gap: space.sm, paddingVertical: space.sm }}>
+        {onClose && <SheetCloseButton onPress={onClose} style={{ alignSelf: "flex-end" }} />}
+        <AppText style={{ color: colors.inkMuted, fontSize: fontSize.footnote }}>
+          {notFound ? "이 장소의 리뷰 정보를 찾지 못했어요." : toUserMessage(detailQuery.error, "정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.")}
+        </AppText>
+      </View>
+    );
+  }
 
   if (detailQuery.isLoading || !detail) {
     return (
