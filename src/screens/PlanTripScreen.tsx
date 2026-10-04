@@ -8,6 +8,7 @@ import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { SkeletonRow } from "@/components/Skeleton";
+import { VideoThumb } from "@/components/VideoThumb";
 import { haptics } from "@/lib/haptics";
 import { toUserMessage } from "@/lib/api/client";
 import { getPlaces, type Place } from "@/lib/api/places";
@@ -33,7 +34,7 @@ import type { RootStackParamList } from "@/navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PlanTrip">;
 
-type Video = { jobId: number; title: string; placeCount: number };
+type Video = { jobId: number; title: string; placeCount: number; sourceUrl: string; platform: Place["sourcePlatform"] };
 
 // 요청 문장을 처음부터 쓰기 어려워 자주 쓰는 기간을 칩으로 둔다 — 서버가 코드로 바로 읽는 표현이라 Gemini 호출도 없다.
 const PERIOD_CHIPS = ["당일치기", "1박 2일", "2박 3일"];
@@ -44,7 +45,14 @@ function videosFrom(places: Place[]): Video[] {
   for (const p of places) {
     const v = map.get(p.jobId);
     if (v) v.placeCount += 1;
-    else map.set(p.jobId, { jobId: p.jobId, title: cleanVideoTitle(p.title) ?? describeSourceUrl(p.sourceUrl), placeCount: 1 });
+    else
+      map.set(p.jobId, {
+        jobId: p.jobId,
+        title: cleanVideoTitle(p.title) ?? describeSourceUrl(p.sourceUrl),
+        placeCount: 1,
+        sourceUrl: p.sourceUrl,
+        platform: p.sourcePlatform,
+      });
   }
   return Array.from(map.values());
 }
@@ -186,6 +194,15 @@ export function PlanTripScreen({ navigation }: Props) {
   }
 
   const canStart = selected.length > 0 && message.trim() !== "" && !busy;
+  // 버튼이 꺼져 있을 때 무엇이 빠졌는지 알려준다(디자인 QA P3).
+  const missing =
+    message.trim() === "" && selected.length === 0
+      ? "기간을 적고 영상을 골라 주세요."
+      : message.trim() === ""
+        ? "어떻게 다녀올지 적어 주세요. 예: 1박 2일"
+        : selected.length === 0
+          ? "일정을 짤 영상을 1개 이상 골라 주세요."
+          : null;
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: space.md, gap: space.lg }} keyboardShouldPersistTaps="handled">
@@ -229,11 +246,14 @@ export function PlanTripScreen({ navigation }: Props) {
                     paddingHorizontal: space.sm,
                     borderRadius: radius.full,
                     borderWidth: 1,
-                    borderColor: on ? colors.accent : colors.border,
-                    backgroundColor: on ? colors.accentBg : colors.bg,
+                    // 결과 화면 분류 칩(CategoryFilterChips)과 같은 선택 모양 — 앱 안의 칩이 한 가지로 보이게(디자인 QA P2).
+                    borderColor: on ? colors.ink : colors.border,
+                    backgroundColor: on ? colors.ink : colors.bg,
                   }}
                 >
-                  <AppText style={{ fontSize: fontSize.footnote, color: on ? colors.accent : colors.ink }}>{chip}</AppText>
+                  <AppText weight={on ? "medium" : "regular"} style={{ fontSize: fontSize.footnote, color: on ? colors.onAccent : colors.ink }}>
+                    {chip}
+                  </AppText>
                 </PressableScale>
               );
             })}
@@ -268,6 +288,7 @@ export function PlanTripScreen({ navigation }: Props) {
                 }}
               >
                 <Feather name={on ? "check-circle" : "circle"} size={22} color={on ? colors.accent : colors.border} />
+                <VideoThumb sourceUrl={v.sourceUrl} platform={v.platform} size={48} />
                 <View style={{ flex: 1, gap: space.xxxs }}>
                   <AppText numberOfLines={2}>{v.title}</AppText>
                   <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>장소 {v.placeCount}곳</AppText>
@@ -280,6 +301,9 @@ export function PlanTripScreen({ navigation }: Props) {
 
       <View style={{ padding: space.md, gap: space.xs, borderTopWidth: 1, borderTopColor: colors.borderSubtle, backgroundColor: colors.bg }}>
         {error && <ErrorText>{error}</ErrorText>}
+        {!error && missing && !busy && (
+          <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, textAlign: "center" }}>{missing}</AppText>
+        )}
         <PrimaryButton label={busy ? "시작하는 중..." : "일정 짜기"} disabled={!canStart} onPress={start} />
       </View>
     </KeyboardAvoidingView>

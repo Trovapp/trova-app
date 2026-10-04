@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ComponentProps } from "react";
-import { Alert, FlatList, Image, RefreshControl, View } from "react-native";
+import { Alert, FlatList, RefreshControl, View } from "react-native";
 import { useScrollToTop } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
@@ -11,10 +11,11 @@ import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { SkeletonRow } from "@/components/Skeleton";
+import { PLATFORM_LABEL, VideoThumb } from "@/components/VideoThumb";
 import { useListEntrance } from "@/hooks/useListEntrance";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { haptics } from "@/lib/haptics";
-import { describeSourceUrl, youtubeThumbnailUrl } from "@/lib/shareUrl";
+import { describeSourceUrl } from "@/lib/shareUrl";
 import { toUserMessage } from "@/lib/api/client";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 import { deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob, type Place } from "@/lib/api/places";
@@ -22,10 +23,6 @@ import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"PlacesList">;
 
-const PLATFORM_LABEL: Record<Place["sourcePlatform"], string> = {
-  INSTAGRAM: "인스타그램",
-  YOUTUBE: "유튜브",
-};
 
 type VideoGroup = {
   jobId: number;
@@ -56,35 +53,6 @@ function groupByVideo(places: Place[]): VideoGroup[] {
     }
   }
   return Array.from(groups.values());
-}
-
-const THUMB_SIZE = 56;
-
-// 영상 기록 행의 썸네일. 예전엔 모든 행 맨 위에 "유튜브" 글자만 반복돼 영상을 구분할 단서가 제목뿐이었다(2026-10 QA C4).
-// 썸네일을 못 얻는 경우(인스타그램, 지워진 영상 등 불러오기 실패)는 플랫폼 아이콘 타일로 대신한다 — 플랫폼 글자 줄은 뺐다.
-function VideoThumb({ sourceUrl, platform }: { sourceUrl: string; platform: Place["sourcePlatform"] }) {
-  const [failed, setFailed] = useState(false);
-  const uri = platform === "YOUTUBE" ? youtubeThumbnailUrl(sourceUrl) : null;
-  const box = { width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: radius.sm, borderCurve: "continuous" as const };
-  if (!uri || failed) {
-    return (
-      <View
-        accessibilityLabel={PLATFORM_LABEL[platform]}
-        style={{ ...box, backgroundColor: colors.borderSubtle, justifyContent: "center", alignItems: "center" }}
-      >
-        <Feather name={platform === "YOUTUBE" ? "youtube" : "instagram"} size={20} color={colors.inkMuted} />
-      </View>
-    );
-  }
-  return (
-    <Image
-      source={{ uri }}
-      resizeMode="cover"
-      onError={() => setFailed(true)}
-      accessibilityLabel={`${PLATFORM_LABEL[platform]} 영상 썸네일`}
-      style={{ ...box, backgroundColor: colors.borderSubtle }}
-    />
-  );
 }
 
 function placePreview(places: Place[]): string {
