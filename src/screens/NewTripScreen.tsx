@@ -64,9 +64,13 @@ export function NewTripScreen({ navigation }: Props) {
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: space.xl, gap: space.md }}
+        // 다른 화면과 같은 양옆 여백(16) — 이 화면만 24였다(디자인 QA N1).
+        contentContainerStyle={{ padding: space.md, gap: space.md }}
         keyboardShouldPersistTaps="handled"
       >
+      {/* 날짜 칸처럼 이름 칸에도 이름표를 단다(디자인 QA N1). */}
+      <View style={{ gap: space.xxs }}>
+      <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>여행 이름</AppText>
       <TextInput
         maxFontSizeMultiplier={MAX_FONT_SCALE}
         value={title}
@@ -83,6 +87,7 @@ export function NewTripScreen({ navigation }: Props) {
           fontFamily: FONT.regular,
         }}
       />
+      </View>
 
       <View style={{ flexDirection: "row", gap: space.sm }}>
         <View style={{ flex: 1, gap: space.xxs }}>

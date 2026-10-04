@@ -107,6 +107,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
 
   // 여행 삭제 — 한번 만든 여행을 지울 방법이 없어 테스트/중복 여행이 계속 쌓이던 문제.
   // 되돌릴 수 없으니 확인을 받고, 성공하면 목록을 새로 받고 이 여행 캐시는 버린 뒤 뒤로 간다.
+  // 헤더에 휴지통을 바로 두지 않고 ⋯ 메뉴 안에 둔다 — 찜 폴더 삭제(⋮ 메뉴)와 같은 방식(디자인 QA T1).
+  const tripMenuSheetRef = useRef<BottomSheetModal>(null);
+  const confirmDeleteTripRef = useRef<() => void>(() => {});
   useLayoutEffect(() => {
     function confirmDeleteTrip() {
       Alert.alert("여행을 삭제할까요?", `"${tripTitle ?? "이 여행"}"의 일정과 장소가 모두 사라지고 되돌릴 수 없어요.`, [
@@ -131,13 +134,19 @@ export function TripDetailScreen({ route, navigation }: Props) {
         },
       ]);
     }
+    confirmDeleteTripRef.current = confirmDeleteTrip;
     navigation.setOptions({
       // 화면 어디에도 여행 이름이 없어 어떤 여행을 보고 있는지 알 수 없었다(2026-10 QA) — 헤더 제목으로 보여준다.
       // 긴 이름은 iOS 헤더가 말줄임표로 줄인다. 불러오기 전에는 원래 제목을 둔다.
       title: tripTitle ?? "여행 상세",
       headerRight: () => (
-        <PressableScale onPress={confirmDeleteTrip} hitSlop={10} disabled={!tripTitle}>
-          <Feather name="trash-2" size={19} color={colors.inkMuted} />
+        <PressableScale
+          onPress={() => tripMenuSheetRef.current?.present()}
+          hitSlop={10}
+          disabled={!tripTitle}
+          accessibilityLabel="여행 메뉴"
+        >
+          <Feather name="more-horizontal" size={20} color={colors.inkMuted} />
         </PressableScale>
       ),
     });
@@ -1185,6 +1194,31 @@ export function TripDetailScreen({ route, navigation }: Props) {
             {r.address && <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{r.address}</AppText>}
           </PressableScale>
         ))}
+      </BottomSheetView>
+    </BottomSheetModal>
+    <BottomSheetModal
+      ref={tripMenuSheetRef}
+      enableDynamicSizing
+      backdropComponent={(props: BottomSheetBackdropProps) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+      )}
+      backgroundStyle={{ backgroundColor: colors.bg }}
+      handleIndicatorStyle={{ backgroundColor: colors.border }}
+    >
+      <BottomSheetView style={{ padding: space.xs, paddingBottom: space.xxl }}>
+        <AppText weight="medium" numberOfLines={1} style={{ padding: space.sm, color: colors.inkMuted, fontSize: fontSize.footnote }}>
+          {tripTitle}
+        </AppText>
+        <PressableScale
+          onPress={() => {
+            tripMenuSheetRef.current?.dismiss();
+            confirmDeleteTripRef.current();
+          }}
+          style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
+        >
+          <Feather name="trash-2" size={16} color={colors.accent} />
+          <AppText style={{ color: colors.accent }}>여행 삭제</AppText>
+        </PressableScale>
       </BottomSheetView>
     </BottomSheetModal>
     </View>
