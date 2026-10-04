@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type ComponentProps } from "react";
+import { useCallback, useEffect, useRef, useState, type ComponentProps } from "react";
 import { Alert, KeyboardAvoidingView, Platform, RefreshControl, ScrollView, TextInput, View } from "react-native";
 import { useScrollToTop } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -24,6 +24,7 @@ import { toUserMessage } from "@/lib/api/client";
 import { colors, fontSize, radius, space, motion } from "@/lib/theme";
 import { extractFirstUrl, isSupportedShareUrl, sourceVideoKey, UNSUPPORTED_SHARE_URL_MESSAGE } from "@/lib/shareUrl";
 import { PasteButton } from "@/lib/clipboard";
+import { takePendingShare, usePendingShare } from "@/lib/pendingShare";
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"Home">;
@@ -62,6 +63,18 @@ export function HomeScreen({ navigation }: Props) {
     setSubmitting(false);
   }
   const [error, setError] = useState<string | null>(null);
+  // 다른 앱에서 Trova로 공유한 링크 — 공유 자체가 "분석해 달라"는 뜻이라 입력창에 채우고 바로 시작한다
+  // (이미 분석한 영상이면 지금처럼 보러 갈지 묻는다).
+  const pendingShare = usePendingShare();
+  useEffect(() => {
+    if (!pendingShare) return;
+    const shared = takePendingShare();
+    if (!shared) return;
+    setUrl(shared);
+    setError(null);
+    handleSubmit(shared);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingShare]);
   const reducedMotion = useReducedMotion();
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
@@ -131,8 +144,8 @@ export function HomeScreen({ navigation }: Props) {
     }
   }
 
-  async function handleSubmit() {
-    const trimmed = url.trim();
+  async function handleSubmit(value?: string) {
+    const trimmed = (value ?? url).trim();
     if (!trimmed || submittingRef.current) return;
     if (!isSupportedShareUrl(trimmed)) {
       setError(UNSUPPORTED_SHARE_URL_MESSAGE);
@@ -218,7 +231,7 @@ export function HomeScreen({ navigation }: Props) {
                 autoCorrect={false}
                 keyboardType="url"
                 returnKeyType="go"
-                onSubmitEditing={handleSubmit}
+                onSubmitEditing={() => handleSubmit()}
                 style={{
                   height: 52,
                   borderWidth: 1,
@@ -249,7 +262,7 @@ export function HomeScreen({ navigation }: Props) {
               )}
             </View>
             <PressableScale
-              onPress={handleSubmit}
+              onPress={() => handleSubmit()}
               disabled={!url.trim() || submitting}
               style={{
                 height: 52,

@@ -14,6 +14,8 @@ import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { shouldRetryQuery } from "@/lib/api/client";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { RootNavigator } from "@/navigation/RootNavigator";
+import { navigationRef } from "@/navigation/navigationRef";
+import { ShareIntentListener } from "@/components/ShareIntentListener";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -80,6 +82,7 @@ export default function App() {
             <AppErrorBoundary>
               <BottomSheetModalProvider>
                 <NavigationContainer
+                  ref={navigationRef}
                   key={fontScale}
                   initialState={navState.current}
                   onStateChange={(state) => {
@@ -88,6 +91,7 @@ export default function App() {
                 >
                   <RootNavigator />
                 </NavigationContainer>
+                <ShareIntentListener />
               </BottomSheetModalProvider>
             </AppErrorBoundary>
           </SafeAreaProvider>

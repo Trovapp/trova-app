@@ -9,7 +9,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.trovapp.trova"
+      "bundleIdentifier": "com.trovapp.trova",
+      "infoPlist": {
+        "CFBundleDisplayName": "Trova"
+      }
     },
     "android": {
       "package": "com.trovapp.trova",
@@ -30,7 +33,21 @@
       "expo-web-browser",
       "expo-splash-screen",
       "expo-font",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+            "NSExtensionActivationSupportsWebPageWithMaxCount": 1,
+            "NSExtensionActivationSupportsText": true
+          },
+          "androidIntentFilters": [
+            "text/*"
+          ],
+          "iosShareExtensionName": "Trova"
+        }
+      ]
     ]
   }
 }

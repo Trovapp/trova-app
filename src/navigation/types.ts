@@ -1,4 +1,4 @@
-import type { CompositeScreenProps } from "@react-navigation/native";
+import type { CompositeScreenProps, NavigatorScreenParams } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
@@ -16,7 +16,7 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   Onboarding: undefined;
   Login: undefined;
-  MainTabs: undefined;
+  MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
   Processing: { jobId: number };
   // justAnalyzed: 영상 분석 화면에서 막 넘어왔을 때만 도착 연출(개수 세기·카드 순차 등장)을 한다.
   VideoGroup: { jobId: number; justAnalyzed?: boolean };
