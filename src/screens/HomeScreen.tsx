@@ -10,6 +10,7 @@ import { InlineMap } from "@/components/InlineMap";
 import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { StaleNotice } from "@/components/StaleNotice";
 import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
 import { createShare, deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob } from "@/lib/api/places";
@@ -254,12 +255,22 @@ export function HomeScreen({ navigation }: Props) {
 
         {isFirstVisit && <FirstVisitGuide />}
 
+        {/* 받아 둔 찜·여행이 있는데 다시 불러오기만 실패했으면 화면은 그대로 두고 한 줄만 알린다(디자인 QA E1). */}
+        {((bookmarksQuery.isError && bookmarksQuery.data) || (tripsQuery.isError && tripsQuery.data)) && (
+          <StaleNotice
+            onRetry={() => {
+              bookmarksQuery.refetch();
+              tripsQuery.refetch();
+            }}
+          />
+        )}
+
         {bookmarksQuery.isLoading ? (
           <View style={{ gap: space.sm }}>
             <Skeleton style={{ width: 100, height: 17 }} />
             <Skeleton style={{ width: "100%", height: 160, borderRadius: radius.md }} />
           </View>
-        ) : bookmarksQuery.isError ? (
+        ) : bookmarksQuery.isError && !bookmarksQuery.data ? (
           <QueryErrorView message="찜한 장소를 불러오지 못했어요." onRetry={() => bookmarksQuery.refetch()} />
         ) : (
           pins.length > 0 && (
@@ -283,7 +294,7 @@ export function HomeScreen({ navigation }: Props) {
             <SkeletonRow />
             <SkeletonRow />
           </View>
-        ) : tripsQuery.isError ? (
+        ) : tripsQuery.isError && !tripsQuery.data ? (
           <QueryErrorView message="최근 여행을 불러오지 못했어요." onRetry={() => tripsQuery.refetch()} />
         ) : (
           recentTrips.length > 0 && (

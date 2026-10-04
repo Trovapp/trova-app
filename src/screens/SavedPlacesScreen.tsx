@@ -19,6 +19,7 @@ import { InlineMap } from "@/components/InlineMap";
 import { PlaceReviewContent } from "@/components/PlaceReviewModal";
 import { PressableRow } from "@/components/PressableRow";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { StaleNotice } from "@/components/StaleNotice";
 import { RatingBadge } from "@/components/RatingBadge";
 import { Skeleton } from "@/components/Skeleton";
 import { useListEntrance } from "@/hooks/useListEntrance";
@@ -98,7 +99,8 @@ export function SavedPlacesScreen() {
   }
 
   // 조회 실패를 "장소 없음"(빈 지도 + 미분류 0개)으로 보여주지 않는다.
-  if (bookmarksQuery.isError || foldersQuery.isError) {
+  // 받아 둔 찜·폴더가 있으면 오류 화면 대신 위에 한 줄만 알린다(디자인 QA E1).
+  if ((bookmarksQuery.isError && !bookmarksQuery.data) || (foldersQuery.isError && !foldersQuery.data)) {
     return (
       <QueryErrorView
         fullScreen
@@ -285,6 +287,15 @@ export function SavedPlacesScreen() {
       </View>
 
       <View style={{ flex: 1 }}>
+        {(bookmarksQuery.isError || foldersQuery.isError) && (
+          <StaleNotice
+            floating
+            onRetry={() => {
+              bookmarksQuery.refetch();
+              foldersQuery.refetch();
+            }}
+          />
+        )}
         <InlineMap
           pins={pins}
           fill

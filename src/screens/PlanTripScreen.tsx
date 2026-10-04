@@ -7,6 +7,7 @@ import { ErrorText } from "@/components/ErrorText";
 import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { StaleNotice } from "@/components/StaleNotice";
 import { SkeletonRow } from "@/components/Skeleton";
 import { VideoThumb } from "@/components/VideoThumb";
 import { haptics } from "@/lib/haptics";
@@ -179,7 +180,7 @@ export function PlanTripScreen({ navigation }: Props) {
       </View>
     );
   }
-  if (placesQuery.isError) {
+  if (placesQuery.isError && !placesQuery.data) {
     return <QueryErrorView fullScreen message="저장한 영상을 불러오지 못했어요." onRetry={() => placesQuery.refetch()} />;
   }
   if (videos.length === 0) {
@@ -206,6 +207,8 @@ export function PlanTripScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: space.md, gap: space.lg }} keyboardShouldPersistTaps="handled">
+        {/* 받아 둔 영상 목록이 있으면 오류 화면 대신 한 줄만 알린다(디자인 QA E1). */}
+        {placesQuery.isError && <StaleNotice onRetry={() => placesQuery.refetch()} />}
         <View style={{ gap: space.xs }}>
           <AppText weight="medium">어떻게 다녀올까요?</AppText>
           <TextInput

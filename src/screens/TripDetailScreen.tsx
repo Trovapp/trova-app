@@ -21,6 +21,7 @@ import { InlineMap } from "@/components/InlineMap";
 import { PlaceRow } from "@/components/PlaceRow";
 import { PlaceReviewSheet } from "@/components/PlaceReviewModal";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { StaleNotice } from "@/components/StaleNotice";
 import { RatingBadge } from "@/components/RatingBadge";
 import { Skeleton } from "@/components/Skeleton";
 import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
@@ -243,7 +244,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
   }
 
   // 조회 실패와 "아직 데이터 없음"을 같은 화면으로 보여주지 않는다.
-  if (tripQuery.isError || !trip) {
+  // 받아 둔 여행이 있으면 오류 화면 대신 지도 위에 한 줄만 알린다(디자인 QA E1).
+  if (!trip) {
     return (
       <QueryErrorView
         fullScreen
@@ -714,6 +716,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
 
   return (
     <View style={{ flex: 1 }}>
+    {tripQuery.isError && <StaleNotice floating onRetry={() => tripQuery.refetch()} />}
     <InlineMap
       pins={places
         .filter((p) => p.latitude !== null && p.longitude !== null)

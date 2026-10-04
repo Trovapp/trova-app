@@ -8,6 +8,7 @@ import { AppText } from "@/components/AppText";
 import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { StaleNotice } from "@/components/StaleNotice";
 import { Skeleton, SkeletonRow } from "@/components/Skeleton";
 import { useListEntrance } from "@/hooks/useListEntrance";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -42,7 +43,8 @@ export function TripsListScreen({ navigation }: Props) {
   }
 
   // 조회 실패를 빈 목록("아직 만든 여행이 없어요")으로 보여주지 않는다.
-  if (tripsQuery.isError) {
+  // 받아 둔 목록이 있으면 오류 화면 대신 목록 위에 한 줄만 알린다(디자인 QA E1).
+  if (tripsQuery.isError && !tripsQuery.data) {
     return (
       <QueryErrorView
         fullScreen
@@ -71,6 +73,7 @@ export function TripsListScreen({ navigation }: Props) {
       keyExtractor={(item) => String(item.id)}
       ListHeaderComponent={
         <View style={{ marginBottom: space.lg, gap: space.xs }}>
+        {tripsQuery.isError && <StaleNotice onRetry={() => tripsQuery.refetch()} />}
         <PressableScale
           onPress={() => navigation.navigate("PlanTrip")}
           style={{

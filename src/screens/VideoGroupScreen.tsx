@@ -18,6 +18,7 @@ import { CategoryFilterChips } from "@/components/CategoryFilterChips";
 import { categoryGroup, type CategoryGroup } from "@/lib/placeCategory";
 import { SavedPlaceInfoSheet } from "@/components/SavedPlaceInfoSheet";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { StaleNotice } from "@/components/StaleNotice";
 import { Skeleton } from "@/components/Skeleton";
 import { SourceVideoLink } from "@/components/SourceVideoLink";
 import { haversineDistanceKm } from "@/lib/geo";
@@ -272,7 +273,8 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   }
 
   // 조회 실패를 "영상 없음"으로 보여주면 사용자가 다시 시도할 방법이 없다.
-  if (placesQuery.isError) {
+  // 받아 둔 장소가 있으면 오류 화면 대신 지도 위에 한 줄만 알린다(디자인 QA E1).
+  if (placesQuery.isError && !placesQuery.data) {
     return (
       <QueryErrorView
         fullScreen
@@ -468,6 +470,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   return (
     <View style={{ flex: 1 }}>
       {map}
+      {placesQuery.isError && <StaleNotice floating onRetry={() => placesQuery.refetch()} />}
       {/* 시트 안 목록은 끌어서 순서를 바꾼다 — 목록을 끌 때 시트까지 움직이지 않게 시트는 위쪽 손잡이로만 움직인다. */}
       <BottomSheet
         index={1}

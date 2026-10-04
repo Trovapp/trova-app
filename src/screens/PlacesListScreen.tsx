@@ -10,6 +10,7 @@ import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
 import { ProgressBar } from "@/components/ProgressBar";
 import { QueryErrorView } from "@/components/QueryErrorView";
+import { StaleNotice } from "@/components/StaleNotice";
 import { SkeletonRow } from "@/components/Skeleton";
 import { PLATFORM_LABEL, VideoThumb } from "@/components/VideoThumb";
 import { useListEntrance } from "@/hooks/useListEntrance";
@@ -251,7 +252,8 @@ export function PlacesListScreen({ navigation }: Props) {
   }
 
   // 조회 실패를 "영상 없음"으로 보여주지 않는다.
-  if (placesQuery.isError) {
+  // 받아 둔 목록이 있으면 오류 화면 대신 목록 위에 한 줄만 알린다(디자인 QA E1).
+  if (placesQuery.isError && !placesQuery.data) {
     return (
       <QueryErrorView
         fullScreen
@@ -273,8 +275,9 @@ export function PlacesListScreen({ navigation }: Props) {
       data={videoGroups}
       keyExtractor={(item) => String(item.jobId)}
       ListHeaderComponent={
-        pendingJobs.length > 0 ? (
+        placesQuery.isError || pendingJobs.length > 0 ? (
           <View style={{ gap: space.sm, marginBottom: space.lg }}>
+            {placesQuery.isError && <StaleNotice onRetry={() => placesQuery.refetch()} />}
             {pendingJobs.map((job) => (
               <PendingJobCard
                 key={job.jobId}
