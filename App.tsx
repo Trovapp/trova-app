@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { AppState } from "react-native";
+import { useEffect, useRef } from "react";
+import { AppState, useWindowDimensions } from "react-native";
 import { useFonts as useMonoFonts, IBMPlexMono_400Regular, IBMPlexMono_500Medium } from "@expo-google-fonts/ibm-plex-mono";
 import { useFonts as useEmojiFonts, useFonts as useSansFonts } from "expo-font";
 import { FONT } from "@/components/AppText";
@@ -8,7 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, type NavigationState } from "@react-navigation/native";
 import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { shouldRetryQuery } from "@/lib/api/client";
@@ -35,6 +35,11 @@ AppState.addEventListener("change", (status) => {
 });
 
 export default function App() {
+  // 앱이 켜진 채로 iOS "글자 크기"를 바꾸면, 그때 뒤에 숨어 있던 화면(다른 탭, 아래 깔린 화면)은 칸 크기를 다시 재지 않아
+  // 커진 글자가 잘렸다(디자인 QA D1 — 테스트 시뮬레이터에서 재현: 보던 화면과 새로 여는 화면은 정상, 숨어 있던 화면만 잘림).
+  // 글자 배율이 바뀌면 화면들을 새로 그리되, 보던 위치(내비게이션 상태)는 그대로 되살린다. 입력 중이던 값은 사라진다.
+  const { fontScale } = useWindowDimensions();
+  const navState = useRef<NavigationState | undefined>(undefined);
   const [monoFontsLoaded] = useMonoFonts({
     IBMPlexMono_400Regular,
     IBMPlexMono_500Medium,
@@ -74,7 +79,13 @@ export default function App() {
                 BottomSheet와 달리, DayPickerSheet 등 필요할 때만 뜨는 시트들이 이걸 쓴다. */}
             <AppErrorBoundary>
               <BottomSheetModalProvider>
-                <NavigationContainer>
+                <NavigationContainer
+                  key={fontScale}
+                  initialState={navState.current}
+                  onStateChange={(state) => {
+                    navState.current = state;
+                  }}
+                >
                   <RootNavigator />
                 </NavigationContainer>
               </BottomSheetModalProvider>
