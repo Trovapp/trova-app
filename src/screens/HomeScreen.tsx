@@ -22,7 +22,8 @@ import { formatTripDates, toDateString } from "@/lib/date";
 import { groupTripsByDate } from "@/lib/tripSections";
 import { toUserMessage } from "@/lib/api/client";
 import { colors, fontSize, radius, space, motion } from "@/lib/theme";
-import { isSupportedShareUrl, sourceVideoKey, UNSUPPORTED_SHARE_URL_MESSAGE } from "@/lib/shareUrl";
+import { extractFirstUrl, isSupportedShareUrl, sourceVideoKey, UNSUPPORTED_SHARE_URL_MESSAGE } from "@/lib/shareUrl";
+import { PasteButton } from "@/lib/clipboard";
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"Home">;
@@ -200,33 +201,53 @@ export function HomeScreen({ navigation }: Props) {
           </AppText>
 
           <View style={{ gap: space.sm }}>
-            <TextInput
-              maxFontSizeMultiplier={MAX_FONT_SCALE}
-              // 눌러도 테두리가 그대로라 입력 중인지 알기 어려웠다(2026-10 QA) — 입력 중엔 강조색 테두리.
-              onFocus={() => setUrlFocused(true)}
-              onBlur={() => setUrlFocused(false)}
-              selectionColor={colors.accent}
-              value={url}
-              onChangeText={(text) => {
-                setUrl(text);
-                if (error) setError(null);
-              }}
-              placeholder="인스타그램 또는 유튜브 링크"
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-              returnKeyType="go"
-              onSubmitEditing={handleSubmit}
-              style={{
-                height: 52,
-                borderWidth: 1,
-                borderColor: urlFocused ? colors.accent : colors.border,
-                borderRadius: radius.md,
-                paddingHorizontal: space.lg,
-                fontFamily: FONT.regular,
-                color: colors.ink,
-              }}
-            />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+              <TextInput
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+                // 눌러도 테두리가 그대로라 입력 중인지 알기 어려웠다(2026-10 QA) — 입력 중엔 강조색 테두리.
+                onFocus={() => setUrlFocused(true)}
+                onBlur={() => setUrlFocused(false)}
+                selectionColor={colors.accent}
+                value={url}
+                onChangeText={(text) => {
+                  setUrl(text);
+                  if (error) setError(null);
+                }}
+                placeholder="인스타그램 또는 유튜브 링크"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                returnKeyType="go"
+                onSubmitEditing={handleSubmit}
+                style={{
+                  height: 52,
+                  borderWidth: 1,
+                  borderColor: urlFocused ? colors.accent : colors.border,
+                  borderRadius: radius.md,
+                  paddingHorizontal: space.lg,
+                  fontFamily: FONT.regular,
+                  color: colors.ink,
+                  flex: 1,
+                }}
+              />
+              {/* 복사한 링크를 길게 눌러 붙여넣지 않아도 되게 — iOS 기본 붙여넣기 버튼이라 "허용" 확인창이 뜨지 않는다. */}
+              {PasteButton && (
+                <PasteButton
+                  acceptedContentTypes={["plain-text", "url"]}
+                  displayMode="iconOnly"
+                  cornerStyle="medium"
+                  backgroundColor={colors.accentBg}
+                  foregroundColor={colors.accent}
+                  style={{ width: 52, height: 52 }}
+                  onPress={(data) => {
+                    if (data.type !== "text") return;
+                    const pasted = extractFirstUrl(data.text);
+                    setUrl(pasted);
+                    setError(isSupportedShareUrl(pasted) ? null : UNSUPPORTED_SHARE_URL_MESSAGE);
+                  }}
+                />
+              )}
+            </View>
             <PressableScale
               onPress={handleSubmit}
               disabled={!url.trim() || submitting}

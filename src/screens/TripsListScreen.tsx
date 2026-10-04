@@ -133,6 +133,14 @@ export function TripsListScreen({ navigation }: Props) {
                   {formatTripDates(item.startDate, item.endDate)}
                 </AppText>
               )}
+              {/* 이름이 같은 여행을 구분할 수 없었다(사용자 관점 QA, #123) — 지역과 장소 수를 함께 보여준다. */}
+              {item.placeCount !== undefined && (
+                <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
+                  {item.placeCount === 0
+                    ? "아직 담은 장소가 없어요"
+                    : [item.regions?.join("·"), `${item.placeCount}곳`].filter(Boolean).join(" · ")}
+                </AppText>
+              )}
             </View>
             <Feather name="chevron-right" size={18} color={colors.inkMuted} />
           </PressableRow>

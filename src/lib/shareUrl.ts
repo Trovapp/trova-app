@@ -11,6 +11,12 @@ const VIDEO_URL_PATTERNS = [
   new RegExp(`^https?://(?:www\\.|m\\.)?instagram\\.com\\.?/(?:reels?|p|tv)/${VIDEO_ID}(?:[/?#]|$)`, "i"),
 ];
 
+/** 복사한 글에서 첫 링크만 꺼낸다 — 인스타 공유 문구처럼 링크 앞뒤에 글이 붙어 있을 수 있다. 링크가 없으면 글 그대로. */
+export function extractFirstUrl(text: string): string {
+  const match = text.match(/https?:\/\/\S+/);
+  return (match ? match[0] : text).trim();
+}
+
 export function isSupportedShareUrl(url: string): boolean {
   const trimmed = url.trim();
   return VIDEO_URL_PATTERNS.some((pattern) => pattern.test(trimmed));

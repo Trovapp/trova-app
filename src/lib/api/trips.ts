@@ -1,7 +1,15 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { AI_TIMEOUT_MS, ApiError, apiFetch } from "@/lib/api/client";
 
-export type Trip = { id: number; title: string; startDate: string | null; endDate: string | null };
+export type Trip = {
+  id: number;
+  title: string;
+  startDate: string | null;
+  endDate: string | null;
+  // 목록 요약(#123). 예전 서버는 주지 않으므로 없을 수 있다.
+  placeCount?: number;
+  regions?: string[];
+};
 
 export type TripPlace = {
   id: number;
