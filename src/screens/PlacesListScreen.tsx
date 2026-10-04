@@ -106,7 +106,7 @@ function PendingJobCard({
         {isFailed && (
           <PressableScale
             onPress={() =>
-              Alert.alert("이 항목을 삭제할까요?", "실패한 처리 기록을 목록에서 지웁니다.", [
+              Alert.alert("이 항목을 삭제할까요?", "실패한 처리 기록을 목록에서 지워요.", [
                 { text: "취소", style: "cancel" },
                 { text: "삭제", style: "destructive", onPress: () => onDelete(job.jobId) },
               ])

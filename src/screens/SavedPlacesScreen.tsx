@@ -24,6 +24,7 @@ import { RatingBadge } from "@/components/RatingBadge";
 import { Skeleton } from "@/components/Skeleton";
 import { useListEntrance } from "@/hooks/useListEntrance";
 import { haptics } from "@/lib/haptics";
+import { objectParticle } from "@/lib/korean";
 import {
   addBookmark,
   deleteFolder,
@@ -555,7 +556,7 @@ export function SavedPlacesScreen() {
               menuSheetRef.current?.dismiss();
               if (!target) return;
               // 일정 장소 삭제와 같은 확인 흐름 — 폴더 분류까지 함께 사라지고 되돌릴 수 없다.
-              Alert.alert("찜을 해제할까요?", `"${target.placeName}"을(를) 찜한 장소에서 뺍니다.`, [
+              Alert.alert("찜을 해제할까요?", `"${target.placeName}"${objectParticle(target.placeName)} 찜한 장소에서 빼요.`, [
                 { text: "취소", style: "cancel" },
                 { text: "해제", style: "destructive", onPress: () => handleRemove(target.id) },
               ]);

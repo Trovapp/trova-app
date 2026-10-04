@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
 import { getDayColor } from "@/lib/itinerary";
 import { haptics } from "@/lib/haptics";
+import { objectParticle } from "@/lib/korean";
 import { parseTimeToDate, toTimeString } from "@/lib/date";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { formatCount } from "@/lib/number";
@@ -998,7 +999,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                           />
                           <PressableScale
                             onPress={() =>
-                              Alert.alert("찜을 해제할까요?", `"${bookmark.placeName}"을(를) 찜한 장소에서 뺍니다.`, [
+                              Alert.alert("찜을 해제할까요?", `"${bookmark.placeName}"${objectParticle(bookmark.placeName)} 찜한 장소에서 빼요.`, [
                                 { text: "취소", style: "cancel" },
                                 { text: "해제", style: "destructive", onPress: () => handleRemoveBookmark(bookmark.id) },
                               ])
@@ -1145,7 +1146,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             const target = menuPlace;
             menuSheetRef.current?.dismiss();
             if (!target) return;
-            Alert.alert("장소를 삭제할까요?", `"${target.placeName}"을(를) 일정에서 삭제합니다.`, [
+            Alert.alert("장소를 삭제할까요?", `"${target.placeName}"${objectParticle(target.placeName)} 일정에서 삭제해요.`, [
               { text: "취소", style: "cancel" },
               { text: "삭제", style: "destructive", onPress: () => handleRemove(target.id) },
             ]);

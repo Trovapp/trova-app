@@ -147,7 +147,7 @@ export function PlanTripScreen({ navigation }: Props) {
   if (draftId != null) {
     const draft = draftQuery.data;
     if (draftQuery.isError && !draft) {
-      return <QueryErrorView fullScreen message="일정 상태를 불러오지 못했어요." onRetry={() => draftQuery.refetch()} />;
+      return <QueryErrorView fullScreen message="일정 상태를 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요." onRetry={() => draftQuery.refetch()} />;
     }
     if (!draft || draft.status === "PENDING" || draft.status === "PROCESSING") {
       return <Working videoCount={selected.length} answered={draft?.answer != null} />;
@@ -181,7 +181,7 @@ export function PlanTripScreen({ navigation }: Props) {
     );
   }
   if (placesQuery.isError && !placesQuery.data) {
-    return <QueryErrorView fullScreen message="저장한 영상을 불러오지 못했어요." onRetry={() => placesQuery.refetch()} />;
+    return <QueryErrorView fullScreen message="저장한 영상을 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요." onRetry={() => placesQuery.refetch()} />;
   }
   if (videos.length === 0) {
     return (
