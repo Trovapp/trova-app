@@ -41,6 +41,7 @@ import { categoryLabel } from "@/lib/placeCategory";
 import { formatCount } from "@/lib/number";
 import { toUserMessage } from "@/lib/api/client";
 import { colors, fontSize, radius, space } from "@/lib/theme";
+import { hitSlopFor } from "@/lib/touch";
 
 const UNSORTED_ID = -1; // "미분류" 가상 폴더 id — 실제 폴더 id는 항상 양수(DB IDENTITY)라 겹치지 않는다.
 
@@ -444,11 +445,11 @@ export function SavedPlacesScreen() {
                     {activeFolder?.name ?? "미분류"}
                   </AppText>
                   {activeFolderId !== UNSORTED_ID && (
-                    <PressableScale onPress={() => folderMenuSheetRef.current?.present()} hitSlop={8} accessibilityLabel="폴더 메뉴">
+                    <PressableScale onPress={() => folderMenuSheetRef.current?.present()} hitSlop={hitSlopFor(18, 18, 6)} accessibilityLabel="폴더 메뉴">
                       <Feather name="more-vertical" size={18} color={colors.inkMuted} />
                     </PressableScale>
                   )}
-                  <PressableScale onPress={() => setActiveFolderId(null)} hitSlop={8}>
+                  <PressableScale onPress={() => setActiveFolderId(null)} hitSlop={hitSlopFor(18, 18, 6)}>
                     <Feather name="x" size={18} color={colors.inkMuted} />
                   </PressableScale>
                 </View>
@@ -506,7 +507,7 @@ export function SavedPlacesScreen() {
                       </AppText>
                     )}
                   </View>
-                  <PressableScale onPress={() => openBookmarkMenu(item.id)} hitSlop={10} style={{ paddingHorizontal: space.xxs }}>
+                  <PressableScale onPress={() => openBookmarkMenu(item.id)} hitSlop={hitSlopFor(26, 18)} style={{ paddingHorizontal: space.xxs }}>
                     <Feather name="more-vertical" size={18} color={colors.inkMuted} />
                   </PressableScale>
                 </PressableRow>

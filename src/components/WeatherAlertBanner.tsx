@@ -7,6 +7,7 @@ import { ErrorText } from "@/components/ErrorText";
 import { PressableScale } from "@/components/PressableScale";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 import { dismissNotification, listNotifications } from "@/lib/api/notifications";
+import { hitSlopFor } from "@/lib/touch";
 
 export function WeatherAlertBanner({
   tripId,
@@ -59,7 +60,7 @@ export function WeatherAlertBanner({
           <ErrorText>{dismissError}</ErrorText>
         )}
       </View>
-      <PressableScale onPress={handleDismiss} hitSlop={10}>
+      <PressableScale onPress={handleDismiss} hitSlop={hitSlopFor(16)}>
         <Feather name="x" size={16} color={colors.inkMuted} />
       </PressableScale>
     </PressableScale>

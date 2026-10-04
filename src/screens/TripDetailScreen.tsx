@@ -55,6 +55,7 @@ import {
 } from "@/lib/api/trips";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
+import { hitSlopFor } from "@/lib/touch";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TripDetail">;
 
@@ -144,7 +145,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
       headerRight: () => (
         <PressableScale
           onPress={() => tripMenuSheetRef.current?.present()}
-          hitSlop={10}
+          hitSlop={hitSlopFor(20)}
           disabled={!tripTitle}
           accessibilityLabel="여행 메뉴"
         >

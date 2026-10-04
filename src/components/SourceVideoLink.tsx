@@ -4,6 +4,7 @@ import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import type { Place } from "@/lib/api/places";
 import { colors, fontSize, radius, space } from "@/lib/theme";
+import { hitSlopFor } from "@/lib/touch";
 
 const PLATFORM_LABEL: Record<Place["sourcePlatform"], string> = {
   INSTAGRAM: "인스타그램",
@@ -52,7 +53,7 @@ export function SourceVideoLink({
   return (
     <PressableScale
       onPress={() => Linking.openURL(url).catch(() => {})}
-      hitSlop={10}
+      hitSlop={hitSlopFor(120, 18)}
       style={{ flexDirection: "row", alignItems: "center", gap: space.xxs, alignSelf: "flex-start" }}
     >
       <Feather name="external-link" size={13} color={colors.inkMuted} />

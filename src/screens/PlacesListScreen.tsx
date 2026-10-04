@@ -21,6 +21,7 @@ import { toUserMessage } from "@/lib/api/client";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 import { deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob, type Place } from "@/lib/api/places";
 import type { MainTabScreenProps } from "@/navigation/types";
+import { hitSlopFor } from "@/lib/touch";
 
 type Props = MainTabScreenProps<"PlacesList">;
 
@@ -111,7 +112,7 @@ function PendingJobCard({
                 { text: "삭제", style: "destructive", onPress: () => onDelete(job.jobId) },
               ])
             }
-            hitSlop={10}
+            hitSlop={hitSlopFor(24, 16)}
             style={{ paddingLeft: space.xs }}
           >
             <Feather name="trash-2" size={16} color={colors.inkMuted} />

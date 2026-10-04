@@ -31,6 +31,7 @@ import { toUserMessage } from "@/lib/api/client";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
+import { hitSlopFor } from "@/lib/touch";
 
 type Props = NativeStackScreenProps<RootStackParamList, "VideoGroup">;
 
@@ -112,7 +113,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     }
     navigation.setOptions({
       headerRight: () => (
-        <PressableScale onPress={confirmDeleteVideo} hitSlop={10} disabled={placeIds.length === 0}>
+        <PressableScale onPress={confirmDeleteVideo} hitSlop={hitSlopFor(19)} disabled={placeIds.length === 0}>
           <Feather name="trash-2" size={19} color={colors.inkMuted} />
         </PressableScale>
       ),

@@ -17,6 +17,7 @@ import { categoryLabel } from "@/lib/placeCategory";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 import { invalidateTripPlaceChangeQueries, replacePlace, type AlternativeCandidate } from "@/lib/api/trips";
 import { endConversationSession, sendConversationMessage } from "@/lib/api/conversations";
+import { hitSlopFor } from "@/lib/touch";
 
 const SNAP_POINTS = ["65%", "90%"];
 const MAX_MESSAGE_LENGTH = 300;
@@ -131,7 +132,7 @@ function ExpandedCandidateCard({
         height={110}
         showPath={false}
       />
-      <PressableScale onPress={onOpenReview} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
+      <PressableScale onPress={onOpenReview} hitSlop={hitSlopFor(60, 16)} style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
         <AppText style={{ fontSize: fontSize.caption1, color: colors.accent }}>리뷰 보기</AppText>
         <Feather name="chevron-right" size={12} color={colors.accent} />
       </PressableScale>
@@ -378,7 +379,7 @@ export function ConversationSheet({
           <>
             <PressableScale
               onPress={() => setReviewCandidateId(null)}
-              hitSlop={8}
+              hitSlop={hitSlopFor(70, 22)}
               style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}
             >
               <Feather name="chevron-left" size={18} color={colors.accent} />

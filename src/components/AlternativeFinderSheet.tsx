@@ -22,6 +22,7 @@ import {
   type AlternativeCandidate,
   type AlternativeFilter,
 } from "@/lib/api/trips";
+import { hitSlopFor } from "@/lib/touch";
 
 const SNAP_POINTS = ["55%", "85%"];
 
@@ -244,7 +245,7 @@ export function AlternativeFinderSheet({
           <>
             <PressableScale
               onPress={() => setReviewCandidateId(null)}
-              hitSlop={8}
+              hitSlop={hitSlopFor(80, 22)}
               style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}
             >
               <Feather name="chevron-left" size={18} color={colors.accent} />
@@ -399,7 +400,7 @@ export function AlternativeFinderSheet({
                       )}
                       <PressableScale
                         onPress={() => setReviewCandidateId(candidate.placeId)}
-                        hitSlop={6}
+                        hitSlop={hitSlopFor(60, 16)}
                         style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}
                       >
                         <AppText style={{ fontSize: fontSize.caption1, color: colors.accent }}>리뷰 보기</AppText>
