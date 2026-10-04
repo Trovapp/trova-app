@@ -6,6 +6,7 @@ import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { oauthUrl } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { PRIVACY_POLICY_URL, TERMS_URL } from "@/lib/legal";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 
 // 디자인(2026-09): 로그인 전 첫 화면인데도 브랜드 요소가 하나도 없던 걸
@@ -103,6 +104,26 @@ export function LoginScreen() {
         >
           <AppText weight="medium">Google로 시작하기</AppText>
         </PressableScale>
+        {/* 가입 전에 약관·방침을 볼 수 있게 한다(2026-10-04 공개). 링크는 앱 안 브라우저로 연다. */}
+        <AppText style={{ marginTop: space.xs, textAlign: "center", fontSize: fontSize.caption1, color: colors.inkMuted }}>
+          시작하면{" "}
+          <AppText
+            accessibilityRole="link"
+            onPress={() => WebBrowser.openBrowserAsync(TERMS_URL).catch(() => {})}
+            style={{ fontSize: fontSize.caption1, color: colors.inkMuted, textDecorationLine: "underline" }}
+          >
+            이용약관
+          </AppText>
+          과{" "}
+          <AppText
+            accessibilityRole="link"
+            onPress={() => WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL).catch(() => {})}
+            style={{ fontSize: fontSize.caption1, color: colors.inkMuted, textDecorationLine: "underline" }}
+          >
+            개인정보처리방침
+          </AppText>
+          에 동의하는 것으로 봐요.
+        </AppText>
       </View>
     </View>
   );
