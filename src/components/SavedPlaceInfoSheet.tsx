@@ -1,9 +1,14 @@
-import { View } from "react-native";
+import { useEffect, useState } from "react";
+import { Dimensions, View } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { SheetCloseButton } from "@/components/SheetCloseButton";
+import { ApiError } from "@/lib/api/client";
+import { bookmarkSavedPlace } from "@/lib/api/bookmarks";
+import { haptics } from "@/lib/haptics";
 import type { Place } from "@/lib/api/places";
 import { categoryLabel } from "@/lib/placeCategory";
 import { kakaoMapUrl, openExternal, phoneUrl } from "@/lib/placeLinks";
@@ -19,12 +24,51 @@ export function SavedPlaceInfoSheet({
   place,
   onClose,
   onMoveDay,
+  onAddToTrip,
 }: {
   place: Place | null;
   onClose: () => void;
   onMoveDay?: () => void;
+  // 있으면 "여행에 담기"를 보인다. 여행·일차 고르기는 화면에서 연다 — 이 시트 안에서 다른 시트를 띄우면
+  // present()가 불려도 화면에 나오지 않았다(2026-10-04 QA). "다른 날로 이동"과 같은 방식.
+  onAddToTrip?: () => void;
 }) {
+  const queryClient = useQueryClient();
+  // 찜·여행에 담기 결과는 시트 안 한 줄로 알린다(사용자 관점 QA — 영상에서 찾은 곳을 바로 모을 수 없었다, #125·#126).
+  const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
+  const [busy, setBusy] = useState<"bookmark" | null>(null);
+  const [bookmarked, setBookmarked] = useState(false);
+  const placeId = place?.id;
+  useEffect(() => {
+    setNotice(null);
+    setBookmarked(false);
+  }, [placeId]);
+
   if (!place) return null;
+  const current = place;
+
+  async function handleBookmark() {
+    setBusy("bookmark");
+    setNotice(null);
+    try {
+      await bookmarkSavedPlace(current.id);
+      setBookmarked(true);
+      haptics.success();
+      setNotice({ text: "찜했어요. 찜한 장소에서 볼 수 있어요.", error: false });
+      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      queryClient.invalidateQueries({ queryKey: ["bookmarkFolders"] });
+    } catch (e) {
+      const notFound = e instanceof ApiError && e.status === 422;
+      setNotice({
+        text: notFound ? "지도에서 이 장소를 찾지 못해 찜할 수 없어요." : "찜하지 못했어요. 잠시 후 다시 시도해주세요.",
+        error: true,
+      });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+
 
   const mapUrl = kakaoMapUrl(place);
   const telUrl = phoneUrl(place);
@@ -36,8 +80,9 @@ export function SavedPlaceInfoSheet({
   return (
     <BottomSheet
       index={0}
-      snapPoints={["45%"]}
-      enableDynamicSizing={false}
+      // 내용 높이에 맞춘다 — 45% 고정일 때 찜·담기 결과 문장과 영상 메모가 시트 아래로 잘렸다(2026-10-04 QA).
+      enableDynamicSizing
+      maxDynamicContentSize={Math.round(Dimensions.get("window").height * 0.8)}
       enablePanDownToClose
       onClose={onClose}
       // 영상 시트 위에 그대로 겹쳐 손잡이가 두 개 보이고 뒤 시트 제목이 반쯤 잘렸다(2026-10 QA). 뒤를 어둡게 해
@@ -47,7 +92,7 @@ export function SavedPlaceInfoSheet({
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.3} pressBehavior="close" />
       )}
     >
-      <BottomSheetView style={{ padding: space.lg, gap: space.md }}>
+      <BottomSheetView style={{ padding: space.lg, paddingBottom: space.xxl, gap: space.md }}>
         <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.sm }}>
           <View style={{ flex: 1, gap: space.xxs }}>
             <AppText weight="medium" style={{ fontSize: fontSize.callout }}>
@@ -63,60 +108,103 @@ export function SavedPlaceInfoSheet({
         </View>
 
         {/* 동작 버튼은 테두리 대신 옅은 채움(여행 상세 동작 칩과 같은 규칙, 2026-10 QA) */}
-        {(mapUrl || telUrl || onMoveDay) && (
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
-            {onMoveDay && (
-              <PressableScale
-                onPress={onMoveDay}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: space.xs,
-                  paddingVertical: space.sm,
-                  paddingHorizontal: space.md,
-                  borderRadius: radius.md,
-                  backgroundColor: colors.borderSubtle,
-                }}
-              >
-                <Feather name="calendar" size={14} color={colors.ink} />
-                <AppText style={{ fontSize: fontSize.footnote }}>다른 날로 이동</AppText>
-              </PressableScale>
-            )}
-            {mapUrl && (
-              <PressableScale
-                onPress={() => openExternal(mapUrl)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: space.xs,
-                  paddingVertical: space.sm,
-                  paddingHorizontal: space.md,
-                  borderRadius: radius.md,
-                  backgroundColor: colors.borderSubtle,
-                }}
-              >
-                <Feather name="map" size={14} color={colors.ink} />
-                <AppText style={{ fontSize: fontSize.footnote }}>카카오맵에서 보기</AppText>
-              </PressableScale>
-            )}
-            {telUrl && (
-              <PressableScale
-                onPress={() => openExternal(telUrl)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: space.xs,
-                  paddingVertical: space.sm,
-                  paddingHorizontal: space.md,
-                  borderRadius: radius.md,
-                  backgroundColor: colors.borderSubtle,
-                }}
-              >
-                <Feather name="phone" size={14} color={colors.ink} />
-                <AppText style={{ fontSize: fontSize.footnote }}>전화 걸기</AppText>
-              </PressableScale>
-            )}
-          </View>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
+          <PressableScale
+            onPress={handleBookmark}
+            disabled={busy !== null || bookmarked}
+            accessibilityState={{ disabled: busy !== null || bookmarked, busy: busy === "bookmark" }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: space.xs,
+              paddingVertical: space.sm,
+              paddingHorizontal: space.md,
+              borderRadius: radius.md,
+              backgroundColor: colors.accentBg,
+            }}
+          >
+            <Feather name={bookmarked ? "check" : "heart"} size={14} color={colors.accent} />
+            <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
+              {busy === "bookmark" ? "찜하는 중..." : bookmarked ? "찜했어요" : "찜하기"}
+            </AppText>
+          </PressableScale>
+          {onAddToTrip && (
+            <PressableScale
+              onPress={onAddToTrip}
+              disabled={busy !== null}
+              accessibilityState={{ disabled: busy !== null }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: space.xs,
+                paddingVertical: space.sm,
+                paddingHorizontal: space.md,
+                borderRadius: radius.md,
+                backgroundColor: colors.accentBg,
+              }}
+            >
+              <Feather name="plus" size={14} color={colors.accent} />
+              <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
+                여행에 담기
+              </AppText>
+            </PressableScale>
+          )}
+          {onMoveDay && (
+            <PressableScale
+              onPress={onMoveDay}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: space.xs,
+                paddingVertical: space.sm,
+                paddingHorizontal: space.md,
+                borderRadius: radius.md,
+                backgroundColor: colors.borderSubtle,
+              }}
+            >
+              <Feather name="calendar" size={14} color={colors.ink} />
+              <AppText style={{ fontSize: fontSize.footnote }}>다른 날로 이동</AppText>
+            </PressableScale>
+          )}
+          {mapUrl && (
+            <PressableScale
+              onPress={() => openExternal(mapUrl)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: space.xs,
+                paddingVertical: space.sm,
+                paddingHorizontal: space.md,
+                borderRadius: radius.md,
+                backgroundColor: colors.borderSubtle,
+              }}
+            >
+              <Feather name="map" size={14} color={colors.ink} />
+              <AppText style={{ fontSize: fontSize.footnote }}>카카오맵에서 보기</AppText>
+            </PressableScale>
+          )}
+          {telUrl && (
+            <PressableScale
+              onPress={() => openExternal(telUrl)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: space.xs,
+                paddingVertical: space.sm,
+                paddingHorizontal: space.md,
+                borderRadius: radius.md,
+                backgroundColor: colors.borderSubtle,
+              }}
+            >
+              <Feather name="phone" size={14} color={colors.ink} />
+              <AppText style={{ fontSize: fontSize.footnote }}>전화 걸기</AppText>
+            </PressableScale>
+          )}
+        </View>
+        {notice && (
+          <AppText selectable style={{ fontSize: fontSize.footnote, color: notice.error ? colors.accent : colors.inkMuted }}>
+            {notice.text}
+          </AppText>
         )}
 
         {/* 영상에서 말한 내용(#104) — 사용자 메모와 섞이지 않게 출처를 제목으로 밝힌다. 없으면 예전 안내만. */}

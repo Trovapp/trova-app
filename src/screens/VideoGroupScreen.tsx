@@ -25,14 +25,16 @@ import { CountUpText } from "@/components/CountUpText";
 import { CategoryFilterChips } from "@/components/CategoryFilterChips";
 import { categoryGroup, type CategoryGroup } from "@/lib/placeCategory";
 import { SavedPlaceInfoSheet } from "@/components/SavedPlaceInfoSheet";
+import { TripDayPickerSheet } from "@/components/TripDayPickerSheet";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { StaleNotice } from "@/components/StaleNotice";
 import { Skeleton } from "@/components/Skeleton";
 import { SourceVideoLink } from "@/components/SourceVideoLink";
 import { haversineDistanceKm } from "@/lib/geo";
 import { haptics } from "@/lib/haptics";
+import { objectParticle } from "@/lib/korean";
 import { deleteVideoPlaces, generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
-import { confirmTrip, getVideoTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trips";
+import { addVideoPlaceToTrip, confirmTrip, getVideoTrip, TRIP_TITLE_MAX_LENGTH, type Trip } from "@/lib/api/trips";
 import { formatDateLabel, formatTripDates, toDateString } from "@/lib/date";
 import { groupByDay, isItineraryGroup } from "@/lib/itinerary";
 import { toUserMessage } from "@/lib/api/client";
@@ -72,6 +74,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const [actionPending, setActionPending] = useState(false);
   const [itineraryError, setItineraryError] = useState<string | null>(null);
   const [dayPickerFor, setDayPickerFor] = useState<Place | null>(null);
+  const [addToTripFor, setAddToTripFor] = useState<Place | null>(null);
+  const tripPickerRef = useRef<BottomSheetModal>(null);
+  const dayPickerRef = useRef<BottomSheetModal>(null);
   const [activeDay, setActiveDay] = useState<number | null>(null);
   const [showTripForm, setShowTripForm] = useState(false);
   // 예전엔 시작일이 항상 "오늘"로 들어가서 다음 달 여행도 오늘 날짜가 됐고, 날짜 수정 API도 없어 고칠 수 없었다.
@@ -160,6 +165,22 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     } catch (err) {
       setError(toUserMessage(err, "일정 생성 요청에 실패했어요. 다시 시도해주세요."));
       setGenerating(false);
+    }
+  }
+
+  async function handleAddToTrip(place: Place, trip: Trip, day: number) {
+    try {
+      await addVideoPlaceToTrip(trip.id, day, place.id);
+      haptics.success();
+      queryClient.invalidateQueries({ queryKey: ["trips"] });
+      queryClient.invalidateQueries({ queryKey: ["trip", trip.id] });
+      // 담은 뒤 바로 그 여행을 볼 수 있게 한다 — 시트는 이미 닫혀 있어 결과를 확인창으로 알린다.
+      Alert.alert("여행에 담았어요", `${place.placeName}${objectParticle(place.placeName)} ${trip.title} ${day}일차 맨 끝에 담았어요.`, [
+        { text: "확인", style: "cancel" },
+        { text: "여행 보기", onPress: () => navigation.navigate("TripDetail", { id: trip.id }) },
+      ]);
+    } catch {
+      Alert.alert("여행에 담지 못했어요", "잠시 후 다시 시도해주세요.");
     }
   }
 
@@ -673,7 +694,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
         </BottomSheetView>
       </BottomSheet>
       <DayPickerSheet
-        visible={dayPickerFor !== null}
+        sheetRef={dayPickerRef}
         dayNumbers={dayNumbers}
         currentDay={dayPickerFor?.dayNumber ?? null}
         onSelect={(day) => {
@@ -689,9 +710,28 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             ? () => {
                 setReviewPlaceId(null);
                 setDayPickerFor(reviewPlace);
+                dayPickerRef.current?.present();
               }
             : undefined
         }
+        onAddToTrip={
+          reviewPlace
+            ? () => {
+                setReviewPlaceId(null);
+                setAddToTripFor(reviewPlace);
+                tripPickerRef.current?.present();
+              }
+            : undefined
+        }
+      />
+      {/* 영상 장소 하나를 이미 만든 여행에 담는다(2026-10-04 사용자 관점 QA, 백엔드 #126). */}
+      <TripDayPickerSheet
+        sheetRef={tripPickerRef}
+        onSelect={(trip, day) => {
+          const target = addToTripFor;
+          setAddToTripFor(null);
+          if (target) handleAddToTrip(target, trip, day);
+        }}
       />
       <BottomSheetModal
         ref={videoMenuSheetRef}

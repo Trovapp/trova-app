@@ -1,11 +1,13 @@
-import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView, type BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 
 type DayPickerSheetProps = {
-  visible: boolean;
+  // 여는 쪽이 버튼에서 sheetRef.current?.present()를 바로 부른다(2026-10-04 QA — visible 값으로 효과에서 present()를
+  // 부르면 영상 화면에서 시트가 열리지 않았다. present()는 불렸지만 애니메이션이 시작되지 않음).
+  sheetRef: RefObject<BottomSheetModal | null>;
   dayNumbers: number[];
   currentDay: number | null;
   onSelect: (day: number) => void;
@@ -17,16 +19,8 @@ type DayPickerSheetProps = {
 // 않고 이미 프로젝트에 있던(SavedPlacesScreen에서 이미 씀) 검증된 라이브러리를
 // 그대로 재사용. onClose는 onDismiss(드래그/배경탭/dismiss() 호출 전부 포함해
 // 시트가 실제로 닫혔을 때 딱 한 번만 발생)에만 연결해서 이중 호출을 피한다.
-export function DayPickerSheet({ visible, dayNumbers, currentDay, onSelect, onClose }: DayPickerSheetProps) {
-  const ref = useRef<BottomSheetModal>(null);
-
-  useEffect(() => {
-    if (visible) {
-      ref.current?.present();
-    } else {
-      ref.current?.dismiss();
-    }
-  }, [visible]);
+export function DayPickerSheet({ sheetRef, dayNumbers, currentDay, onSelect, onClose }: DayPickerSheetProps) {
+  const ref = sheetRef;
 
   return (
     <BottomSheetModal

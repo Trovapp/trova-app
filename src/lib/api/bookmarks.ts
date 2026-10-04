@@ -100,3 +100,18 @@ export function invalidateBookmarkQueries(queryClient: QueryClient) {
     queryClient.invalidateQueries({ queryKey: ["bookmarkFolders"] }),
   ]);
 }
+
+/**
+ * 영상에서 찾은 장소를 찜한다(백엔드 #125). 서버가 구글 장소에 연결한 뒤 찜하고, 지도에서 찾지 못하면 422.
+ */
+export async function bookmarkSavedPlace(savedPlaceId: number, folderId?: number | null): Promise<Bookmark> {
+  const res = await apiFetch(`/api/bookmarks/saved-place`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ savedPlaceId, folderId: folderId ?? null }),
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, `POST /api/bookmarks/saved-place failed: ${res.status}`);
+  }
+  return res.json();
+}

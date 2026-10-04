@@ -230,10 +230,15 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const [menuPlaceId, setMenuPlaceId] = useState<number | null>(null);
 
   const gapSheetRef = useRef<BottomSheetModal>(null);
+  // 열려 있지 않은 시트에 dismiss()를 부르면 뒤의 present()가 무시된다(아래 ⋮ 메뉴 설명, 2026-10-04 폴더 선택에서도 재현) —
+  // 지금 열려 있을 때만 닫고, 드래그·바깥 탭으로 닫히면 onDismiss에서 표시를 지운다.
+  const gapSheetOpen = useRef(false);
   useEffect(() => {
     if (gapCardFor !== null) {
+      gapSheetOpen.current = true;
       gapSheetRef.current?.present();
-    } else {
+    } else if (gapSheetOpen.current) {
+      gapSheetOpen.current = false;
       gapSheetRef.current?.dismiss();
     }
   }, [gapCardFor]);
@@ -1239,7 +1244,10 @@ export function TripDetailScreen({ route, navigation }: Props) {
     <BottomSheetModal
       ref={gapSheetRef}
       enableDynamicSizing
-      onDismiss={() => setGapCardFor(null)}
+      onDismiss={() => {
+        gapSheetOpen.current = false;
+        setGapCardFor(null);
+      }}
       backdropComponent={(props: BottomSheetBackdropProps) => (
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
       )}

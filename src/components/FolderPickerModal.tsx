@@ -37,10 +37,15 @@ export function FolderPickerModal({
   const [error, setError] = useState<string | null>(null);
 
   const ref = useRef<BottomSheetModal>(null);
+  // 열려 있지 않은 시트에 dismiss()를 부르면(화면이 처음 그려질 때 visible=false, 또는 이미 닫힌 뒤) 뒤의 present()가
+  // 무시돼 시트가 뜨지 않았다(2026-10-04 QA — 찜 폴더 이동). 지금 열려 있을 때만 닫는다(여행 상세 ⋮ 메뉴와 같은 원인).
+  const presented = useRef(false);
   useEffect(() => {
     if (visible) {
+      presented.current = true;
       ref.current?.present();
-    } else {
+    } else if (presented.current) {
+      presented.current = false;
       ref.current?.dismiss();
     }
   }, [visible]);
@@ -73,6 +78,8 @@ export function FolderPickerModal({
       ref={ref}
       snapPoints={["70%"]}
       onDismiss={() => {
+        // 드래그·바깥 탭으로 이미 닫혔다 — effect가 닫힌 시트에 dismiss()를 다시 부르지 않게 표시를 지운다.
+        presented.current = false;
         reset();
         onClose();
       }}

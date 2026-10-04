@@ -113,6 +113,26 @@ export async function listTrips(): Promise<Trip[]> {
   return res.json();
 }
 
+/** 영상에서 찾은 장소 하나를 여행의 그 일차 끝에 담는다(백엔드 #126). */
+export async function addVideoPlaceToTrip(tripId: number, day: number, savedPlaceId: number): Promise<TripPlace> {
+  const res = await apiFetch(`/api/trips/${tripId}/days/${day}/video-places`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ savedPlaceId }),
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, `POST /api/trips/${tripId}/days/${day}/video-places failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+/** 날짜로 여행 일수를 센다. 날짜가 없으면 1일. */
+export function tripDayCount(trip: Trip): number {
+  if (!trip.startDate || !trip.endDate) return 1;
+  const ms = new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime();
+  return Math.max(1, Math.round(ms / 86_400_000) + 1);
+}
+
 export async function getTrip(id: number): Promise<TripDetail> {
   const res = await apiFetch(`/api/trips/${id}`);
   if (!res.ok) {
