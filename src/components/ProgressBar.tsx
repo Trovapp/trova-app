@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Animated, View } from "react-native";
-import { colors } from "@/lib/theme";
+import { colors, motion } from "@/lib/theme";
 
 export function ProgressBar({ percent, height = 6 }: { percent: number; height?: number }) {
   const widthAnim = useRef(new Animated.Value(0)).current;
@@ -8,7 +8,7 @@ export function ProgressBar({ percent, height = 6 }: { percent: number; height?:
   useEffect(() => {
     Animated.timing(widthAnim, {
       toValue: percent,
-      duration: 400,
+      duration: motion.slow,
       useNativeDriver: false,
     }).start();
   }, [percent, widthAnim]);

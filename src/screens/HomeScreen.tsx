@@ -21,7 +21,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { formatTripDates, toDateString } from "@/lib/date";
 import { groupTripsByDate } from "@/lib/tripSections";
 import { toUserMessage } from "@/lib/api/client";
-import { colors, fontSize, radius, space } from "@/lib/theme";
+import { colors, fontSize, radius, space, motion } from "@/lib/theme";
 import { isSupportedShareUrl, sourceVideoKey, UNSUPPORTED_SHARE_URL_MESSAGE } from "@/lib/shareUrl";
 import type { MainTabScreenProps } from "@/navigation/types";
 
@@ -305,7 +305,7 @@ export function HomeScreen({ navigation }: Props) {
               {recentTrips.map((trip, i) => (
                 <Animated.View
                   key={trip.id}
-                  entering={reducedMotion ? undefined : FadeInDown.delay(i * 60).springify().damping(16)}
+                  entering={reducedMotion ? undefined : FadeInDown.delay(i * motion.listStagger).springify().damping(16)}
                 >
                   <PressableRow
                     onPress={() => navigation.navigate("TripDetail", { id: trip.id })}

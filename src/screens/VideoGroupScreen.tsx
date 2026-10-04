@@ -28,7 +28,7 @@ import { confirmTrip, getVideoTrip, TRIP_TITLE_MAX_LENGTH } from "@/lib/api/trip
 import { formatDateLabel, formatTripDates, toDateString } from "@/lib/date";
 import { groupByDay, isItineraryGroup } from "@/lib/itinerary";
 import { toUserMessage } from "@/lib/api/client";
-import { colors, fontSize, radius, space } from "@/lib/theme";
+import { colors, fontSize, radius, space, motion } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
 import { hitSlopFor } from "@/lib/touch";
@@ -318,7 +318,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     return (
       // 등장 애니메이션(바깥)과 드래그 중 투명도(안쪽)를 나눈다 — 한 View에 두면 Reanimated가 투명도를 덮어쓴다고 경고한다.
       <Animated.View
-        entering={arrive ? FadeInDown.delay(250 + Math.min(index, 8) * 70).springify().damping(16) : undefined}
+        entering={arrive ? FadeInDown.delay(motion.listDelay + Math.min(index, 8) * motion.listStagger).springify().damping(16) : undefined}
       >
         <View style={{ opacity: isActive ? 0.9 : 1 }}>
           <PlaceRow
@@ -445,7 +445,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                 return (
                   <Animated.View
                     key={place.id}
-                    entering={arrive ? FadeInDown.delay(250 + Math.min(index, 8) * 70).springify().damping(16) : undefined}
+                    entering={arrive ? FadeInDown.delay(motion.listDelay + Math.min(index, 8) * motion.listStagger).springify().damping(16) : undefined}
                   >
                     <PlaceRow
                       place={place}

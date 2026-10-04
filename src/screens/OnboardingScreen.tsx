@@ -15,7 +15,7 @@ import {
   type DemoPlatform,
 } from "@/components/onboarding/LinkPasteDemo";
 import { FitToSpace } from "@/components/onboarding/FitToSpace";
-import { colors, fontSize, radius, space } from "@/lib/theme";
+import { colors, fontSize, radius, space, motion } from "@/lib/theme";
 
 // 로그인 전 온보딩(2026-10). 참고: ScreensDesign의 Plotline 온보딩 — 가입보다 먼저 "전과 후" 그림 한 장으로
 // 앱이 하는 일을 보여주고(소개), 이어서 사용법을 움직이는 데모로 보여준다(따라하기). 이미 계정이 있는 사람은
@@ -60,7 +60,7 @@ function PrimaryButton({ label, onPress }: { label: string; onPress: () => void 
 
 function IntroPage({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
   return (
-    <Animated.View entering={FadeIn.duration(250)} style={{ flex: 1 }}>
+    <Animated.View entering={FadeIn.duration(motion.base)} style={{ flex: 1 }}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: space.xs }}>
         <Image source={require("../../assets/splash-icon.png")} resizeMode="contain" style={{ width: 28, height: 28 }} />
         <AppText weight="medium" style={{ fontSize: fontSize.title3 }}>
@@ -72,7 +72,7 @@ function IntroPage({ onNext, onSkip }: { onNext: () => void; onSkip: () => void 
         <FeedToMapIllustration />
       </FitToSpace>
 
-      <Animated.View entering={FadeInDown.delay(500).duration(500)} style={{ gap: space.sm, marginBottom: space.xxl }}>
+      <Animated.View entering={FadeInDown.delay(motion.enter).duration(motion.enter)} style={{ gap: space.sm, marginBottom: space.xxl }}>
         <AppText weight="bold" style={{ fontSize: fontSize.title1, lineHeight: 36 }}>
           {"보기만 했던 여행 영상을\n내 지도로"}
         </AppText>
@@ -109,7 +109,7 @@ function DemoPage({ onBack, onDone }: { onBack: () => void; onDone: () => void }
   }
 
   return (
-    <Animated.View entering={FadeIn.duration(250)} style={{ flex: 1 }}>
+    <Animated.View entering={FadeIn.duration(motion.base)} style={{ flex: 1 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
         <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="뒤로" hitSlop={12}>
           <Feather name="chevron-left" size={24} color={colors.ink} />

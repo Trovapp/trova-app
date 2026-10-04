@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { describeSourceUrl, sourceKindLabel } from "@/lib/shareUrl";
 import { cleanVideoTitle } from "@/lib/videoTitle";
 import { toUserMessage } from "@/lib/api/client";
-import { colors, fontSize, radius, space } from "@/lib/theme";
+import { colors, fontSize, radius, space, motion } from "@/lib/theme";
 import { getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob } from "@/lib/api/places";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
@@ -404,7 +404,7 @@ function FoundPlaceChips({ names }: { names: string[] }) {
         {names.map((name, index) => (
           <Animated.View
             key={name + index}
-            entering={FadeInDown.delay(index * 220).duration(420)}
+            entering={FadeInDown.delay(index * motion.revealStagger).duration(motion.reveal)}
             style={{ paddingVertical: space.xs, paddingHorizontal: space.sm, borderRadius: radius.lg, backgroundColor: colors.accentBg }}
           >
             <AppText style={{ fontSize: fontSize.footnote, color: colors.ink }}>{name}</AppText>

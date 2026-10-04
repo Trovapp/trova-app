@@ -6,13 +6,14 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { motion } from "@/lib/theme";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type Props = Omit<PressableProps, "style"> & { style?: StyleProp<ViewStyle> };
 
 // 누름 반응은 100~150ms가 기준(expo-animation 스킬). 300ms는 손을 뗀 뒤에도 늦게 돌아와 굼떠 보였다(디자인 QA M1).
-const PRESS_MS = 150;
+const PRESS_MS = motion.press;
 
 // 토스 스타일 누름 피드백 — 눌리는 순간 살짝(0.97) 작아졌다가 스프링으로 복귀한다.
 // "동작 줄이기"(reduce motion) 켜져 있으면 스케일 자체를 안 건드려서 접근성 설정을

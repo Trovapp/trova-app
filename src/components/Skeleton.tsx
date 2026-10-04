@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useEffect } from "react";
-import { colors, radius, space } from "@/lib/theme";
+import { colors, radius, space, motion } from "@/lib/theme";
 
 // 화면 위에서 밝기가 오르내리는 모양이라 "이동/변형" 계열 완화 곡선을 쓴다
 // (expo-animation 스킬: 화면 위 움직임엔 ease-in-out). withTiming의 easing은
@@ -23,7 +23,7 @@ export function Skeleton({ style }: { style?: ViewStyle }) {
 
   useEffect(() => {
     if (reducedMotion) return;
-    opacity.set(withRepeat(withTiming(1, { duration: 700, easing: EASE_IN_OUT }), -1, true));
+    opacity.set(withRepeat(withTiming(1, { duration: motion.shimmer, easing: EASE_IN_OUT }), -1, true));
   }, [opacity, reducedMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({
