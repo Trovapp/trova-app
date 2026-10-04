@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Alert, Platform, RefreshControl, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, Keyboard, Platform, RefreshControl, ScrollView, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import BottomSheet, {
   BottomSheetBackdrop,
@@ -154,6 +154,36 @@ export function TripDetailScreen({ route, navigation }: Props) {
       ),
     });
   }, [navigation, id, tripTitle, queryClient]);
+
+  // 목록 맨 아래의 장소 검색창이 키보드에 가렸다(디자인 QA K1). 목록이 BottomSheetView 안에서 내용 높이만큼 늘어나 스크롤되지
+  // 않았다(로그: 목록 높이 = 내용 높이). 목록을 시트 높이에 맞추고, 키보드 높이만큼 아래 여백을 더한 뒤, 검색창이 입력 중일 때
+  // 키보드가 뜨면 여백이 그려진 뒤(onContentSizeChange) 목록을 끝까지 내린다. 여백을 빼면 다시 가려졌다(시뮬레이터에서 확인).
+  // 같은 원인으로 장소가 많은 날은 아래 장소가 시트 밖으로 잘려 스크롤로도 못 봤을 수 있다(목록이 시트 높이를 넘어 늘어났음).
+  // DraggableFlatList의 ref는 gesture-handler FlatList 타입이라, 쓰는 scrollToOffset만 좁혀 둔다.
+  const listRef = useRef<{ scrollToOffset: (options: { offset: number; animated?: boolean }) => void } | null>(null);
+  // BottomSheetTextInput의 ref도 gesture-handler 타입이라, 쓰는 isFocused만 좁혀 둔다.
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const scrollToSearchRef = useRef(false);
+  const contentHeightRef = useRef(0);
+  const searchInputRef = useRef<{ isFocused: () => boolean } | null>(null);
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardWillShow", (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+      // BottomSheetTextInput은 onFocus를 넘겨주지 않아(로그로 확인), 키보드가 뜰 때 검색창이 입력 중인지 본다.
+      // 늘린 아래 여백이 그려진 뒤에 내려야 해서(고정 시간 대기는 됐다 안 됐다 함), 목록 내용 높이가 바뀔 때 내린다.
+      if (searchInputRef.current?.isFocused()) {
+        scrollToSearchRef.current = true;
+      }
+    });
+    const hide = Keyboard.addListener("keyboardWillHide", () => {
+      scrollToSearchRef.current = false;
+      setKeyboardHeight(0);
+    });
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   const [activeDay, setActiveDay] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"search" | "bookmarks">("search");
@@ -626,23 +656,37 @@ export function TripDetailScreen({ route, navigation }: Props) {
           )}
 
           {editingField?.placeId === place.id && editingField.field === "memo" && (
-            <BottomSheetTextInput
-              maxFontSizeMultiplier={MAX_FONT_SCALE}
-              autoFocus
-              defaultValue={memoDraft}
-              onChangeText={setMemoDraft}
-              onBlur={() => handleUpdateDetails(place.id, { memo: memoDraft })}
-              onSubmitEditing={() => handleUpdateDetails(place.id, { memo: memoDraft })}
-              style={{
-                marginTop: space.xs,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: radius.sm,
-                paddingHorizontal: space.sm,
-                paddingVertical: space.xs,
-                fontSize: fontSize.caption1,
-              }}
-            />
+            // 언제 저장되는지 안 보이고(리턴 키가 "↵"), 바깥을 눌러도 키보드가 안 닫혔다(디자인 QA K2·K3).
+            // 안내 문구·"완료" 리턴 키·완료 버튼을 둔다. 저장은 지금처럼 입력이 끝날 때(blur) 한 번 한다.
+            <View style={{ marginTop: space.xs, flexDirection: "row", alignItems: "center", gap: space.xs }}>
+              <BottomSheetTextInput
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+                autoFocus
+                defaultValue={memoDraft}
+                onChangeText={setMemoDraft}
+                placeholder="메모를 적고 완료를 누르세요"
+                placeholderTextColor={colors.inkMuted}
+                returnKeyType="done"
+                onBlur={() => handleUpdateDetails(place.id, { memo: memoDraft })}
+                onSubmitEditing={() => Keyboard.dismiss()}
+                style={{
+                  flex: 1,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: radius.sm,
+                  paddingHorizontal: space.sm,
+                  paddingVertical: space.xs,
+                  fontSize: fontSize.caption1,
+                  fontFamily: FONT.regular,
+                  color: colors.ink,
+                }}
+              />
+              <PressableScale onPress={() => Keyboard.dismiss()} hitSlop={hitSlopFor(36, 24)} accessibilityRole="button">
+                <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
+                  완료
+                </AppText>
+              </PressableScale>
+            </View>
           )}
 
           {editingField?.placeId === place.id && editingField.field === "time" && showTimePicker && (
@@ -729,14 +773,27 @@ export function TripDetailScreen({ route, navigation }: Props) {
     />
     {/* 시트 안 목록은 끌어서 순서를 바꾼다 — 목록을 끌 때 시트까지 움직이지 않게 시트는 위쪽 손잡이로만 움직인다. */}
     <BottomSheet index={1} snapPoints={SHEET_SNAP_POINTS} enableDynamicSizing={false} enableContentPanningGesture={false}>
-    <BottomSheetView style={{ flex: 1 }}>
+    {/* BottomSheetView는 내용 높이만큼 늘어나 목록이 스크롤되지 않고 아래가 잘렸다(로그: 목록 높이 = 내용 높이). 시트 높이에 맞추는 View를 쓴다(디자인 QA K1). */}
+    <View style={{ flex: 1 }}>
     <DraggableFlatList keyboardShouldPersistTaps="handled"
+      ref={listRef as never}
+      // 바깥 틀이 시트 높이를 넘어 늘어나면 목록이 스크롤되지 않고 아래가 잘린다 — 시트 안에 맞춰 스크롤되게 한다(디자인 QA K1).
+      containerStyle={{ flex: 1 }}
+      onContentSizeChange={(_w, h) => {
+        // 키보드가 뜬 직후 여백이 붙기 전 높이로 먼저 한 번 불린다(로그로 확인) — 높이가 실제로 늘었을 때 내린다.
+        if (scrollToSearchRef.current && h > contentHeightRef.current) {
+          scrollToSearchRef.current = false;
+          // scrollToEnd는 이 목록(DraggableFlatList)에서 움직이지 않았다 — 위치를 직접 주는 scrollToOffset은 움직인다(로그·캡처로 확인).
+          listRef.current?.scrollToOffset({ offset: h, animated: true });
+        }
+        contentHeightRef.current = h;
+      }}
       data={places}
       keyExtractor={(item) => String(item.id)}
       onDragEnd={handleDragEnd}
       renderItem={renderPlaceItem}
       activationDistance={0}
-      contentContainerStyle={{ padding: space.md, paddingBottom: space.xxxl }}
+      contentContainerStyle={{ padding: space.md, paddingBottom: space.xxxl + keyboardHeight }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       ListHeaderComponent={
         <View style={{ gap: space.sm, marginBottom: space.sm }}>
@@ -848,41 +905,34 @@ export function TripDetailScreen({ route, navigation }: Props) {
           </View>
           {activeTab === "search" ? (
             <View style={{ gap: space.sm }}>
-              <View style={{ flexDirection: "row", gap: space.xs }}>
+              {/* 찜한 장소 검색창(디자인 QA B2)과 같은 iOS식 검색창 — 옆 "검색" 버튼 대신 키보드 검색 키로 찾는다(디자인 QA K4). */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: space.xs,
+                  height: 40,
+                  paddingHorizontal: space.sm,
+                  borderRadius: radius.md,
+                  backgroundColor: colors.bgMuted,
+                }}
+              >
+                <Feather name="search" size={16} color={colors.inkMuted} />
                 <BottomSheetTextInput
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
                   value={query}
                   onChangeText={setQuery}
                   placeholder="장소 이름으로 검색 (예: 경복궁)"
                   returnKeyType="search"
+                  enablesReturnKeyAutomatically
+                  clearButtonMode="while-editing"
+                  selectionColor={colors.accent}
                   onSubmitEditing={handleSearch}
-                  style={{
-                    flex: 1,
-                    height: 40,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: radius.md,
-                    paddingHorizontal: space.sm,
-                    fontFamily: FONT.regular,
-                  }}
+                  ref={searchInputRef as never}
+                  editable={!searching}
+                  style={{ flex: 1, height: "100%", fontFamily: FONT.regular, color: colors.ink }}
                 />
-                <PressableScale
-                  onPress={handleSearch}
-                  disabled={searching || !query.trim()}
-                  style={{
-                    height: 40,
-                    paddingHorizontal: space.md,
-                    borderRadius: radius.md,
-                    backgroundColor: colors.accent,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    opacity: searching || !query.trim() ? 0.6 : 1,
-                  }}
-                >
-                  <AppText weight="medium" style={{ color: colors.onAccent }}>
-                    {searching ? "검색 중..." : "검색"}
-                  </AppText>
-                </PressableScale>
+                {searching && <ActivityIndicator size="small" color={colors.inkMuted} />}
               </View>
 
               {searchedQuery !== null && !searching && searchResults.length === 0 && (
@@ -1025,7 +1075,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
         </View>
       }
     />
-    </BottomSheetView>
+    </View>
     </BottomSheet>
     <PlaceReviewSheet
       placeId={reviewTarget?.kind === "place" ? reviewTarget.id : null}
