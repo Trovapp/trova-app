@@ -505,7 +505,8 @@ function Review({
                     borderTopColor: colors.borderSubtle,
                   }}
                 >
-                  <AppText mono style={{ fontSize: fontSize.footnote, color: colors.inkMuted, width: 44 }}>
+                  {/* 시간만 다른 글꼴(IBM Plex Mono)로 보였다(2026-10-04 QA) — 여행 상세처럼 Pretendard + 고정폭 숫자로 맞춘다. */}
+                  <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, width: 44, fontVariant: ["tabular-nums"] }}>
                     {item.start}
                   </AppText>
                   <MaterialCommunityIcons name={group.icon} size={16} color={colors.inkMuted} accessibilityLabel={group.label} />

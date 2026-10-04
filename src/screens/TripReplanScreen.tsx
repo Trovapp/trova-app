@@ -185,7 +185,7 @@ export function TripReplanScreen({ route, navigation }: Props) {
           <Orb state={total === null ? "thinking" : "searching"} size={140} label="일정 재구성 중" />
           <ProgressHero percent={percent} ceiling={ceiling} creepMs={AVG_TARGET_MS} showCards={false} />
           {total !== null && (
-            <AppText mono weight="medium" style={{ color: colors.inkMuted }}>
+            <AppText weight="medium" style={{ color: colors.inkMuted, fontVariant: ["tabular-nums"] }}>
               {job.completedTargets} / {total}
             </AppText>
           )}

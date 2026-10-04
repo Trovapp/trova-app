@@ -169,7 +169,8 @@ function VideoGroupCard({
           <AppText weight="medium" numberOfLines={1}>
             {group.title ?? describeSourceUrl(group.sourceUrl)}
           </AppText>
-          <AppText mono style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
+          {/* 한글 미리보기에 mono 글꼴을 쓰면 한글이 대체 글꼴로 그려져 자간이 벌어졌다(2026-10-04 QA). */}
+          <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
             {placePreview(group.places)}
           </AppText>
         </View>
