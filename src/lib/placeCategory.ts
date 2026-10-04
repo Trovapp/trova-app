@@ -66,7 +66,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   gym: "헬스장",
   beauty_salon: "미용실",
   hair_salon: "헤어샵",
-  movie_theater: "영화관",
   stadium: "경기장",
   bowling_alley: "볼링장",
 
@@ -95,16 +94,87 @@ const CATEGORY_LABELS: Record<string, string> = {
   establishment: "장소",
   store: "상점",
   food: "음식",
+  // 구글 세부 종류(2026-10-05 — 찜한 장소에 "Korean Restaurant"처럼 영어로 보였다). 개발·운영 DB에 실제로 있는 값 위주.
+  korean_restaurant: "한식",
+  korean_barbecue_restaurant: "고깃집",
+  barbecue_restaurant: "고깃집",
+  chinese_restaurant: "중식",
+  japanese_restaurant: "일식",
+  sushi_restaurant: "초밥",
+  tonkatsu_restaurant: "돈가스",
+  italian_restaurant: "양식",
+  western_restaurant: "양식",
+  spanish_restaurant: "양식",
+  pizza_restaurant: "피자",
+  hamburger_restaurant: "햄버거",
+  chicken_restaurant: "치킨",
+  seafood_restaurant: "해산물",
+  dumpling_restaurant: "만두",
+  noodle_shop: "국수",
+  breakfast_restaurant: "브런치",
+  brunch_restaurant: "브런치",
+  fine_dining_restaurant: "파인다이닝",
+  asian_restaurant: "아시아 음식",
+  indian_restaurant: "인도 음식",
+  indonesian_restaurant: "인도네시아 음식",
+  vegan_restaurant: "비건",
+  halal_restaurant: "할랄",
+  snack_bar: "분식",
+  gastropub: "펍",
+  bagel_shop: "베이커리",
+  art_museum: "미술관",
+  historical_place: "유적지",
+  landmark: "명소",
+  city_park: "공원",
+  beach: "해변",
+  natural_feature: "자연",
+  castle: "성",
+  buddhist_temple: "절",
+  cultural_center: "문화센터",
+  planetarium: "천문관",
+  performing_arts_theater: "공연장",
+  movie_theater: "영화관",
+  golf_course: "골프장",
+  adventure_sports_center: "레저",
+  visitor_center: "안내소",
+  tourist_information_center: "관광안내소",
+  market: "시장",
+  cosmetics_store: "화장품",
+  discount_store: "할인점",
+  sporting_goods_store: "스포츠용품",
+  sportswear_store: "스포츠의류",
+  bed_and_breakfast: "민박",
+  private_guest_room: "민박",
+  hostel: "호스텔",
+  motel: "모텔",
+  extended_stay_hotel: "레지던스",
+  rv_park: "캠핑장",
+  sauna: "찜질방",
+  bus_stop: "버스정류장",
+  transit_station: "정류장",
+  international_airport: "공항",
+  rest_stop: "휴게소",
+  parking_lot: "주차장",
 };
 
-/** 알 수 없는 카테고리라도 영어 snake_case 원문을 그대로 노출하지 않도록,
- * 최소한 언더스코어를 공백으로 바꿔 사람이 읽기 편한 형태로 폴백한다. */
-function fallbackLabel(category: string): string {
-  return category
-    .split("_")
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+// 표에 없는 구글 종류는 끝말로 묶는다(…_restaurant → 음식점). 그래도 모르면 영어 원문 대신 숨긴다.
+const SUFFIX_LABELS: [string, string][] = [
+  ["_restaurant", "음식점"],
+  ["_cafe", "카페"],
+  ["_bakery", "베이커리"],
+  ["_museum", "박물관"],
+  ["_park", "공원"],
+  ["_temple", "절"],
+  ["_store", "상점"],
+  ["_shop", "상점"],
+  ["_hotel", "숙소"],
+  ["_station", "역"],
+];
+
+/** 표에 없는 종류는 끝말로 묶고, 그래도 모르면 숨긴다 — 예전엔 "Korean Restaurant"처럼 영어로 보였다. */
+function fallbackLabel(category: string): string | null {
+  const hit = SUFFIX_LABELS.find(([suffix]) => category.endsWith(suffix));
+  return hit ? hit[1] : null;
 }
 
 export function categoryLabel(category: string | null | undefined): string | null {
@@ -139,10 +209,29 @@ const GROUP_OF: Record<string, CategoryGroup> = {
   lodging: "lodging", hotel: "lodging", guest_house: "lodging", campground: "lodging",
   shopping: "shopping", store: "shopping", shopping_mall: "shopping", department_store: "shopping", clothing_store: "shopping",
   book_store: "shopping", home_goods_store: "shopping", supermarket: "shopping", convenience_store: "shopping",
+  noodle_shop: "restaurant", snack_bar: "restaurant", gastropub: "restaurant", bagel_shop: "cafe",
+  art_museum: "attraction", historical_place: "attraction", landmark: "attraction", city_park: "attraction", beach: "attraction",
+  natural_feature: "attraction", castle: "attraction", buddhist_temple: "attraction", market: "shopping",
+  hypermarket: "shopping", grocery_store: "shopping", bed_and_breakfast: "lodging", private_guest_room: "lodging",
+  hostel: "lodging", motel: "lodging", extended_stay_hotel: "lodging", rv_park: "lodging",
 };
 
+const SUFFIX_GROUPS: [string, CategoryGroup][] = [
+  ["_restaurant", "restaurant"],
+  ["_cafe", "cafe"],
+  ["_bakery", "cafe"],
+  ["_museum", "attraction"],
+  ["_park", "attraction"],
+  ["_temple", "attraction"],
+  ["_store", "shopping"],
+  ["_hotel", "lodging"],
+];
+
 export function categoryGroup(category: string | null | undefined): CategoryGroup {
-  return (category && GROUP_OF[category]) || "other";
+  if (!category) return "other";
+  if (GROUP_OF[category]) return GROUP_OF[category];
+  // 구글 세부 종류(korean_restaurant 등)가 "기타"로 빠져 분류 필터·아이콘이 틀렸다(2026-10-05).
+  return SUFFIX_GROUPS.find(([suffix]) => category.endsWith(suffix))?.[1] ?? "other";
 }
 
 export function categoryGroupInfo(category: string | null | undefined) {
