@@ -10,6 +10,7 @@ import { PlanTripScreen } from "@/screens/PlanTripScreen";
 import { TripDetailScreen } from "@/screens/TripDetailScreen";
 import { TripReplanScreen } from "@/screens/TripReplanScreen";
 import { LicensesScreen } from "@/screens/LicensesScreen";
+import { PassScreen } from "@/screens/PassScreen";
 import { AppText } from "@/components/AppText";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { useEffect, useState } from "react";
@@ -97,6 +98,7 @@ export function RootNavigator() {
           <Stack.Screen name="TripDetail" component={TripDetailScreen} options={{ title: "여행 상세" }} />
           <Stack.Screen name="TripReplan" component={TripReplanScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Licenses" component={LicensesScreen} options={{ title: "오픈소스 라이선스" }} />
+          <Stack.Screen name="Pass" component={PassScreen} options={{ title: "여행 패스" }} />
         </>
       )}
     </Stack.Navigator>

@@ -27,6 +27,8 @@ export type RootStackParamList = {
   TripDetail: { id: number; weatherAlertTripPlaceId?: number };
   TripReplan: { tripId: number; jobId: number };
   Licenses: undefined;
+  // 여행 패스 구매 페이지(2026-10-05). feature: 한도에 닿아 들어왔을 때 어떤 기능이었는지.
+  Pass: { feature?: "ANALYSIS" | "DRAFT" | "ASSIST" } | undefined;
 };
 
 // 탭 화면(MainTabParamList)에서도 바깥 스택 화면(Processing/VideoGroup/TripDetail 등)으로

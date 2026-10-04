@@ -1,0 +1,40 @@
+{
+  "identifier" : "7A2C9E1F",
+  "nonRenewingSubscriptions" : [
+    {
+      "displayPrice" : "4900",
+      "familyShareable" : false,
+      "internalID" : "6A1F2B3C",
+      "localizations" : [
+        {
+          "description" : "30일 동안 AI 일정 초안과 비서·대안 찾기를 넉넉하게",
+          "displayName" : "여행 패스 30일",
+          "locale" : "ko"
+        }
+      ],
+      "productID" : "com.trovapp.trova.travelpass30",
+      "referenceName" : "Travel Pass 30 days",
+      "type" : "NonRenewingSubscription"
+    }
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0",
+    "_developerTeamID" : "",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "ko",
+    "_storefront" : "KOR",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { Alert, Image, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -8,6 +9,7 @@ import { PressableRow } from "@/components/PressableRow";
 import { haptics } from "@/lib/haptics";
 import { PRIVACY_POLICY_URL, TERMS_URL } from "@/lib/legal";
 import { withdraw } from "@/lib/api/auth";
+import { getBillingStatus } from "@/lib/api/billing";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 import type { RootStackParamList } from "@/navigation/types";
@@ -17,6 +19,13 @@ import appConfig from "../../app.json";
 // 전용 화면으로 분리했다. 회원 탈퇴(DELETE /api/users/me)는 백엔드에 이미
 // 구현돼 있었는데 앱에서 아직 안 쓰고 있던 걸 여기서 연결한다.
 export function MyPageScreen() {
+  // 여행 패스 상태(2026-10-05). 불러오지 못해도 행은 그대로 두고 상태 글자만 비운다.
+  const billingQuery = useQuery({ queryKey: ["billingStatus"], queryFn: getBillingStatus });
+  const passLabel = !billingQuery.data
+    ? null
+    : billingQuery.data.plan === "PASS" && billingQuery.data.passExpiresAt
+      ? `${new Date(billingQuery.data.passExpiresAt).getMonth() + 1}월 ${new Date(billingQuery.data.passExpiresAt).getDate()}일까지`
+      : "무료 이용 중";
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { user, logout } = useAuth();
   const [withdrawing, setWithdrawing] = useState(false);
@@ -86,6 +95,23 @@ export function MyPageScreen() {
       </View>
 
       <View>
+        <PressableRow
+          onPress={() => navigation.navigate("Pass")}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingVertical: space.md,
+            borderTopWidth: 1,
+            borderTopColor: colors.borderSubtle,
+          }}
+        >
+          <AppText>여행 패스</AppText>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+            {passLabel && <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>{passLabel}</AppText>}
+            <Feather name="chevron-right" size={18} color={colors.inkMuted} />
+          </View>
+        </PressableRow>
         {/* 앱스토어 심사·개인정보 보호법상 앱 안에서 방침을 볼 수 있어야 한다. 앱 안 브라우저로 연다. */}
         {[
           { label: "개인정보처리방침", url: PRIVACY_POLICY_URL },

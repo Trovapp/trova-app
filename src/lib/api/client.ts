@@ -1,6 +1,6 @@
 import { clearToken, getToken } from "@/lib/tokenStorage";
 import { API_BASE_URL } from "@/lib/api/config";
-import { ApiError, RequestTimeoutError } from "@/lib/api/errors";
+import { ApiError, PlanLimitError, RequestTimeoutError } from "@/lib/api/errors";
 
 // AuthProvider가 등록해두는 콜백 — 401을 받으면 토큰만 지우는 게 아니라
 // 인증 상태(user)도 즉시 null로 바꿔서 네비게이터가 로그인 화면으로
@@ -8,10 +8,16 @@ import { ApiError, RequestTimeoutError } from "@/lib/api/errors";
 // 어디서든 호출되는 평범한 함수라 React context를 직접 구독할 수 없기
 // 때문.
 // 오류 타입/판단 함수는 네이티브 모듈 의존이 없는 errors.ts에 두고(단위 테스트 가능) 여기서 다시 내보낸다.
-export { ApiError, RequestTimeoutError, shouldRetryQuery, toUserMessage } from "@/lib/api/errors";
+export { ApiError, PlanLimitError, RequestTimeoutError, shouldRetryQuery, toUserMessage } from "@/lib/api/errors";
 
 // hadToken: 토큰을 보냈는데 401이면 "세션 만료", 토큰 없이 401이면 원래 비로그인(첫 실행 등)이다.
 let unauthorizedHandler: ((info: { hadToken: boolean }) => void) | null = null;
+
+// 한도에 닿으면 화면마다 따로 처리하지 않고 한 곳(PlanLimitListener)에서 여행 패스로 안내한다.
+let planLimitHandler: ((err: PlanLimitError) => void) | null = null;
+export function setPlanLimitHandler(handler: ((err: PlanLimitError) => void) | null): void {
+  planLimitHandler = handler;
+}
 
 export function setUnauthorizedHandler(handler: (info: { hadToken: boolean }) => void): void {
   unauthorizedHandler = handler;
@@ -44,6 +50,16 @@ export async function apiFetch(
   if (res.status === 401) {
     await clearToken();
     unauthorizedHandler?.({ hadToken: Boolean(token) });
+  }
+  if (res.status === 402) {
+    const body = (await res.json().catch(() => null)) as
+      | { message?: string; code?: string; feature?: "ANALYSIS" | "DRAFT" | "ASSIST"; onPass?: boolean }
+      | null;
+    if (body?.code === "PLAN_LIMIT" && body.feature) {
+      const err = new PlanLimitError(`${options.method ?? "GET"} ${path} failed: 402`, body.message, body.feature, Boolean(body.onPass));
+      planLimitHandler?.(err);
+      throw err;
+    }
   }
   // 하루 한도 초과(429)·처리 대기열 포화(503)는 서버가 안내 문구를 보낸다 — 호출부마다 파싱하지 않도록 여기서
   // 사용자용 메시지를 담은 오류로 바꿔 던진다. 화면은 toUserMessage로 그 문구를 그대로 보여준다.

@@ -12,6 +12,19 @@ export class ApiError extends Error {
   }
 }
 
+// 무료·여행 패스 한도를 다 썼을 때(서버 402, code PLAN_LIMIT, 백엔드 #130). onPass가 false면 무료 사용자라 구매 화면으로 안내한다.
+export class PlanLimitError extends ApiError {
+  constructor(
+    message: string,
+    userMessage: string | undefined,
+    readonly feature: "ANALYSIS" | "DRAFT" | "ASSIST",
+    readonly onPass: boolean,
+  ) {
+    super(402, message, userMessage);
+    this.name = "PlanLimitError";
+  }
+}
+
 // 요청이 시간 제한 안에 끝나지 않았을 때(서버 과부하·연결이 사라진 경우). 예전엔 시간 제한이 없어
 // 서버가 응답을 안 주면 "불러오는 중..."에서 5분 넘게 멈춰 있었다(실측).
 export class RequestTimeoutError extends Error {

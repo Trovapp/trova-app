@@ -16,6 +16,7 @@ import { AuthProvider } from "@/lib/auth/AuthContext";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { navigationRef } from "@/navigation/navigationRef";
 import { ShareIntentListener } from "@/components/ShareIntentListener";
+import { PlanLimitListener } from "@/components/PlanLimitListener";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -92,6 +93,7 @@ export default function App() {
                   <RootNavigator />
                 </NavigationContainer>
                 <ShareIntentListener />
+                <PlanLimitListener />
               </BottomSheetModalProvider>
             </AppErrorBoundary>
           </SafeAreaProvider>

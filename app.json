@@ -47,7 +47,8 @@
           ],
           "iosShareExtensionName": "Trova"
         }
-      ]
+      ],
+      "expo-iap"
     ]
   }
 }
