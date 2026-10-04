@@ -1,6 +1,14 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { Alert, Platform, TextInput, View } from "react-native";
-import BottomSheet, { BottomSheetFooter, BottomSheetScrollView, BottomSheetView, type BottomSheetFooterProps } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetFooter,
+  BottomSheetModal,
+  BottomSheetScrollView,
+  BottomSheetView,
+  type BottomSheetBackdropProps,
+  type BottomSheetFooterProps,
+} from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
@@ -83,6 +91,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   const placeIdsKey = group.map((p) => p.id).join(",");
 
   // 완료된 영상 기록은 지울 방법이 없던 문제 — 여행 상세와 같은 위치(헤더 오른쪽)에 삭제를 둔다.
+  // 헤더에 휴지통이 바로 있으면 한 번 잘못 눌러 삭제 확인창이 뜬다 — 여행 상세(T1)처럼 ⋯ 메뉴 안으로 넣었다(2026-10-04).
+  const videoMenuSheetRef = useRef<BottomSheetModal>(null);
+  const confirmDeleteVideoRef = useRef<() => void>(() => {});
   useLayoutEffect(() => {
     const placeIds = placeIdsKey ? placeIdsKey.split(",").map(Number) : [];
     function confirmDeleteVideo() {
@@ -111,10 +122,16 @@ export function VideoGroupScreen({ route, navigation }: Props) {
         ],
       );
     }
+    confirmDeleteVideoRef.current = confirmDeleteVideo;
     navigation.setOptions({
       headerRight: () => (
-        <PressableScale onPress={confirmDeleteVideo} hitSlop={hitSlopFor(19)} disabled={placeIds.length === 0}>
-          <Feather name="trash-2" size={19} color={colors.inkMuted} />
+        <PressableScale
+          onPress={() => videoMenuSheetRef.current?.present()}
+          hitSlop={hitSlopFor(20)}
+          disabled={placeIds.length === 0}
+          accessibilityLabel="영상 메뉴"
+        >
+          <Feather name="more-horizontal" size={20} color={colors.inkMuted} />
         </PressableScale>
       ),
     });
@@ -676,6 +693,28 @@ export function VideoGroupScreen({ route, navigation }: Props) {
             : undefined
         }
       />
+      <BottomSheetModal
+        ref={videoMenuSheetRef}
+        enableDynamicSizing
+        backdropComponent={(props: BottomSheetBackdropProps) => (
+          <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+        )}
+        backgroundStyle={{ backgroundColor: colors.bg }}
+        handleIndicatorStyle={{ backgroundColor: colors.border }}
+      >
+        <BottomSheetView style={{ padding: space.xs, paddingBottom: space.xxl }}>
+          <PressableScale
+            onPress={() => {
+              videoMenuSheetRef.current?.dismiss();
+              confirmDeleteVideoRef.current();
+            }}
+            style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
+          >
+            <Feather name="trash-2" size={16} color={colors.accent} />
+            <AppText style={{ color: colors.accent }}>영상 기록 삭제</AppText>
+          </PressableScale>
+        </BottomSheetView>
+      </BottomSheetModal>
     </View>
   );
 }

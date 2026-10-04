@@ -1081,6 +1081,17 @@ export function TripDetailScreen({ route, navigation }: Props) {
       placeId={reviewTarget?.kind === "place" ? reviewTarget.id : null}
       tripPlaceId={reviewTarget?.kind === "tripPlace" ? reviewTarget.id : null}
       onClose={() => setReviewTarget(null)}
+      // 여행에 담긴 장소를 볼 때만 — 비서는 여행의 장소를 두고 대화한다.
+      onAskAssistant={
+        reviewTarget?.kind === "tripPlace"
+          ? () => {
+              const id = reviewTarget.id;
+              setReviewTarget(null);
+              setAlternativeTargetId(null);
+              setAssistantTargetId(id);
+            }
+          : undefined
+      }
     />
     <AlternativeFinderSheet
       tripPlaceId={alternativeTargetId}
@@ -1116,6 +1127,48 @@ export function TripDetailScreen({ route, navigation }: Props) {
         <AppText weight="medium" numberOfLines={1} style={{ padding: space.sm, color: colors.inkMuted, fontSize: fontSize.footnote }}>
           {menuPlace?.placeName}
         </AppText>
+        {/* 비서는 이 앱만의 기능인데 메뉴 9개 중 6번째 회색 글자라 눈에 안 띄었다(사용자 지적, 2026-10-04).
+            맨 위에 연한 주황 배경으로 두고, 같은 "AI가 찾아주는" 동작인 대안 찾기를 바로 아래에 둔다.
+            글자색은 주황으로 하지 않는다 — 아래 "삭제"가 주황이라 헷갈린다. */}
+        <PressableScale
+          onPress={() => {
+            if (!menuPlace) return;
+            setReviewTarget(null);
+            setAlternativeTargetId(null);
+            setAssistantTargetId(menuPlace.id);
+            menuSheetRef.current?.dismiss();
+          }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: space.sm,
+            padding: space.md,
+            marginHorizontal: space.xs,
+            borderRadius: radius.md,
+            borderCurve: "continuous",
+            backgroundColor: colors.accentBg,
+          }}
+        >
+          <Feather name="message-circle" size={16} color={colors.accent} />
+          <View style={{ flex: 1, gap: space.xxxs }}>
+            <AppText weight="medium">비서에게 물어보기</AppText>
+            <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>조용한 카페, 사람 적은 곳처럼 물어보세요</AppText>
+          </View>
+        </PressableScale>
+        <PressableScale
+          onPress={() => {
+            if (!menuPlace) return;
+            setReviewTarget(null);
+            setAlternativeInitialIndoor(false);
+            setAlternativeTargetId(menuPlace.id);
+            menuSheetRef.current?.dismiss();
+          }}
+          style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
+        >
+          <Feather name="search" size={16} color={colors.inkMuted} />
+          <AppText>대안 찾기</AppText>
+        </PressableScale>
+        <View style={{ height: 1, marginHorizontal: space.md, backgroundColor: colors.borderSubtle }} />
         {/* 일정 정하기(시간·이동수단·메모)는 행에서 빼고 여기 맨 위에 모았다. 아래 동작들도 같은 모양으로 아이콘을 붙인다
             (위 4개만 아이콘이 있어 두 묶음이 다른 메뉴처럼 보였다, 2026-10 QA). */}
         {menuPlace &&
@@ -1139,32 +1192,6 @@ export function TripDetailScreen({ route, navigation }: Props) {
             </PressableScale>
           ))}
         <View style={{ height: 1, marginHorizontal: space.md, backgroundColor: colors.borderSubtle }} />
-        <PressableScale
-          onPress={() => {
-            if (!menuPlace) return;
-            setReviewTarget(null);
-            setAlternativeInitialIndoor(false);
-            setAlternativeTargetId(menuPlace.id);
-            menuSheetRef.current?.dismiss();
-          }}
-          style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
-        >
-          <Feather name="search" size={16} color={colors.inkMuted} />
-          <AppText>대안 찾기</AppText>
-        </PressableScale>
-        <PressableScale
-          onPress={() => {
-            if (!menuPlace) return;
-            setReviewTarget(null);
-            setAlternativeTargetId(null);
-            setAssistantTargetId(menuPlace.id);
-            menuSheetRef.current?.dismiss();
-          }}
-          style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
-        >
-          <Feather name="message-circle" size={16} color={colors.inkMuted} />
-          <AppText>비서에게 물어보기</AppText>
-        </PressableScale>
         {/* 행에 링크 줄까지 붙으면 장소 하나가 네 줄이 돼서, 가끔 쓰는 외부 링크는 메뉴로 옮겼다. */}
         {menuPlace && kakaoMapUrl(menuPlace) && (
           <PressableScale

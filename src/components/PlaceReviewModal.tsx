@@ -67,6 +67,7 @@ export function PlaceReviewContent({
   showMiniMap = true,
   onClose,
   showMapLink = false,
+  onAskAssistant,
 }: {
   // 검색결과("장소 카탈로그")에서 상세보기 할 때는 placeId, 여행 상세의 장소 카드에서
   // 볼 때는 tripPlaceId — 둘은 서로 다른 id 공간이라 백엔드 엔드포인트도 다르다.
@@ -81,6 +82,8 @@ export function PlaceReviewContent({
   // 카카오맵에서 보기·전화 걸기 버튼. 영상 속 장소 상세(SavedPlaceInfoSheet)와 같은 모양(2026-10 QA S3).
   // 전화번호는 서버가 Google 장소 상세에서 받아 둔 경우에만 온다(#99).
   showMapLink?: boolean;
+  // 있으면 주소 아래에 "비서에게 물어보기"를 크게 둔다(여행 상세의 장소). 메뉴 깊이 숨어 있어 눈에 안 띄었다(사용자 지적, 2026-10-04).
+  onAskAssistant?: () => void;
 }) {
   const [showRawReviews, setShowRawReviews] = useState(false);
   const detailQuery = useQuery({
@@ -168,6 +171,27 @@ export function PlaceReviewContent({
         </View>
         {detail.address && <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>{detail.address}</AppText>}
       </View>
+      {onAskAssistant && (
+        <PressableScale
+          onPress={onAskAssistant}
+          accessibilityRole="button"
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: space.xs,
+            height: 44,
+            borderRadius: radius.md,
+            borderCurve: "continuous",
+            backgroundColor: colors.accentBg,
+          }}
+        >
+          <Feather name="message-circle" size={16} color={colors.accent} />
+          <AppText weight="medium" style={{ color: colors.accent }}>
+            비서에게 물어보기
+          </AppText>
+        </PressableScale>
+      )}
       {showMapLink && (mapUrl || telUrl) && (
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
           {mapUrl && (
@@ -318,10 +342,12 @@ export function PlaceReviewSheet({
   placeId = null,
   tripPlaceId = null,
   onClose,
+  onAskAssistant,
 }: {
   placeId?: number | null;
   tripPlaceId?: number | null;
   onClose: () => void;
+  onAskAssistant?: () => void;
 }) {
   const sheetRef = useRef<BottomSheet>(null);
   const isOpen = placeId !== null || tripPlaceId !== null;
@@ -347,7 +373,7 @@ export function PlaceReviewSheet({
     >
       <BottomSheetScrollView contentContainerStyle={{ padding: space.lg, gap: space.sm }}>
         <SheetCloseButton onPress={() => sheetRef.current?.close()} style={{ alignSelf: "flex-end" }} />
-        <PlaceReviewContent placeId={placeId} tripPlaceId={tripPlaceId} />
+        <PlaceReviewContent placeId={placeId} tripPlaceId={tripPlaceId} onAskAssistant={onAskAssistant} />
       </BottomSheetScrollView>
     </BottomSheet>
   );
