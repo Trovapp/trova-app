@@ -559,7 +559,7 @@ export function SavedPlacesScreen() {
               // 일정 장소 삭제와 같은 확인 흐름 — 폴더 분류까지 함께 사라지고 되돌릴 수 없다.
               Alert.alert("찜을 해제할까요?", `"${target.placeName}"${objectParticle(target.placeName)} 찜한 장소에서 빼요.`, [
                 { text: "취소", style: "cancel" },
-                { text: "해제", style: "destructive", onPress: () => handleRemove(target.id) },
+                { text: "해제", style: "destructive", onPress: () => { haptics.warning(); handleRemove(target.id); } },
               ]);
             }}
             style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}

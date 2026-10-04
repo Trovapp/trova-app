@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useReducedMotion } from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 
@@ -91,9 +92,13 @@ export function ProgressHero({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [percent, effectiveCeiling, creepMs]);
 
+  // 카드가 옆으로 계속 흐르는 움직임은 "동작 줄이기"를 켜면 멈춘다(디자인 QA M2). 이 부분만 RN Animated라
+  // Reanimated의 자동 처리를 못 받았다 — 다른 애니메이션은 이미 이 설정을 따른다.
+  const reducedMotion = useReducedMotion();
   useEffect(() => {
     if (!showCards || setWidth === 0) return;
     translateX.setValue(0);
+    if (reducedMotion) return;
     const loop = Animated.loop(
       Animated.timing(translateX, {
         toValue: -setWidth,
@@ -104,7 +109,7 @@ export function ProgressHero({
     );
     loop.start();
     return () => loop.stop();
-  }, [showCards, setWidth, cards.length, translateX]);
+  }, [showCards, setWidth, cards.length, translateX, reducedMotion]);
 
   return (
     <View style={{ width: "100%", alignItems: "center", gap: space.lg }}>

@@ -1052,7 +1052,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                             onPress={() =>
                               Alert.alert("찜을 해제할까요?", `"${bookmark.placeName}"${objectParticle(bookmark.placeName)} 찜한 장소에서 빼요.`, [
                                 { text: "취소", style: "cancel" },
-                                { text: "해제", style: "destructive", onPress: () => handleRemoveBookmark(bookmark.id) },
+                                { text: "해제", style: "destructive", onPress: () => { haptics.warning(); handleRemoveBookmark(bookmark.id); } },
                               ])
                             }
                             hitSlop={{ top: 12, bottom: 12, left: 4, right: 12 }}>
@@ -1199,7 +1199,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             if (!target) return;
             Alert.alert("장소를 삭제할까요?", `"${target.placeName}"${objectParticle(target.placeName)} 일정에서 삭제해요.`, [
               { text: "취소", style: "cancel" },
-              { text: "삭제", style: "destructive", onPress: () => handleRemove(target.id) },
+              { text: "삭제", style: "destructive", onPress: () => { haptics.warning(); handleRemove(target.id); } },
             ]);
           }}
           style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}

@@ -109,7 +109,7 @@ function PendingJobCard({
             onPress={() =>
               Alert.alert("이 항목을 삭제할까요?", "실패한 처리 기록을 목록에서 지워요.", [
                 { text: "취소", style: "cancel" },
-                { text: "삭제", style: "destructive", onPress: () => onDelete(job.jobId) },
+                { text: "삭제", style: "destructive", onPress: () => { haptics.warning(); onDelete(job.jobId); } },
               ])
             }
             hitSlop={hitSlopFor(24, 16)}
