@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -77,6 +77,16 @@ export function PlanTripScreen({ navigation, route }: Props) {
   const [draftId, setDraftId] = useState<number | null>(route.params?.draftId ?? null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 화면이 새로 뜨지 않고 재사용될 때(같은 라우트로 다시 navigate 등) route.params만 바뀔 수 있다 —
+  // useState 초기값은 첫 렌더에만 적용돼서, draftId가 있는 다른 파라미터로 다시 들어오면 예전 초안이 그대로
+  // 남아있었다. 파라미터로 draftId가 새로 왔을 때만 따라가고, 파라미터가 없는 진입(고르기 화면)은 그대로 둔다.
+  useEffect(() => {
+    if (route.params?.draftId != null && route.params.draftId !== draftId) {
+      setDraftId(route.params.draftId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.params?.draftId]);
 
   const draftQuery = useQuery({
     queryKey: ["tripDraft", draftId],

@@ -103,6 +103,9 @@ export function HomeScreen({ navigation }: Props) {
       await autoDraftsQuery.refetch();
     } catch (err) {
       setDraftDismissError(toUserMessage(err, "닫지 못했어요. 다시 시도해주세요."));
+      // 이미 없어졌거나(404) 이미 승인된(409) 초안이면 실패해도 목록은 다시 받아와야 한다 —
+      // 안 그러면 더 이상 아무것도 할 수 없는 카드가 화면에 계속 남는다(폴링이 이미 멈춰 있을 수도 있음).
+      await autoDraftsQuery.refetch();
     }
   }
   // 이미 보고 있는 탭을 다시 누르면 맨 위로(iOS 기본 동작).
