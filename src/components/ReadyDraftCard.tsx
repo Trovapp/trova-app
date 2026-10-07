@@ -19,7 +19,10 @@ export function ReadyDraftCard({
   onDismiss: () => void;
 }) {
   const ready = draft.status === "READY";
-  const subtitleParts = [draft.videoTitle, draft.days != null ? `${draft.days}일` : null].filter(
+  // "#제주 #혼행" 같은 해시태그가 제목 뒤에 붙어 있으면 한 줄(numberOfLines=1)에서 일수가 잘려 안 보인다 —
+  // 해시태그를 지우고 남은 공백을 정리한 뒤에 일수를 붙인다.
+  const cleanTitle = draft.videoTitle?.replace(/#\S+/g, "").replace(/\s+/g, " ").trim() || null;
+  const subtitleParts = [cleanTitle, draft.days != null ? `${draft.days}일` : null].filter(
     (part): part is string => Boolean(part),
   );
   const subtitle = subtitleParts.length > 0 ? subtitleParts.join(" ") : null;

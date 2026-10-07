@@ -408,7 +408,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
 
   // 시트 아래 고정 버튼 하나만 이 화면의 주 행동이다. 예전엔 위쪽 테두리 버튼이라 다른 칩·링크와 무게가 비슷했다.
   // 만든 여행이 없고 서버가 알아서 짜둔 초안이 준비됐으면, 수동으로 일정을 짜거나 여행을 만들라고 하지 않고 그 초안으로 보낸다.
-  const footer = !existingTrip && readyAutoDraft
+  // 기존 여행 조회가 끝나기 전(isSuccess 전)엔 보여주지 않는다 — 안 그러면 로딩 중 잠깐 떴다가 기존 여행 버튼으로
+  // 바뀌어 깜빡인다. 사용자가 이미 "여행으로 만들기" 폼을 채우는 중이면(showTripForm) 그 버튼을 밀어내지 않는다.
+  const footer = !existingTrip && readyAutoDraft && !showTripForm && videoTripQuery.isSuccess
     ? { label: "준비된 일정 보기", onPress: () => navigation.navigate("PlanTrip", { draftId: readyAutoDraft.draftId }), disabled: false }
     : !hasItinerary
       ? { label: generating ? "일정 생성 중..." : "일정 짜기", onPress: handleGenerateItinerary, disabled: generating }

@@ -224,6 +224,14 @@ export function HomeScreen({ navigation }: Props) {
     }
   }
 
+  const weatherBanner = (
+    <WeatherAlertBanner
+      onOpenAlternative={(tripId, tripPlaceId) =>
+        navigation.navigate("TripDetail", { id: tripId, weatherAlertTripPlaceId: tripPlaceId })
+      }
+    />
+  );
+
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
       <ScrollView
@@ -304,7 +312,10 @@ export function HomeScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {(autoDraftsQuery.data ?? []).length > 0 && (
+        {/* 자동 초안 카드와 날씨 배너는 둘 다 "알려줄 게 있어요" 성격의 배너라 한 묶음으로 본다 — 섹션
+            자체의 gap(sm)과 ScrollView의 블록 사이 gap(xxl)이 겹쳐 둘 사이만 유독 넓어 보였다(QA 발견).
+            자동 초안이 있을 때만 날씨 배너를 이 묶음 안으로 넣어 같은 sm 간격을 쓰게 한다. */}
+        {(autoDraftsQuery.data ?? []).length > 0 ? (
           <View style={{ gap: space.sm }}>
             {(autoDraftsQuery.data ?? []).map((draft) => (
               <ReadyDraftCard
@@ -315,14 +326,11 @@ export function HomeScreen({ navigation }: Props) {
               />
             ))}
             {draftDismissError && <ErrorText>{draftDismissError}</ErrorText>}
+            {weatherBanner}
           </View>
+        ) : (
+          weatherBanner
         )}
-
-        <WeatherAlertBanner
-          onOpenAlternative={(tripId, tripPlaceId) =>
-            navigation.navigate("TripDetail", { id: tripId, weatherAlertTripPlaceId: tripPlaceId })
-          }
-        />
 
         {isFirstVisit && <FirstVisitGuide />}
 
