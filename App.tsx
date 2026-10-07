@@ -17,6 +17,7 @@ import { RootNavigator } from "@/navigation/RootNavigator";
 import { navigationRef } from "@/navigation/navigationRef";
 import { ShareIntentListener } from "@/components/ShareIntentListener";
 import { PlanLimitListener } from "@/components/PlanLimitListener";
+import { PendingPurchaseSync } from "@/components/PendingPurchaseSync";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -94,6 +95,7 @@ export default function App() {
                 </NavigationContainer>
                 <ShareIntentListener />
                 <PlanLimitListener />
+                <PendingPurchaseSync />
               </BottomSheetModalProvider>
             </AppErrorBoundary>
           </SafeAreaProvider>
