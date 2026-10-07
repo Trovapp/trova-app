@@ -53,7 +53,9 @@ export function WeatherAlertBanner({
         <AppText weight="medium" style={{ fontSize: fontSize.footnote }}>
           {target.title}
         </AppText>
-        <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={2}>
+        {/* 두 줄로 자르면 큰 글자에서 뒤의 "실내 대안을 확인해보세요"가 …로 사라졌다(uiflow 화면 훑기, 2026-10-07) —
+            안내 문장은 길이가 정해져 있어 자르지 않는다. */}
+        <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
           {target.body}
         </AppText>
         {dismissError && (
