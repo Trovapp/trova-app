@@ -18,6 +18,7 @@ import { colors, fontSize, radius, space } from "@/lib/theme";
 import { invalidateTripPlaceChangeQueries, replacePlace, type AlternativeCandidate } from "@/lib/api/trips";
 import { endConversationSession, sendConversationMessage } from "@/lib/api/conversations";
 import { hitSlopFor } from "@/lib/touch";
+import { PlanLimitError } from "@/lib/api/client";
 
 const SNAP_POINTS = ["65%", "90%"];
 const MAX_MESSAGE_LENGTH = 300;
@@ -340,8 +341,13 @@ export function ConversationSheet({
       setJustArrived(true);
       setTurnLimitReached(result.turnLimitReached);
       requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
-    } catch {
-      setSendError("지금 답변을 가져오지 못했어요. 다시 시도해주세요.");
+    } catch (err) {
+      // 무료 한도(402)는 다시 해도 같다 — "다시 시도해주세요" 대신 서버가 보낸 이유를 보여 준다(2026-10-07 QA).
+      setSendError(
+        err instanceof PlanLimitError && err.userMessage
+          ? err.userMessage
+          : "지금 답변을 가져오지 못했어요. 다시 시도해주세요.",
+      );
     } finally {
       setSending(false);
     }
