@@ -240,8 +240,11 @@ function PurchaseButton({ status }: { status: BillingStatus }) {
     setBusy("restore");
     try {
       await restorePurchases();
-    } catch {
+    } catch (e) {
       setBusy(null);
+      // Apple 계정 확인 창에서 취소하면 "Request Canceled"로 끝난다 — 사용자가 직접 취소한 것이라 오류로 알리지 않는다(2026-10-07 QA).
+      const message = e instanceof Error ? e.message : String(e);
+      if (/cancel/i.test(message)) return;
       setError("패스를 불러오지 못했어요.");
     }
   }
