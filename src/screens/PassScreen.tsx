@@ -178,11 +178,15 @@ function PurchaseButton({ status }: { status: BillingStatus }) {
     onPurchaseSuccess: async (purchase) => {
       try {
         if (!purchase.purchaseToken) throw new Error("결제 정보를 받지 못했어요.");
-        await recordAppleTransaction(purchase.purchaseToken);
+        const wasOnPass = status.plan === "PASS";
+        const next = await recordAppleTransaction(purchase.purchaseToken);
         await finishTransaction({ purchase, isConsumable: false });
         haptics.success();
         await queryClient.invalidateQueries({ queryKey: ["billingStatus"] });
-        Alert.alert("여행 패스를 시작했어요", "30일 동안 AI 일정과 비서를 넉넉하게 쓸 수 있어요.");
+        // 쓰는 중에 또 사면 연장이다 — "시작했어요"는 맞지 않았다(2026-10-07 QA).
+        const until = next.passExpiresAt ? ` ${formatUntil(next.passExpiresAt)} 쓸 수 있어요.` : "";
+        if (wasOnPass) Alert.alert("여행 패스를 30일 연장했어요", until.trim());
+        else Alert.alert("여행 패스를 시작했어요", `30일 동안 AI 일정과 비서를 넉넉하게 쓸 수 있어요.${until}`);
       } catch (e) {
         setError(toUserMessage(e, "결제는 됐지만 패스를 붙이지 못했어요. 앱을 다시 열면 다시 시도해요."));
       } finally {
