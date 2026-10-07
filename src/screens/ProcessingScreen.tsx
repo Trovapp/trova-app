@@ -387,7 +387,7 @@ export function ProcessingProgressView({
 
       {/* 처리는 서버에서 비동기로 도는데, 안내가 없으면 12~40초(실측) 동안 이 화면을 지켜봐야 한다고 느끼기 쉽다. */}
       <AppText style={{ marginTop: space.md, fontSize: fontSize.caption1, lineHeight: 18, color: colors.inkMuted, textAlign: "center" }}>
-        다른 화면으로 가도 분석은 계속돼요.{"\n"}결과는 영상 기록 탭에서 확인할 수 있어요.
+        다른 화면으로 가도 분석은 계속돼요.{"\n"}결과는 영상 기록 탭에서 확인할 수 있어요. 끝나면 일정도 짜 둘게요.
       </AppText>
     </>
   );

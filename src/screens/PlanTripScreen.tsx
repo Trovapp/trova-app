@@ -66,14 +66,15 @@ function dayLabel(day: number, date: string | null): string {
 
 // 영상 여러 개 + "부산 1박 2일" → 서버 에이전트가 초안을 만들고(검증·수정 포함), 사용자가 보고 승인해야 여행이 된다(백엔드 #106).
 // 한 화면 안에서 고르기 → 기다리기 → (지역이 멀면 질문) → 초안 확인·승인 순서로 바뀐다.
-export function PlanTripScreen({ navigation }: Props) {
+// route.params?.draftId: 홈 카드·영상 결과에서 이미 만들어진 자동 초안으로 들어올 때 — 고르기를 건너뛰고 바로 그 초안을 연다.
+export function PlanTripScreen({ navigation, route }: Props) {
   const queryClient = useQueryClient();
   const placesQuery = useQuery({ queryKey: ["places"], queryFn: getPlaces });
   const videos = useMemo(() => videosFrom(placesQuery.data ?? []), [placesQuery.data]);
 
   const [selected, setSelected] = useState<number[]>([]);
   const [message, setMessage] = useState("");
-  const [draftId, setDraftId] = useState<number | null>(null);
+  const [draftId, setDraftId] = useState<number | null>(route.params?.draftId ?? null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -131,6 +132,7 @@ export function PlanTripScreen({ navigation }: Props) {
       const { tripId } = await approveTripDraft(draftId, title.trim() || null);
       haptics.success();
       await queryClient.invalidateQueries({ queryKey: ["trips"] });
+      await queryClient.invalidateQueries({ queryKey: ["autoDrafts"] });
       navigation.replace("TripDetail", { id: tripId });
     } catch (e) {
       setError(toUserMessage(e, "여행으로 저장하지 못했어요. 다시 시도해주세요."));

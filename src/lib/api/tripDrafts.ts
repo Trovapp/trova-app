@@ -94,3 +94,32 @@ export async function approveTripDraft(id: number, title: string | null): Promis
   }
   return res.json();
 }
+
+// 영상 분석이 끝나면 서버가 알아서 만들어 두는 초안(백엔드 #auto-draft) — 사용자가 직접 영상을
+// 고르거나 요청 문장을 쓰지 않아도 홈/영상 결과에서 바로 볼 수 있다. 최신 10개까지만 온다.
+export type AutoDraftStatus = "PENDING" | "PROCESSING" | "READY";
+
+export type AutoDraft = {
+  draftId: number;
+  status: AutoDraftStatus;
+  jobId: number;
+  videoTitle: string | null;
+  days: number | null;
+  createdAt: string;
+};
+
+export async function listAutoDrafts(): Promise<AutoDraft[]> {
+  const res = await apiFetch(`/api/trip-drafts/auto`);
+  if (!res.ok) {
+    throw new ApiError(res.status, `GET /api/trip-drafts/auto failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+// 닫기(숨기기) — 내 것이 아니면 404, 이미 승인된 초안이면 409.
+export async function dismissTripDraft(id: number): Promise<void> {
+  const res = await apiFetch(`/api/trip-drafts/${id}/dismiss`, { method: "POST" });
+  if (!res.ok) {
+    throw new ApiError(res.status, `POST /api/trip-drafts/${id}/dismiss failed: ${res.status}`);
+  }
+}

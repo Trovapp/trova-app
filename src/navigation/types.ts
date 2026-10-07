@@ -22,7 +22,8 @@ export type RootStackParamList = {
   VideoGroup: { jobId: number; justAnalyzed?: boolean };
   NewTrip: undefined;
   // 고른 영상들 + 요청 문장으로 일정 초안을 만들고 승인하는 흐름(백엔드 #106).
-  PlanTrip: undefined;
+  // draftId: 자동으로 만들어진 초안(홈 카드·영상 결과 버튼)에서 들어올 때 — 고르기 화면 없이 그 초안으로 바로 연다.
+  PlanTrip: { draftId?: number } | undefined;
   // weatherAlertTripPlaceId: 홈의 날씨 알림에서 들어올 때 — 해당 장소의 날짜로 이동해 실내 대안 찾기를 바로 연다.
   TripDetail: { id: number; weatherAlertTripPlaceId?: number };
   TripReplan: { tripId: number; jobId: number };

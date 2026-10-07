@@ -16,6 +16,8 @@ import { WeatherAlertBanner } from "@/components/WeatherAlertBanner";
 import { createShare, deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob } from "@/lib/api/places";
 import { listBookmarks } from "@/lib/api/bookmarks";
 import { listTrips } from "@/lib/api/trips";
+import { dismissTripDraft, listAutoDrafts } from "@/lib/api/tripDrafts";
+import { ReadyDraftCard } from "@/components/ReadyDraftCard";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { formatTripDates, toDateString } from "@/lib/date";
@@ -79,12 +81,30 @@ export function HomeScreen({ navigation }: Props) {
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: listTrips });
+  // 영상 분석이 끝나면 서버가 알아서 일정 초안을 만들어 둔다 — 아직 짜는 중(PENDING/PROCESSING)인 게 있으면
+  // 5초마다 다시 물어서 "준비됐어요"로 바뀌는 걸 바로 보여준다. 다 준비됐으면(모두 READY) 조용히 멈춘다.
+  const autoDraftsQuery = useQuery({
+    queryKey: ["autoDrafts"],
+    queryFn: listAutoDrafts,
+    refetchInterval: (query) => (query.state.data?.some((d) => d.status !== "READY") ? 5000 : false),
+  });
   const queryClient = useQueryClient();
   const refetchAll = useCallback(
-    () => Promise.all([bookmarksQuery.refetch(), tripsQuery.refetch()]),
-    [bookmarksQuery.refetch, tripsQuery.refetch]
+    () => Promise.all([bookmarksQuery.refetch(), tripsQuery.refetch(), autoDraftsQuery.refetch()]),
+    [bookmarksQuery.refetch, tripsQuery.refetch, autoDraftsQuery.refetch]
   );
   const { refreshing, onRefresh } = usePullToRefresh(refetchAll);
+  const [draftDismissError, setDraftDismissError] = useState<string | null>(null);
+
+  async function dismissDraft(draftId: number) {
+    setDraftDismissError(null);
+    try {
+      await dismissTripDraft(draftId);
+      await autoDraftsQuery.refetch();
+    } catch (err) {
+      setDraftDismissError(toUserMessage(err, "닫지 못했어요. 다시 시도해주세요."));
+    }
+  }
   // 이미 보고 있는 탭을 다시 누르면 맨 위로(iOS 기본 동작).
   const scrollRef = useRef<ScrollView>(null);
   useScrollToTop(scrollRef);
@@ -280,6 +300,20 @@ export function HomeScreen({ navigation }: Props) {
             {error && <ErrorText>{error}</ErrorText>}
           </View>
         </View>
+
+        {(autoDraftsQuery.data ?? []).length > 0 && (
+          <View style={{ gap: space.sm }}>
+            {(autoDraftsQuery.data ?? []).map((draft) => (
+              <ReadyDraftCard
+                key={draft.draftId}
+                draft={draft}
+                onPress={() => navigation.navigate("PlanTrip", { draftId: draft.draftId })}
+                onDismiss={() => dismissDraft(draft.draftId)}
+              />
+            ))}
+            {draftDismissError && <ErrorText>{draftDismissError}</ErrorText>}
+          </View>
+        )}
 
         <WeatherAlertBanner
           onOpenAlternative={(tripId, tripPlaceId) =>

@@ -35,6 +35,7 @@ import { haptics } from "@/lib/haptics";
 import { objectParticle } from "@/lib/korean";
 import { deleteVideoPlaces, generateItinerary, getPlaces, moveToDay, optimizeRoute, reorderPlace, type Place } from "@/lib/api/places";
 import { addVideoPlaceToTrip, confirmTrip, getVideoTrip, TRIP_TITLE_MAX_LENGTH, type Trip } from "@/lib/api/trips";
+import { listAutoDrafts } from "@/lib/api/tripDrafts";
 import { formatDateLabel, formatTripDates, toDateString } from "@/lib/date";
 import { groupByDay, isItineraryGroup } from "@/lib/itinerary";
 import { toUserMessage } from "@/lib/api/client";
@@ -69,6 +70,10 @@ export function VideoGroupScreen({ route, navigation }: Props) {
   // 조회에 실패하면(서버에 API가 없는 등) 지금처럼 만들기 폼을 보여준다.
   const videoTripQuery = useQuery({ queryKey: ["videoTrip", jobId], queryFn: () => getVideoTrip(jobId) });
   const existingTrip = videoTripQuery.data ?? null;
+  // 이 영상의 분석이 끝나면 서버가 알아서 일정 초안을 만들어 둔다 — 아직 만든 여행이 없으면 직접
+  // "일정 짜기"를 누르는 대신 그 초안으로 바로 보낸다(백엔드 auto-draft).
+  const autoDraftsQuery = useQuery({ queryKey: ["autoDrafts"], queryFn: listAutoDrafts });
+  const readyAutoDraft = (autoDraftsQuery.data ?? []).find((d) => d.jobId === jobId && d.status === "READY") ?? null;
   const [localPlaces, setLocalPlaces] = useState<Place[] | null>(null);
   const [emptyDayNumbers, setEmptyDayNumbers] = useState<number[]>([]);
   const [actionPending, setActionPending] = useState(false);
@@ -402,21 +407,24 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     .map((p) => ({ id: String(p.id), latitude: p.latitude as number, longitude: p.longitude as number }));
 
   // 시트 아래 고정 버튼 하나만 이 화면의 주 행동이다. 예전엔 위쪽 테두리 버튼이라 다른 칩·링크와 무게가 비슷했다.
-  const footer = !hasItinerary
-    ? { label: generating ? "일정 생성 중..." : "일정 짜기", onPress: handleGenerateItinerary, disabled: generating }
-    : existingTrip
-      ? // 이 영상으로 이미 만든 여행이 있으면 같은 곳으로 가는 카드를 따로 두지 않고 버튼에 여행 이름을 담는다.
-        { label: `만든 여행 보기 · ${existingTrip.title}`, onPress: () => navigation.navigate("TripDetail", { id: existingTrip.id }), disabled: false }
-      : showTripForm
-        ? { label: confirmingTrip ? "만드는 중..." : "이대로 여행 만들기", onPress: handleConfirmTrip, disabled: confirmingTrip }
-        : {
-            label: "여행으로 만들기",
-            onPress: () => {
-              setTripTitle(title);
-              setShowTripForm(true);
-            },
-            disabled: false,
-          };
+  // 만든 여행이 없고 서버가 알아서 짜둔 초안이 준비됐으면, 수동으로 일정을 짜거나 여행을 만들라고 하지 않고 그 초안으로 보낸다.
+  const footer = !existingTrip && readyAutoDraft
+    ? { label: "준비된 일정 보기", onPress: () => navigation.navigate("PlanTrip", { draftId: readyAutoDraft.draftId }), disabled: false }
+    : !hasItinerary
+      ? { label: generating ? "일정 생성 중..." : "일정 짜기", onPress: handleGenerateItinerary, disabled: generating }
+      : existingTrip
+        ? // 이 영상으로 이미 만든 여행이 있으면 같은 곳으로 가는 카드를 따로 두지 않고 버튼에 여행 이름을 담는다.
+          { label: `만든 여행 보기 · ${existingTrip.title}`, onPress: () => navigation.navigate("TripDetail", { id: existingTrip.id }), disabled: false }
+        : showTripForm
+          ? { label: confirmingTrip ? "만드는 중..." : "이대로 여행 만들기", onPress: handleConfirmTrip, disabled: confirmingTrip }
+          : {
+              label: "여행으로 만들기",
+              onPress: () => {
+                setTripTitle(title);
+                setShowTripForm(true);
+              },
+              disabled: false,
+            };
 
   function renderFooter(props: BottomSheetFooterProps) {
     return (
