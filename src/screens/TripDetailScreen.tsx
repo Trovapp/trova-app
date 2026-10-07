@@ -160,12 +160,20 @@ export function TripDetailScreen({ route, navigation }: Props) {
   // 키보드가 뜨면 여백이 그려진 뒤(onContentSizeChange) 목록을 끝까지 내린다. 여백을 빼면 다시 가려졌다(시뮬레이터에서 확인).
   // 같은 원인으로 장소가 많은 날은 아래 장소가 시트 밖으로 잘려 스크롤로도 못 봤을 수 있다(목록이 시트 높이를 넘어 늘어났음).
   // DraggableFlatList의 ref는 gesture-handler FlatList 타입이라, 쓰는 scrollToOffset만 좁혀 둔다.
-  const listRef = useRef<{ scrollToOffset: (options: { offset: number; animated?: boolean }) => void } | null>(null);
+  const listRef = useRef<{
+    scrollToOffset: (options: { offset: number; animated?: boolean }) => void;
+    scrollToIndex: (options: { index: number; viewPosition?: number; animated?: boolean }) => void;
+  } | null>(null);
   // BottomSheetTextInput의 ref도 gesture-handler 타입이라, 쓰는 isFocused만 좁혀 둔다.
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollToSearchRef = useRef(false);
   const contentHeightRef = useRef(0);
   const searchInputRef = useRef<{ isFocused: () => boolean } | null>(null);
+  // 메모 입력창은 그 장소 줄 바로 아래에 열려서, 아래쪽 장소의 메모를 고치면 키보드에 가렸다(#134 QA, 영상 메모가 여러 줄이라 더 잘 보임).
+  // 검색창과 같은 방식으로, 키보드 여백이 붙은 뒤 고치는 장소를 목록 맨 위로 올린다. 입력창이 생길 때도 높이가 한 번 늘어나므로
+  // (로그로 확인) 키보드가 뜬 뒤에만 내린다.
+  const memoEditIndexRef = useRef<number | null>(null);
+  const scrollToMemoRef = useRef(false);
   useEffect(() => {
     const show = Keyboard.addListener("keyboardWillShow", (e) => {
       setKeyboardHeight(e.endCoordinates.height);
@@ -173,10 +181,14 @@ export function TripDetailScreen({ route, navigation }: Props) {
       // 늘린 아래 여백이 그려진 뒤에 내려야 해서(고정 시간 대기는 됐다 안 됐다 함), 목록 내용 높이가 바뀔 때 내린다.
       if (searchInputRef.current?.isFocused()) {
         scrollToSearchRef.current = true;
+      } else if (memoEditIndexRef.current !== null) {
+        scrollToMemoRef.current = true;
       }
     });
     const hide = Keyboard.addListener("keyboardWillHide", () => {
       scrollToSearchRef.current = false;
+      scrollToMemoRef.current = false;
+      memoEditIndexRef.current = null;
       setKeyboardHeight(0);
     });
     return () => {
@@ -554,6 +566,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
     } else {
       setMemoDraft(place.memo ?? "");
       setEditingField({ placeId: place.id, field: "memo" });
+      memoEditIndexRef.current = places.findIndex((p) => p.id === place.id);
     }
   }
 
@@ -599,9 +612,10 @@ export function TripDetailScreen({ route, navigation }: Props) {
                 </PressableScale>
               )}
               {place.memo && (
-                <PressableScale onPress={() => startEditing(place, "memo")} style={{ flexDirection: "row", alignItems: "center", gap: space.xxs, flexShrink: 1 }}>
-                  <Feather name="edit-3" size={12} color={colors.inkMuted} />
-                  <AppText style={{ flexShrink: 1, fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
+                // 영상에서 말한 내용이 "· 내용" 여러 줄로 들어온다(백엔드 #134) — 한 줄만 보이면 첫 줄만 남아서 3줄까지 보인다.
+                <PressableScale onPress={() => startEditing(place, "memo")} style={{ flexDirection: "row", alignItems: "flex-start", gap: space.xxs, flexBasis: "100%", flexShrink: 1 }}>
+                  <Feather name="edit-3" size={12} color={colors.inkMuted} style={{ marginTop: space.xxxs }} />
+                  <AppText style={{ flexShrink: 1, fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={3}>
                     {place.memo}
                   </AppText>
                 </PressableScale>
@@ -663,7 +677,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
           {editingField?.placeId === place.id && editingField.field === "memo" && (
             // 언제 저장되는지 안 보이고(리턴 키가 "↵"), 바깥을 눌러도 키보드가 안 닫혔다(디자인 QA K2·K3).
             // 안내 문구·"완료" 리턴 키·완료 버튼을 둔다. 저장은 지금처럼 입력이 끝날 때(blur) 한 번 한다.
-            <View style={{ marginTop: space.xs, flexDirection: "row", alignItems: "center", gap: space.xs }}>
+            <View style={{ marginTop: space.xs, flexDirection: "row", alignItems: "flex-end", gap: space.xs }}>
               <BottomSheetTextInput
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
                 autoFocus
@@ -671,6 +685,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
                 onChangeText={setMemoDraft}
                 placeholder="메모를 적고 완료를 누르세요"
                 placeholderTextColor={colors.inkMuted}
+                // 영상 메모처럼 여러 줄인 메모도 그대로 고칠 수 있게 여러 줄 입력. 리턴 키는 그대로 "완료"(줄바꿈 대신 닫기).
+                multiline
+                submitBehavior="blurAndSubmit"
                 returnKeyType="done"
                 onBlur={() => handleUpdateDetails(place.id, { memo: memoDraft })}
                 onSubmitEditing={() => Keyboard.dismiss()}
@@ -790,6 +807,11 @@ export function TripDetailScreen({ route, navigation }: Props) {
           scrollToSearchRef.current = false;
           // scrollToEnd는 이 목록(DraggableFlatList)에서 움직이지 않았다 — 위치를 직접 주는 scrollToOffset은 움직인다(로그·캡처로 확인).
           listRef.current?.scrollToOffset({ offset: h, animated: true });
+        } else if (scrollToMemoRef.current && memoEditIndexRef.current !== null && h > contentHeightRef.current) {
+          const index = memoEditIndexRef.current;
+          scrollToMemoRef.current = false;
+          memoEditIndexRef.current = null;
+          if (index >= 0) listRef.current?.scrollToIndex({ index, viewPosition: 0, animated: true });
         }
         contentHeightRef.current = h;
       }}
