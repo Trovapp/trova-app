@@ -43,6 +43,7 @@ import { colors, fontSize, radius, space, motion } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
 import { hitSlopFor } from "@/lib/touch";
+import { cleanVideoTitle } from "@/lib/videoTitle";
 
 type Props = NativeStackScreenProps<RootStackParamList, "VideoGroup">;
 
@@ -336,7 +337,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     );
   }
 
-  const title = group.find((p) => p.title)?.title ?? "제목 없음";
+  // 해시태그·채널명까지 그대로 보여 제목이 "#전주 #전주한옥…"으로 잘렸다(디자인 QA 2026-10-07) — 분석 화면과 같은 규칙으로 정리한다.
+  const rawTitle = group.find((p) => p.title)?.title ?? null;
+  const title = cleanVideoTitle(rawTitle) ?? rawTitle ?? "제목 없음";
   const visibleGroup = group.filter(matchesFilter);
 
   const filterChips = (

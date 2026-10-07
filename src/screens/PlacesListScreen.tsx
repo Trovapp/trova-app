@@ -22,6 +22,7 @@ import { colors, fontSize, radius, space } from "@/lib/theme";
 import { deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob, type Place } from "@/lib/api/places";
 import type { MainTabScreenProps } from "@/navigation/types";
 import { hitSlopFor } from "@/lib/touch";
+import { cleanVideoTitle } from "@/lib/videoTitle";
 
 type Props = MainTabScreenProps<"PlacesList">;
 
@@ -101,7 +102,7 @@ function PendingJobCard({
             {PLATFORM_LABEL[job.sourcePlatform]}
           </AppText>
           <AppText weight="medium" numberOfLines={1}>
-            {job.title ?? describeSourceUrl(job.sourceUrl)}
+            {cleanVideoTitle(job.title) ?? job.title ?? describeSourceUrl(job.sourceUrl)}
           </AppText>
         </View>
         {isFailed && (
@@ -167,7 +168,7 @@ function VideoGroupCard({
         <VideoThumb sourceUrl={group.sourceUrl} platform={group.sourcePlatform} />
         <View style={{ flex: 1, gap: space.xxxs }}>
           <AppText weight="medium" numberOfLines={1}>
-            {group.title ?? describeSourceUrl(group.sourceUrl)}
+            {cleanVideoTitle(group.title) ?? group.title ?? describeSourceUrl(group.sourceUrl)}
           </AppText>
           {/* 한글 미리보기에 mono 글꼴을 쓰면 한글이 대체 글꼴로 그려져 자간이 벌어졌다(2026-10-04 QA). */}
           <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ComponentProps } from "react";
-import { Alert, KeyboardAvoidingView, Platform, RefreshControl, ScrollView, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, RefreshControl, ScrollView, TextInput, useWindowDimensions, View } from "react-native";
 import { useScrollToTop } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
@@ -30,6 +30,10 @@ import { takePendingShare, usePendingShare } from "@/lib/pendingShare";
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"Home">;
+
+// 붙여넣기 버튼 기본 크기(입력칸 높이와 같음)와 큰 글자에서 키울 수 있는 최대 크기.
+const PASTE_BUTTON_SIZE = 52;
+const PASTE_BUTTON_MAX = 80;
 
 // 영상 기록/내 여행/저장 장소는 이제 하단 탭에 항상 떠 있어서(MainTabs) 홈에 따로
 // 버튼을 두지 않는다 — 웹 홈 대시보드(HomeDashboard.tsx)처럼 인사말 + 링크 입력 +
@@ -78,6 +82,10 @@ export function HomeScreen({ navigation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingShare]);
   const reducedMotion = useReducedMotion();
+  // iOS 기본 붙여넣기 버튼(UIPasteControl)은 아이콘을 글자 크기에 맞춰 키우는데, 버튼이 52로 고정이면 접근성 큰 글자에서
+  // 아이콘이 들어가지 않아 빈 하늘색 사각형으로 보였다(디자인 QA 2026-10-07, 시뮬레이터에서 단계별 확인).
+  const { fontScale } = useWindowDimensions();
+  const pasteButtonSize = Math.max(PASTE_BUTTON_SIZE, Math.min(PASTE_BUTTON_MAX, Math.round(fontScale * 26)));
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: listTrips });
@@ -130,11 +138,14 @@ export function HomeScreen({ navigation }: Props) {
   async function retryFailedJobs(failedSame: PendingJob[]) {
     const { jobId } = await resubmitFailedJob(failedSame[0]);
     await Promise.allSettled(failedSame.slice(1).map((job) => deletePendingJob(job.jobId)));
+    setUrl("");
     navigation.navigate("Processing", { jobId });
   }
 
   // 서버가 이미 분석한 영상이라고 알려주면(앱의 확인이 놓친 경우) 분석 화면을 거치지 않고 결과로 바로 간다.
   function openShareResult(jobId: number, alreadyAnalyzed?: boolean) {
+    // 제출한 링크가 홈 입력칸에 그대로 남아 다음 링크를 넣을 때 지워야 했다(디자인 QA 2026-10-07).
+    setUrl("");
     if (alreadyAnalyzed) {
       navigation.navigate("VideoGroup", { jobId });
       return;
@@ -188,6 +199,7 @@ export function HomeScreen({ navigation }: Props) {
 
       // 1) 아직 분석 중 → 새로 만들지 않고 그 진행 화면으로.
       if (sameJob && sameJob.status !== "FAILED") {
+        setUrl("");
         navigation.navigate("Processing", { jobId: sameJob.jobId });
         return;
       }
@@ -282,7 +294,7 @@ export function HomeScreen({ navigation }: Props) {
                   cornerStyle="medium"
                   backgroundColor={colors.accentBg}
                   foregroundColor={colors.accent}
-                  style={{ width: 52, height: 52 }}
+                  style={{ width: pasteButtonSize, height: pasteButtonSize }}
                   onPress={(data) => {
                     if (data.type !== "text") return;
                     const pasted = extractFirstUrl(data.text);
@@ -346,7 +358,7 @@ export function HomeScreen({ navigation }: Props) {
 
         {bookmarksQuery.isLoading ? (
           <View style={{ gap: space.sm }}>
-            <Skeleton style={{ width: 100, height: 17 }} />
+            <Skeleton style={{ width: 68, height: 68 }} />
             <Skeleton style={{ width: "100%", height: 160, borderRadius: radius.md }} />
           </View>
         ) : bookmarksQuery.isError && !bookmarksQuery.data ? (
