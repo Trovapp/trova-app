@@ -794,7 +794,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
       selectedId={reviewTarget?.kind === "tripPlace" ? String(reviewTarget.id) : null}
     />
     {/* 시트 안 목록은 끌어서 순서를 바꾼다 — 목록을 끌 때 시트까지 움직이지 않게 시트는 위쪽 손잡이로만 움직인다. */}
-    <BottomSheet index={1} snapPoints={SHEET_SNAP_POINTS} enableDynamicSizing={false} enableContentPanningGesture={false}>
+    <BottomSheet index={1} snapPoints={SHEET_SNAP_POINTS} enableDynamicSizing={false} enableContentPanningGesture={false}
+      backgroundStyle={{ backgroundColor: colors.bg }}
+      handleIndicatorStyle={{ backgroundColor: colors.border }}>
     {/* BottomSheetView는 내용 높이만큼 늘어나 목록이 스크롤되지 않고 아래가 잘렸다(로그: 목록 높이 = 내용 높이). 시트 높이에 맞추는 View를 쓴다(디자인 QA K1). */}
     <View style={{ flex: 1 }}>
     <DraggableFlatList keyboardShouldPersistTaps="handled"

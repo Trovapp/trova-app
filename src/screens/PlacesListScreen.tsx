@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type ComponentProps } from "react";
-import { Alert, FlatList, RefreshControl, View } from "react-native";
+import { Alert, FlatList, RefreshControl, TextInput, View } from "react-native";
 import { useScrollToTop } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
-import { AppText } from "@/components/AppText";
+import { AppText, FONT, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
 import { PressableRow } from "@/components/PressableRow";
 import { PressableScale } from "@/components/PressableScale";
@@ -23,6 +23,7 @@ import { deletePendingJob, getPendingJobs, getPlaces, resubmitFailedJob, type Pe
 import type { MainTabScreenProps } from "@/navigation/types";
 import { hitSlopFor } from "@/lib/touch";
 import { cleanVideoTitle } from "@/lib/videoTitle";
+import { formatSavedAgo } from "@/lib/date";
 
 type Props = MainTabScreenProps<"PlacesList">;
 
@@ -32,8 +33,19 @@ type VideoGroup = {
   title: string | null;
   sourceUrl: string;
   sourcePlatform: Place["sourcePlatform"];
+  createdAt: string;
   places: Place[];
 };
+
+// 영상이 쌓이면 원하는 영상을 찾기 어려웠다(페르소나 QA 2026-10-08, "저장만 쌓아 두는 사람") — 이만큼 넘으면 검색창을 보인다.
+const SEARCH_MIN_VIDEOS = 6;
+
+function matchesQuery(group: VideoGroup, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const text = [group.title ?? "", ...group.places.map((p) => `${p.placeName} ${p.region ?? ""} ${p.address ?? ""}`)].join(" ").toLowerCase();
+  return text.includes(q);
+}
 
 // 장소 하나하나가 아니라 "영상 하나"를 목록의 기본 단위로 삼는다 — 영상 한 편에서
 // 장소가 여러 곳 나오면 예전엔 그 개수만큼 똑같은 목적지(VideoGroup 화면)로 가는
@@ -51,6 +63,7 @@ function groupByVideo(places: Place[]): VideoGroup[] {
         title: place.title,
         sourceUrl: place.sourceUrl,
         sourcePlatform: place.sourcePlatform,
+        createdAt: place.createdAt,
         places: [place],
       });
     }
@@ -71,11 +84,13 @@ function PendingJobCard({
   job,
   onDelete,
   onRetry,
+  onAddOther,
 }: {
   job: PendingJob;
   onDelete: (jobId: number) => void;
   // 추출 단계 실패일 때만 넘어온다(일정 생성 실패는 링크 재제출 대상이 아님).
   onRetry?: (job: PendingJob) => void;
+  onAddOther?: () => void;
 }) {
   const isFailed = job.status === "FAILED";
   // 백엔드가 진짜로 도달한 파이프라인 단계만 반영한다 — 아직 EXTRACTING도 시작 전(PENDING)이면
@@ -122,7 +137,6 @@ function PendingJobCard({
       </View>
       <View style={{ marginTop: space.xxs, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <AppText style={{ fontSize: fontSize.caption1, color: isFailed ? colors.accent : colors.inkMuted }}>{message}</AppText>
-        {/* 장소를 못 찾은 영상은 다시 해도 결과가 같아서 다시 시도를 두지 않는다(삭제로 정리). */}
         {isFailed && !noPlaces && onRetry && (
           <PressableScale onPress={() => onRetry(job)} hitSlop={10}>
             <AppText weight="medium" style={{ fontSize: fontSize.caption1, color: colors.ink }}>
@@ -131,6 +145,35 @@ function PendingJobCard({
           </PressableScale>
         )}
       </View>
+      {/* 장소를 못 찾았다는 말만 있고 이유도 다음 행동도 없었다(페르소나 QA "분석 실패를 겪은 사람"). 같은 영상은 다시 해도
+          결과가 같을 때가 많아 "다른 영상 넣기"를 먼저, 그래도 해 보고 싶으면 확인 후 다시 분석. */}
+      {noPlaces && (
+        <View style={{ marginTop: space.xs, gap: space.xs }}>
+          <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
+            장소 이름이 화면·자막·설명에 나오지 않는 영상이면 찾기 어려워요. 장소를 소개하는 다른 영상을 넣어 보세요.
+          </AppText>
+          <View style={{ flexDirection: "row", gap: space.md }}>
+            {onAddOther && (
+              <PressableScale onPress={onAddOther} hitSlop={10}>
+                <AppText weight="medium" style={{ fontSize: fontSize.caption1, color: colors.accent }}>다른 영상 넣기</AppText>
+              </PressableScale>
+            )}
+            {onRetry && (
+              <PressableScale
+                onPress={() =>
+                  Alert.alert("다시 분석할까요?", "같은 영상은 다시 해도 장소를 찾지 못할 수 있어요.", [
+                    { text: "취소", style: "cancel" },
+                    { text: "다시 분석", onPress: () => onRetry(job) },
+                  ])
+                }
+                hitSlop={10}
+              >
+                <AppText weight="medium" style={{ fontSize: fontSize.caption1, color: colors.ink }}>다시 분석</AppText>
+              </PressableScale>
+            )}
+          </View>
+        </View>
+      )}
       {!isFailed && (
         <View style={{ marginTop: space.sm }}>
           <ProgressBar percent={percent} />
@@ -172,7 +215,8 @@ function VideoGroupCard({
           </AppText>
           {/* 한글 미리보기에 mono 글꼴을 쓰면 한글이 대체 글꼴로 그려져 자간이 벌어졌다(2026-10-04 QA). */}
           <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
-            {placePreview(group.places)}
+            {/* 언제 저장했는지 먼저 — 비슷한 제목의 영상이 쌓이면 날짜로 구분한다(페르소나 QA). */}
+            {[formatSavedAgo(group.createdAt), placePreview(group.places)].filter(Boolean).join(" · ")}
           </AppText>
         </View>
         <Feather name="chevron-right" size={18} color={colors.inkMuted} />
@@ -218,6 +262,7 @@ export function PlacesListScreen({ navigation }: Props) {
   }
 
   const [retryingJobId, setRetryingJobId] = useState<number | null>(null);
+  const [query, setQuery] = useState("");
 
   async function handleRetryJob(job: PendingJob) {
     if (retryingJobId !== null) return;
@@ -268,7 +313,8 @@ export function PlacesListScreen({ navigation }: Props) {
 
   const places = placesQuery.data ?? [];
   const pendingJobs = pendingQuery.data ?? [];
-  const videoGroups = groupByVideo(places);
+  const allGroups = groupByVideo(places);
+  const videoGroups = allGroups.filter((group) => matchesQuery(group, query));
 
   return (
     <FlatList
@@ -277,9 +323,27 @@ export function PlacesListScreen({ navigation }: Props) {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       data={videoGroups}
       keyExtractor={(item) => String(item.jobId)}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
       ListHeaderComponent={
-        placesQuery.isError || pendingJobs.length > 0 ? (
+        placesQuery.isError || pendingJobs.length > 0 || allGroups.length >= SEARCH_MIN_VIDEOS ? (
           <View style={{ gap: space.sm, marginBottom: space.lg }}>
+            {allGroups.length >= SEARCH_MIN_VIDEOS && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs, minHeight: 40, paddingHorizontal: space.sm, borderRadius: radius.md, backgroundColor: colors.bgMuted }}>
+                <Feather name="search" size={16} color={colors.inkMuted} />
+                <TextInput
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder="영상 제목·장소·지역으로 찾기"
+                  placeholderTextColor={colors.inkMuted}
+                  returnKeyType="search"
+                  clearButtonMode="while-editing"
+                  selectionColor={colors.accent}
+                  style={{ flex: 1, paddingVertical: space.xs, fontFamily: FONT.regular, color: colors.ink }}
+                />
+              </View>
+            )}
             {placesQuery.isError && <StaleNotice onRetry={() => placesQuery.refetch()} />}
             {pendingJobs.map((job) => (
               <PendingJobCard
@@ -287,6 +351,7 @@ export function PlacesListScreen({ navigation }: Props) {
                 job={job}
                 onDelete={handleDeleteJob}
                 onRetry={places.some((place) => place.jobId === job.jobId) ? undefined : handleRetryJob}
+                onAddOther={() => navigation.navigate("Home")}
               />
             ))}
             {deleteError && <ErrorText>{deleteError}</ErrorText>}
@@ -295,7 +360,11 @@ export function PlacesListScreen({ navigation }: Props) {
       }
       ListEmptyComponent={
         // 처리 중인 영상이 있으면 "링크 넣으러 가기"는 어색하다 — 곧 여기에 나타난다고만 안내.
-        pendingJobs.length > 0 ? (
+        allGroups.length > 0 ? (
+          <AppText style={{ textAlign: "center", marginTop: space.md, color: colors.inkMuted }}>
+            "{query.trim()}"에 맞는 영상이 없어요.
+          </AppText>
+        ) : pendingJobs.length > 0 ? (
           <AppText style={{ textAlign: "center", marginTop: space.md, color: colors.inkMuted }}>
             처리가 끝나면 영상이 여기에 표시돼요.
           </AppText>

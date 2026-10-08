@@ -306,7 +306,11 @@ export function SavedPlacesScreen() {
           numbered={pinsNumbered}
           selectedId={reviewPlaceId !== null ? String(reviewPlaceId) : null} />
 
-        <BottomSheet index={1} snapPoints={snapPoints} enableDynamicSizing={false}>
+        <BottomSheet index={1} snapPoints={snapPoints} enableDynamicSizing={false}
+          backgroundStyle={{ backgroundColor: colors.bg }}
+
+          handleIndicatorStyle={{ backgroundColor: colors.border }}
+>
         {reviewPlaceId !== null ? (
           // 네이버 지도처럼: 장소 정보를 별도 모달이 아니라 이 바텀시트 안에서 보여준다 —
           // 그래야 시트 밖(지도) 영역이 계속 터치되고, 시트를 살짝 내려도(스냅포인트만

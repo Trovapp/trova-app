@@ -373,6 +373,8 @@ export function ConversationSheet({
       enableDynamicSizing={false}
       enablePanDownToClose
       onClose={handleSheetClose}
+      backgroundStyle={{ backgroundColor: colors.bg }}
+      handleIndicatorStyle={{ backgroundColor: colors.border }}
     >
       <BottomSheetScrollView keyboardShouldPersistTaps="handled" ref={scrollRef} contentContainerStyle={{ padding: space.lg, gap: space.md }}>
         {reviewCandidateId !== null ? (

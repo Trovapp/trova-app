@@ -49,3 +49,18 @@ export function formatDateLabel(date: Date, now: Date = new Date()): string {
   const year = date.getFullYear() !== now.getFullYear() ? `${date.getFullYear()}년 ` : "";
   return `${year}${date.getMonth() + 1}월 ${date.getDate()}일 (${WEEKDAYS[date.getDay()]})`;
 }
+
+// 저장한 때를 짧게: "오늘", "어제", "3일 전", "2주 전", "9월 25일"(한 달 넘으면 날짜). 영상 기록에서 언제 저장했는지 보여 준다.
+export function formatSavedAgo(iso: string, now: Date = new Date()): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const dayMs = 24 * 60 * 60 * 1000;
+  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOf(now) - startOf(d)) / dayMs);
+  if (days <= 0) return "오늘";
+  if (days === 1) return "어제";
+  if (days < 7) return `${days}일 전`;
+  if (days < 31) return `${Math.floor(days / 7)}주 전`;
+  const year = d.getFullYear() !== now.getFullYear() ? `${d.getFullYear()}년 ` : "";
+  return `${year}${d.getMonth() + 1}월 ${d.getDate()}일`;
+}

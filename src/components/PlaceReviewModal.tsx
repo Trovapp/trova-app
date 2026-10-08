@@ -370,6 +370,8 @@ export function PlaceReviewSheet({
       onClose={() => {
         onClose();
       }}
+      backgroundStyle={{ backgroundColor: colors.bg }}
+      handleIndicatorStyle={{ backgroundColor: colors.border }}
     >
       <BottomSheetScrollView contentContainerStyle={{ padding: space.lg, gap: space.sm }}>
         <SheetCloseButton onPress={() => sheetRef.current?.close()} style={{ alignSelf: "flex-end" }} />

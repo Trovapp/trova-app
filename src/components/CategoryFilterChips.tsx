@@ -56,8 +56,8 @@ export function CategoryFilterChips({
               backgroundColor: selected ? colors.ink : colors.bg,
             }}
           >
-            {chip.icon && <MaterialCommunityIcons name={chip.icon} size={14} color={selected ? colors.onAccent : colors.inkMuted} />}
-            <AppText weight={selected ? "medium" : "regular"} style={{ fontSize: fontSize.footnote, color: selected ? colors.onAccent : colors.ink }}>
+            {chip.icon && <MaterialCommunityIcons name={chip.icon} size={14} color={selected ? colors.onInk : colors.inkMuted} />}
+            <AppText weight={selected ? "medium" : "regular"} style={{ fontSize: fontSize.footnote, color: selected ? colors.onInk : colors.ink }}>
               {chip.label} {chip.count}
             </AppText>
           </PressableScale>

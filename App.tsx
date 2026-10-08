@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { AppState, useWindowDimensions } from "react-native";
+import { AppState, useColorScheme, useWindowDimensions } from "react-native";
 import { useFonts as useMonoFonts, IBMPlexMono_400Regular, IBMPlexMono_500Medium } from "@expo-google-fonts/ibm-plex-mono";
 import { useFonts as useEmojiFonts, useFonts as useSansFonts } from "expo-font";
 import { FONT } from "@/components/AppText";
@@ -8,7 +8,8 @@ import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { NavigationContainer, type NavigationState } from "@react-navigation/native";
+import { DarkTheme, DefaultTheme, NavigationContainer, type NavigationState, type Theme } from "@react-navigation/native";
+import { colors, setColorScheme } from "@/lib/theme";
 import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { shouldRetryQuery } from "@/lib/api/client";
@@ -41,6 +42,14 @@ export default function App() {
   // 커진 글자가 잘렸다(디자인 QA D1 — 테스트 시뮬레이터에서 재현: 보던 화면과 새로 여는 화면은 정상, 숨어 있던 화면만 잘림).
   // 글자 배율이 바뀌면 화면들을 새로 그리되, 보던 위치(내비게이션 상태)는 그대로 되살린다. 입력 중이던 값은 사라진다.
   const { fontScale } = useWindowDimensions();
+  // 화면 모드(라이트/다크): 바뀌면 글자 배율과 같은 방식으로 화면을 새로 그린다(보던 위치는 유지).
+  const scheme = useColorScheme() === "dark" ? "dark" : "light";
+  setColorScheme(scheme);
+  const base = scheme === "dark" ? DarkTheme : DefaultTheme;
+  const navTheme: Theme = {
+    ...base,
+    colors: { ...base.colors, primary: colors.accent, background: colors.bgMuted, card: colors.bg, text: colors.ink, border: colors.border },
+  };
   const navState = useRef<NavigationState | undefined>(undefined);
   const [monoFontsLoaded] = useMonoFonts({
     IBMPlexMono_400Regular,
@@ -75,7 +84,7 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <SafeAreaProvider>
-            <StatusBar style="dark" />
+            <StatusBar style={scheme === "dark" ? "light" : "dark"} />
             {/* BottomSheetModal(드래그로 닫히는 시트)을 화면 어디서든 present()로 띄우려면
                 루트에 한 번만 이 Provider가 있으면 된다 — SavedPlacesScreen의 상시 마운트된
                 BottomSheet와 달리, DayPickerSheet 등 필요할 때만 뜨는 시트들이 이걸 쓴다. */}
@@ -83,7 +92,8 @@ export default function App() {
               <BottomSheetModalProvider>
                 <NavigationContainer
                   ref={navigationRef}
-                  key={fontScale}
+                  key={`${fontScale}-${scheme}`}
+                  theme={navTheme}
                   initialState={navState.current}
                   onStateChange={(state) => {
                     navState.current = state;

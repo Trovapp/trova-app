@@ -77,7 +77,7 @@ function IntroPage({ onNext, onSkip }: { onNext: () => void; onSkip: () => void 
           {"보기만 했던 여행 영상을\n내 지도로"}
         </AppText>
         <AppText style={{ fontSize: fontSize.subheadline, lineHeight: 22, color: colors.inkMuted }}>
-          {"영상 링크만 넣으면 AI가 나온 장소를 찾아\n지도와 일정으로 정리해드려요"}
+          {"Trova로 공유만 해 두면 AI가 장소를 찾아\n일정까지 짜 둘게요"}
         </AppText>
       </Animated.View>
 
@@ -119,10 +119,10 @@ function DemoPage({ onBack, onDone }: { onBack: () => void; onDone: () => void }
 
       <View style={{ gap: space.xs, marginTop: space.xl }}>
         <AppText weight="bold" style={{ fontSize: fontSize.title2, lineHeight: 30 }}>
-          {"링크만 넣으면\n장소를 찾아드려요"}
+          {"공유만 하면\n일정까지 짜 둘게요"}
         </AppText>
         <AppText style={{ fontSize: fontSize.subheadline, color: colors.inkMuted }}>
-          영상에서 링크를 복사해 Trova에 붙여넣으면 끝이에요
+          영상의 공유 버튼에서 Trova를 고르면 끝이에요. 링크를 복사해 붙여넣어도 돼요
         </AppText>
       </View>
 

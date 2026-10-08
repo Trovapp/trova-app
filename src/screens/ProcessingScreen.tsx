@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -333,9 +333,14 @@ export function ProcessingProgressView({
   // 제목을 아직 모르거나 못 가져왔으면 단계 팁을 그대로 보여준다.
   const videoLabel = title ? cleanVideoTitle(title) ?? (sourceUrl ? sourceKindLabel(sourceUrl) : null) : null;
   const found = foundPlaceNames.length > 0;
+  // 접근성 큰 글자에서는 아래 설명 카드까지 다 보이면 위쪽 제목이 잘렸다(페르소나 QA 재검증) — 카드는 단계 이름만 남긴다.
+  const { fontScale } = useWindowDimensions();
+  const compact = fontScale > 1.3;
   return (
     <>
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: space.sm }}>
+      {/* 큰 글자에서 위쪽 내용이 남은 높이를 넘쳐 영상 제목이 아래 분석 카드 뒤로 가려졌다(페르소나 QA 2026-10-08) —
+          위쪽을 스크롤 영역으로 두어 넘치면 스크롤되게 하고, 공간이 넉넉하면 지금처럼 가운데에 둔다. */}
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", gap: space.sm, paddingBottom: space.md }} showsVerticalScrollIndicator={false}>
         <Orb state={found ? "arrived" : STAGE_ORB[stage]} size={140} />
         <ProgressHero percent={percent} ceiling={nextCeiling(percent)} creepMs={STAGE_CREEP_MS[stage]} showCards={false} />
         <AppText weight="medium" style={{ fontSize: fontSize.title3, textAlign: "center" }}>
@@ -366,11 +371,11 @@ export function ProcessingProgressView({
             <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>{STAGE_TIP[stage]}</AppText>
           </View>
         )}
-      </View>
+      </ScrollView>
 
       <View
         style={{
-          padding: space.lg,
+          padding: compact ? space.sm : space.lg,
           borderRadius: radius.lg,
           borderWidth: 1,
           borderColor: colors.border,
@@ -382,7 +387,7 @@ export function ProcessingProgressView({
         <AppText weight="medium" style={{ fontSize: fontSize.subheadline }}>
           {analysis.title}
         </AppText>
-        <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, lineHeight: 19 }}>{analysis.description}</AppText>
+        {!compact && <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, lineHeight: 19 }}>{analysis.description}</AppText>}
       </View>
 
       {/* 처리는 서버에서 비동기로 도는데, 안내가 없으면 12~40초(실측) 동안 이 화면을 지켜봐야 한다고 느끼기 쉽다. */}
