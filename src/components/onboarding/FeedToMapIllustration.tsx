@@ -109,7 +109,7 @@ function VideoCard() {
         width: CARD_WIDTH,
         height: CARD_HEIGHT,
         borderRadius: radius.lg,
-        backgroundColor: colors.ink,
+        backgroundColor: colors.media,
         padding: space.sm,
         justifyContent: "space-between",
         transform: [{ rotate: "-5deg" }],

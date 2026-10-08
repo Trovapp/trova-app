@@ -50,7 +50,7 @@ export function LoginScreen() {
           Trova
         </AppText>
         <AppText style={{ marginTop: space.xs, fontSize: fontSize.subheadline, color: colors.inkMuted, textAlign: "center" }}>
-          여행 영상 속 장소를 지도로 옮겨드려요
+          여행 영상을 공유만 하면 장소와 일정까지 정리해드려요
         </AppText>
       </View>
 

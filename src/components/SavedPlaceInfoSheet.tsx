@@ -91,6 +91,8 @@ export function SavedPlaceInfoSheet({
       backdropComponent={(props: BottomSheetBackdropProps) => (
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.3} pressBehavior="close" />
       )}
+      backgroundStyle={{ backgroundColor: colors.bg }}
+      handleIndicatorStyle={{ backgroundColor: colors.border }}
     >
       <BottomSheetView style={{ padding: space.lg, paddingBottom: space.xxl, gap: space.md }}>
         <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.sm }}>

@@ -266,7 +266,7 @@ export function PlanTripScreen({ navigation, route }: Props) {
                     backgroundColor: on ? colors.ink : colors.bg,
                   }}
                 >
-                  <AppText weight={on ? "medium" : "regular"} style={{ fontSize: fontSize.footnote, color: on ? colors.onAccent : colors.ink }}>
+                  <AppText weight={on ? "medium" : "regular"} style={{ fontSize: fontSize.footnote, color: on ? colors.onInk : colors.ink }}>
                     {chip}
                   </AppText>
                 </PressableScale>
@@ -518,7 +518,8 @@ function Review({
                   }}
                 >
                   {/* 시간만 다른 글꼴(IBM Plex Mono)로 보였다(2026-10-04 QA) — 여행 상세처럼 Pretendard + 고정폭 숫자로 맞춘다. */}
-                  <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, width: 44, fontVariant: ["tabular-nums"] }}>
+                  {/* 폭을 44로 고정해 큰 글자에서 "09:0 / 0" 두 줄로 깨졌다(페르소나 QA 2026-10-08) — 최소 폭만 두고 한 줄로. */}
+                  <AppText numberOfLines={1} style={{ fontSize: fontSize.footnote, color: colors.inkMuted, minWidth: 44, flexShrink: 0, fontVariant: ["tabular-nums"] }}>
                     {item.start}
                   </AppText>
                   <MaterialCommunityIcons name={group.icon} size={16} color={colors.inkMuted} accessibilityLabel={group.label} />

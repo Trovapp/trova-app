@@ -17,10 +17,11 @@ import { colors, fontSize, radius, space } from "@/lib/theme";
 
 // 온보딩 따라하기 데모(2026-10). 참고: Plotline 온보딩의 "Share it. We'll grab the places." —
 // 플랫폼 탭을 고르면 휴대폰 화면 안에서 단계가 저절로 넘어가며 사용법을 보여준다.
-// Trova에는 공유 시트로 링크를 받는 기능이 없어서 "공유 → 링크 복사 → Trova에 붙여넣기"를 보여준다.
+// 공유 확장(expo-share-intent)이 생긴 뒤에도 "링크 복사 → 붙여넣기"만 안내했다(페르소나 QA 2026-10-08, 처음 쓰는 사람) —
+// 실제로 가장 쉬운 "공유 → Trova 고르기 → 일정까지 자동"을 보여 주고, 마지막 장면에서 결과(준비된 일정)를 미리 보여 준다.
 export type DemoPlatform = "instagram" | "youtube";
 
-export const DEMO_STEPS = ["공유 누르기", "링크 복사", "Trova에 붙여넣기"] as const;
+export const DEMO_STEPS = ["공유 누르기", "Trova 고르기", "일정까지 자동"] as const;
 export const DEMO_STEP_MS = 2600;
 
 const PLATFORM = {
@@ -54,7 +55,7 @@ function TapRing({ size, width, height, round = radius.full }: { size?: number; 
 function ShareStep({ platform }: { platform: DemoPlatform }) {
   const p = PLATFORM[platform];
   return (
-    <View style={{ flex: 1, backgroundColor: colors.ink, padding: space.sm, justifyContent: "space-between" }}>
+    <View style={{ flex: 1, backgroundColor: colors.media, padding: space.sm, justifyContent: "space-between" }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
         <Feather name={p.icon} size={12} color={colors.onAccent} />
         <AppText style={{ fontSize: fontSize.caption2, color: colors.onAccent }}>{platform === "instagram" ? "릴스" : "쇼츠"}</AppText>
@@ -89,9 +90,9 @@ function CopyLinkStep() {
         </AppText>
         <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
           {[
-            { icon: "link" as const, label: "링크 복사", target: true },
+            { icon: "map-pin" as const, label: "Trova", target: true },
+            { icon: "link" as const, label: "링크 복사", target: false },
             { icon: "message-square" as const, label: "메시지", target: false },
-            { icon: "more-horizontal" as const, label: "더보기", target: false },
           ].map((item) => (
             <View key={item.label} style={{ alignItems: "center", gap: space.xxs }}>
               <View
@@ -116,32 +117,37 @@ function CopyLinkStep() {
   );
 }
 
-function PasteStep({ platform }: { platform: DemoPlatform }) {
+// 3단계: 공유만 해 두면 분석이 끝난 뒤 일정까지 짜 둔다 — 로그인 전에 결과가 어떤 모습인지 미리 보여 준다.
+function ResultStep({ platform }: { platform: DemoPlatform }) {
+  const rows = [
+    { time: "11:00", name: "해운대 돼지국밥", note: "· 오전에 가면 줄이 짧다" },
+    { time: "13:00", name: "흰여울 문화마을", note: "· 바다 보이는 골목 산책" },
+    { time: "15:30", name: "광안리 카페", note: "· 창가 자리에서 다리 보기" },
+  ];
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg, padding: space.sm, gap: space.xs, justifyContent: "center" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg, padding: space.sm, gap: space.xs }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs, padding: space.xs, borderRadius: radius.sm, backgroundColor: colors.accentBg }}>
+        <Feather name="calendar" size={12} color={colors.accent} />
+        <AppText weight="medium" style={{ fontSize: fontSize.caption2, color: colors.ink, flex: 1 }} numberOfLines={1}>
+          일정이 준비됐어요
+        </AppText>
+        <AppText weight="medium" style={{ fontSize: fontSize.caption2, color: colors.accent }}>보기 ›</AppText>
+      </View>
       <AppText weight="bold" style={{ fontSize: fontSize.footnote }}>
-        어디로 떠나볼까요?
+        부산 당일치기
       </AppText>
-      <View
-        style={{
-          height: 32,
-          borderRadius: radius.sm,
-          borderWidth: 1,
-          borderColor: colors.accent,
-          paddingHorizontal: space.xs,
-          justifyContent: "center",
-        }}
-      >
-        <AppText style={{ fontSize: fontSize.caption2 }} numberOfLines={1}>
-          {PLATFORM[platform].url}
-        </AppText>
-      </View>
-      <View style={{ height: 32, borderRadius: radius.sm, backgroundColor: colors.accent, justifyContent: "center", alignItems: "center" }}>
-        <TapRing width="100%" height={32} round={radius.sm} />
-        <AppText weight="medium" style={{ fontSize: fontSize.caption1, color: colors.onAccent }}>
-          장소 추출하기
-        </AppText>
-      </View>
+      {rows.map((r) => (
+        <View key={r.name} style={{ flexDirection: "row", gap: space.xs }}>
+          <AppText style={{ fontSize: fontSize.caption2, color: colors.inkMuted, width: 34 }}>{r.time}</AppText>
+          <View style={{ flex: 1 }}>
+            <AppText weight="medium" style={{ fontSize: fontSize.caption1 }} numberOfLines={1}>{r.name}</AppText>
+            <AppText style={{ fontSize: fontSize.caption2, color: colors.inkMuted }} numberOfLines={1}>{r.note}</AppText>
+          </View>
+        </View>
+      ))}
+      <AppText style={{ fontSize: fontSize.caption2, color: colors.inkMuted, marginTop: "auto" }} numberOfLines={2}>
+        {PLATFORM[platform].label} 영상에서 말한 내용이 장소마다 메모로 들어가요
+      </AppText>
     </View>
   );
 }
@@ -194,15 +200,15 @@ export function LinkPasteDemo({
           height: 340,
           borderRadius: 28 /* 토큰 예외: 휴대폰 모서리를 흉내 낸 그림 */,
           borderWidth: 6,
-          borderColor: colors.ink,
+          borderColor: colors.media,
           overflow: "hidden",
-          backgroundColor: colors.ink,
+          backgroundColor: colors.media,
         }}
       >
         <Animated.View key={`${platform}-${step}`} entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={{ flex: 1 }}>
           {step === 0 && <ShareStep platform={platform} />}
           {step === 1 && <CopyLinkStep />}
-          {step === 2 && <PasteStep platform={platform} />}
+          {step === 2 && <ResultStep platform={platform} />}
         </Animated.View>
       </View>
 

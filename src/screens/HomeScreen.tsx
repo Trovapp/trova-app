@@ -20,7 +20,8 @@ import { dismissTripDraft, listAutoDrafts } from "@/lib/api/tripDrafts";
 import { ReadyDraftCard } from "@/components/ReadyDraftCard";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
-import { formatTripDates, toDateString } from "@/lib/date";
+import { formatSavedAgo, formatTripDates, toDateString } from "@/lib/date";
+import { cleanVideoTitle } from "@/lib/videoTitle";
 import { groupTripsByDate } from "@/lib/tripSections";
 import { toUserMessage } from "@/lib/api/client";
 import { colors, fontSize, radius, space, motion } from "@/lib/theme";
@@ -96,10 +97,14 @@ export function HomeScreen({ navigation }: Props) {
     queryFn: listAutoDrafts,
     refetchInterval: (query) => (query.state.data?.some((d) => d.status !== "READY") ? 5000 : false),
   });
+  // 쌓인 영상으로 가는 길이 탭 이동뿐이었고, 분석 실패는 영상 기록 탭에서만 보였다(페르소나 QA 2026-10-08) —
+  // 홈에 최근 저장한 영상과 실패 안내를 둔다. 둘 다 영상 기록 탭과 같은 캐시를 쓴다.
+  const placesQuery = useQuery({ queryKey: ["places"], queryFn: getPlaces });
+  const pendingQuery = useQuery({ queryKey: ["pendingJobs"], queryFn: getPendingJobs });
   const queryClient = useQueryClient();
   const refetchAll = useCallback(
-    () => Promise.all([bookmarksQuery.refetch(), tripsQuery.refetch(), autoDraftsQuery.refetch()]),
-    [bookmarksQuery.refetch, tripsQuery.refetch, autoDraftsQuery.refetch]
+    () => Promise.all([bookmarksQuery.refetch(), tripsQuery.refetch(), autoDraftsQuery.refetch(), placesQuery.refetch(), pendingQuery.refetch()]),
+    [bookmarksQuery.refetch, tripsQuery.refetch, autoDraftsQuery.refetch, placesQuery.refetch, pendingQuery.refetch]
   );
   const { refreshing, onRefresh } = usePullToRefresh(refetchAll);
   const [draftDismissError, setDraftDismissError] = useState<string | null>(null);
@@ -128,6 +133,16 @@ export function HomeScreen({ navigation }: Props) {
   const tripSections = groupTripsByDate(tripsQuery.data ?? [], toDateString(new Date()));
   const homeTripSection = tripSections.find((s) => s.title === "다가오는 여행") ?? tripSections.find((s) => s.title === "지난 여행");
   const recentTrips = (homeTripSection?.data ?? []).slice(0, 3);
+  const failedJobs = (pendingQuery.data ?? []).filter((job) => job.status === "FAILED");
+  const recentVideos = (() => {
+    const seen = new Map<number, { jobId: number; title: string; createdAt: string; count: number }>();
+    for (const place of placesQuery.data ?? []) {
+      const v = seen.get(place.jobId);
+      if (v) v.count += 1;
+      else seen.set(place.jobId, { jobId: place.jobId, title: cleanVideoTitle(place.title) ?? place.title ?? "제목 없음", createdAt: place.createdAt, count: 1 });
+    }
+    return Array.from(seen.values());
+  })();
   const recentTripsTitle = homeTripSection?.title === "다가오는 여행" ? "다가오는 여행" : "최근 여행";
   // 찜도 여행도 없는 처음 사용자는 "찜한 장소"·"최근 여행" 섹션이 모두 사라져 입력창만 남는다 —
   // 이 앱이 뭘 해주는지, 링크를 어디서 가져오는지 알려준다(둘 다 불러오기에 성공했을 때만).
@@ -344,6 +359,25 @@ export function HomeScreen({ navigation }: Props) {
           weatherBanner
         )}
 
+        {failedJobs.length > 0 && (
+          <PressableScale
+            onPress={() => navigation.navigate("PlacesList")}
+            accessibilityRole="button"
+            style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.sm, borderRadius: radius.md, backgroundColor: colors.bgMuted }}
+          >
+            <Feather name="alert-circle" size={18} color={colors.accent} />
+            <View style={{ flex: 1, gap: space.xxxs }}>
+              <AppText weight="medium" style={{ fontSize: fontSize.footnote }}>
+                분석하지 못한 영상이 {failedJobs.length}개 있어요
+              </AppText>
+              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={1}>
+                {cleanVideoTitle(failedJobs[0].title) ?? failedJobs[0].title ?? "영상"} — 이유와 다음 방법 보기
+              </AppText>
+            </View>
+            <Feather name="chevron-right" size={18} color={colors.inkMuted} />
+          </PressableScale>
+        )}
+
         {isFirstVisit && <FirstVisitGuide />}
 
         {/* 받아 둔 찜·여행이 있는데 다시 불러오기만 실패했으면 화면은 그대로 두고 한 줄만 알린다(디자인 QA E1). */}
@@ -377,6 +411,30 @@ export function HomeScreen({ navigation }: Props) {
               <InlineMap pins={pins} height={160} showPath={false} numbered={false} />
             </View>
           )
+        )}
+
+        {recentVideos.length > 0 && (
+          <View>
+            <PressableScale
+              onPress={() => navigation.navigate("PlacesList")}
+              style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: space.xs }}
+            >
+              <AppText weight="medium">최근 저장한 영상 {recentVideos.length}개</AppText>
+              <Feather name="chevron-right" size={18} color={colors.inkMuted} />
+            </PressableScale>
+            {recentVideos.slice(0, 2).map((video, i) => (
+              <PressableRow
+                key={video.jobId}
+                onPress={() => navigation.navigate("VideoGroup", { jobId: video.jobId })}
+                style={{ paddingVertical: space.sm, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: colors.borderSubtle, gap: space.xxxs }}
+              >
+                <AppText numberOfLines={1}>{video.title}</AppText>
+                <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
+                  {formatSavedAgo(video.createdAt)} · 장소 {video.count}곳
+                </AppText>
+              </PressableRow>
+            ))}
+          </View>
         )}
 
         {tripsQuery.isLoading ? (

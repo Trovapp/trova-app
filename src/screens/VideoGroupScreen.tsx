@@ -480,7 +480,9 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     return (
       <View style={{ flex: 1 }}>
         {map}
-        <BottomSheet index={1} snapPoints={SHEET_SNAP_POINTS} enableDynamicSizing={false} footerComponent={renderFooter}>
+        <BottomSheet index={1} snapPoints={SHEET_SNAP_POINTS} enableDynamicSizing={false} footerComponent={renderFooter}
+          backgroundStyle={{ backgroundColor: colors.bg }}
+          handleIndicatorStyle={{ backgroundColor: colors.border }}>
           <BottomSheetScrollView contentContainerStyle={{ padding: space.md, paddingBottom: FOOTER_SPACE, gap: space.sm }}>
             {titleBlock}
             {error && <ErrorText>{error}</ErrorText>}
@@ -530,6 +532,8 @@ export function VideoGroupScreen({ route, navigation }: Props) {
         enableDynamicSizing={false}
         enableContentPanningGesture={false}
         footerComponent={renderFooter}
+        backgroundStyle={{ backgroundColor: colors.bg }}
+        handleIndicatorStyle={{ backgroundColor: colors.border }}
       >
         <BottomSheetView style={{ flex: 1 }}>
           <DraggableFlatList

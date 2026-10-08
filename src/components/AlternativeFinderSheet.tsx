@@ -239,6 +239,8 @@ export function AlternativeFinderSheet({
       onClose={() => {
         onClose();
       }}
+      backgroundStyle={{ backgroundColor: colors.bg }}
+      handleIndicatorStyle={{ backgroundColor: colors.border }}
     >
       <BottomSheetScrollView ref={scrollRef} contentContainerStyle={{ padding: space.lg, gap: space.md }}>
         {reviewCandidateId !== null ? (
