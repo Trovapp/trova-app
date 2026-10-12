@@ -1,4 +1,4 @@
-// 설치·링크 넣기 안내 그림(웹 전용, ADR 0013). 실제 OS 화면 캡처 대신 단순화한 휴대폰 그림 —
+// 설치·링크 넣기 안내 그림(웹 전용, ADR 0013). 아이폰 설치는 실제 화면 캡처(WebEntryGate의 Shot)로 바꿨고, 안드로이드·링크 넣기만 그림. 실제 OS 화면 캡처 대신 단순화한 휴대폰 그림 —
 // iOS·안드로이드 버전마다 화면이 달라 캡처는 금방 낡는다. 강조할 곳은 accent 색 테두리와 손가락 표시로 보여준다.
 import type { ReactNode } from "react";
 
@@ -31,43 +31,6 @@ function Lines({ y, p, n = 3 }: { y: number; p: Palette; n?: number }) {
         <rect key={i} x="22" y={y + i * 16} width={i % 2 ? 90 : 116} height="7" rx="3.5" fill={p.line} />
       ))}
     </g>
-  );
-}
-
-/** 아이폰 ① Safari 아래 공유 버튼 */
-export function IosShareButton({ p }: { p: Palette }) {
-  return (
-    <Phone p={p}>
-      <Lines y={50} p={p} n={6} />
-      <rect x="9" y="236" width="142" height="55" fill={p.frame} opacity="0.08" />
-      <rect x="22" y="242" width="116" height="16" rx="8" fill={p.line} />
-      <text x="80" y="254" fontSize="8" textAnchor="middle" fill={p.muted}>trova…pages.dev</text>
-      {/* 아래 도구 막대: < > 공유 책 탭 */}
-      <path d="M30 274 l-5 5 5 5" stroke={p.muted} strokeWidth="2" fill="none" />
-      <path d="M50 274 l5 5 -5 5" stroke={p.muted} strokeWidth="2" fill="none" />
-      <rect x="74" y="272" width="12" height="13" rx="2" fill="none" stroke={p.accent} strokeWidth="2" />
-      <path d="M80 280 v-12 m-4 4 l4 -4 4 4" stroke={p.accent} strokeWidth="2" fill="none" />
-      <rect x="102" y="273" width="12" height="11" rx="2" fill="none" stroke={p.muted} strokeWidth="2" />
-      <rect x="124" y="272" width="11" height="11" rx="2" fill="none" stroke={p.muted} strokeWidth="2" />
-      <Tap x={80} y={278} p={p} />
-    </Phone>
-  );
-}
-
-/** 아이폰 ② 공유 시트에서 "홈 화면에 추가" */
-export function IosAddToHome({ p }: { p: Palette }) {
-  return (
-    <Phone p={p}>
-      <rect x="9" y="80" width="142" height="211" rx="16" fill={p.frame} opacity="0.06" />
-      <rect x="20" y="92" width="120" height="22" rx="6" fill={p.line} />
-      <rect x="20" y="122" width="120" height="22" rx="6" fill={p.line} />
-      <rect x="20" y="152" width="120" height="26" rx="6" fill={p.accentBg} stroke={p.accent} strokeWidth="2" />
-      <rect x="28" y="158" width="14" height="14" rx="3" fill="none" stroke={p.accent} strokeWidth="2" />
-      <path d="M35 161 v8 m-4 -4 h8" stroke={p.accent} strokeWidth="2" />
-      <text x="48" y="169" fontSize="10" fontWeight="700" fill={p.ink}>홈 화면에 추가</text>
-      <rect x="20" y="186" width="120" height="22" rx="6" fill={p.line} />
-      <Tap x={133} y={165} p={p} />
-    </Phone>
   );
 }
 

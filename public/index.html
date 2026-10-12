@@ -28,6 +28,17 @@
       html,
       body {
         height: 100%;
+        /* 앱이 뜨기 전에도 기기 화면 모드에 맞는 배경 — 다크 모드에서 흰 화면이 번쩍이지 않게(theme.ts bgMuted와 같은 값). */
+        background: #f7f7f5;
+      }
+      :root {
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        html,
+        body {
+          background: #121514;
+        }
       }
       body {
         overflow: hidden;

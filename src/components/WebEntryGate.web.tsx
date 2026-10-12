@@ -3,12 +3,11 @@ import { FONT } from "@/components/AppText";
 import {
   AndroidMenu,
   HomeIcon,
-  IosAddToHome,
-  IosShareButton,
   PasteButtonArt,
   ShareSheet,
   type Palette,
 } from "@/components/web/InstallIllustrations";
+import { Shot } from "@/components/web/Shot";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 
 // 웹(PWA) 첫 화면(ADR 0013, 유니플 방식): 브라우저로 열면 소개 → 설치 안내(그림)로 유도하고,
@@ -16,7 +15,6 @@ import { colors, fontSize, radius, space } from "@/lib/theme";
 // 아이폰 홈 화면 앱은 Safari와 저장소가 따로라 브라우저에서 로그인해도 이어지지 않는다.
 
 const DIRECT_KEY = "trova_web_direct";
-const SHORTCUT_URL = process.env.EXPO_PUBLIC_SHORTCUT_URL ?? "";
 
 type Os = "ios" | "android" | "other";
 type BeforeInstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
@@ -80,8 +78,8 @@ export function WebEntryGate({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div style={page}>
-      <div style={column}>
+    <div style={page()}>
+      <div style={column()}>
         {step === "intro" ? (
           <Intro onStart={() => setStep("install")} onUseInBrowser={useInBrowser} />
         ) : (
@@ -102,18 +100,19 @@ const palette = (): Palette => ({
   accentBg: colors.accentBg,
 });
 
-const page: CSSProperties = { height: "100%", overflowY: "auto", background: colors.bgMuted, WebkitOverflowScrolling: "touch" };
-const column: CSSProperties = {
+// 색은 그릴 때마다 읽는다 — 모듈에서 미리 만들면 다크 모드에서 라이트 색이 섞인다(theme.ts 규칙, 2026-10-12 카카오톡 다크 화면에서 발견).
+const page = (): CSSProperties => ({ height: "100%", overflowY: "auto", background: colors.bgMuted, WebkitOverflowScrolling: "touch" });
+const column = (): CSSProperties => ({
   maxWidth: 480,
   margin: "0 auto",
   padding: `${space.xl}px ${space.md}px ${space.xxxl}px`,
   fontFamily: FONT.regular,
   color: colors.ink,
-};
-const h1: CSSProperties = { fontFamily: FONT.bold, fontSize: fontSize.title1, lineHeight: 1.3, margin: 0 };
-const h2: CSSProperties = { fontFamily: FONT.bold, fontSize: fontSize.title3, margin: `${space.xxl}px 0 ${space.sm}px` };
-const muted: CSSProperties = { color: colors.inkMuted, fontSize: fontSize.subheadline, lineHeight: 1.6, margin: 0 };
-const card: CSSProperties = { background: colors.bg, borderRadius: radius.lg, padding: space.md, border: `1px solid ${colors.borderSubtle}` };
+});
+const h1 = (): CSSProperties => ({ fontFamily: FONT.bold, fontSize: fontSize.title1, lineHeight: 1.3, margin: 0 });
+const h2 = (): CSSProperties => ({ fontFamily: FONT.bold, fontSize: fontSize.title3, margin: `${space.xxl}px 0 ${space.sm}px` });
+const muted = (): CSSProperties => ({ color: colors.inkMuted, fontSize: fontSize.subheadline, lineHeight: 1.6, margin: 0 });
+const card = (): CSSProperties => ({ background: colors.bg, borderRadius: radius.lg, padding: space.md, border: `1px solid ${colors.borderSubtle}` });
 
 function PrimaryButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
@@ -164,24 +163,24 @@ function Intro({ onStart, onUseInBrowser }: { onStart: () => void; onUseInBrowse
         <img src="/icons/icon-192.png" alt="" width={44} height={44} style={{ borderRadius: radius.md }} />
         <span style={{ fontFamily: FONT.bold, fontSize: fontSize.title3 }}>Trova</span>
       </div>
-      <h1 style={h1}>
+      <h1 style={h1()}>
         여행 릴스 하나 공유하면
         <br />
         일정이 생겨요
       </h1>
-      <p style={{ ...muted, marginTop: space.sm }}>저장만 해 두고 잊어버린 여행 영상, 이제 장소와 일정으로 바로 정리해요.</p>
+      <p style={{ ...muted(), marginTop: space.sm }}>저장만 해 두고 잊어버린 여행 영상, 이제 장소와 일정으로 바로 정리해요.</p>
 
       <div style={{ marginTop: space.xl }}>
         <PrimaryButton onClick={onStart}>앱 설치하고 시작하기</PrimaryButton>
-        <p style={{ ...muted, textAlign: "center", fontSize: fontSize.footnote, marginTop: space.xs }}>
+        <p style={{ ...muted(), textAlign: "center", fontSize: fontSize.footnote, marginTop: space.xs }}>
           앱스토어 없이 무료 · 1분이면 설치돼요
         </p>
       </div>
 
-      <h2 style={h2}>이렇게 쓰여요</h2>
+      <h2 style={h2()}>이렇게 쓰여요</h2>
       <div style={{ display: "flex", gap: space.sm, overflowX: "auto", paddingBottom: space.xs, scrollSnapType: "x mandatory" }}>
         {SHOTS.map((shot, i) => (
-          <figure key={shot.src} style={{ ...card, margin: 0, flex: "0 0 72%", scrollSnapAlign: "start" }}>
+          <figure key={shot.src} style={{ ...card(), margin: 0, flex: "0 0 72%", scrollSnapAlign: "start" }}>
             <img
               src={shot.src}
               alt={shot.title}
@@ -192,7 +191,7 @@ function Intro({ onStart, onUseInBrowser }: { onStart: () => void; onUseInBrowse
               <div style={{ fontFamily: FONT.bold, fontSize: fontSize.callout }}>
                 {i + 1}. {shot.title}
               </div>
-              <div style={{ ...muted, fontSize: fontSize.footnote }}>{shot.body}</div>
+              <div style={{ ...muted(), fontSize: fontSize.footnote }}>{shot.body}</div>
             </figcaption>
           </figure>
         ))}
@@ -210,7 +209,7 @@ function Intro({ onStart, onUseInBrowser }: { onStart: () => void; onUseInBrowse
 
 function Step({ n, title, body, art }: { n: number; title: string; body?: ReactNode; art: ReactNode }) {
   return (
-    <div style={{ ...card, marginBottom: space.sm }}>
+    <div style={{ ...card(), marginBottom: space.sm }}>
       <div style={{ display: "flex", gap: space.sm, alignItems: "baseline" }}>
         <span
           style={{
@@ -230,7 +229,7 @@ function Step({ n, title, body, art }: { n: number; title: string; body?: ReactN
         </span>
         <div>
           <div style={{ fontFamily: FONT.bold, fontSize: fontSize.callout }}>{title}</div>
-          {body && <div style={{ ...muted, fontSize: fontSize.footnote, marginTop: space.xxxs }}>{body}</div>}
+          {body && <div style={{ ...muted(), fontSize: fontSize.footnote, marginTop: space.xxxs }}>{body}</div>}
         </div>
       </div>
       <div style={{ marginTop: space.md }}>{art}</div>
@@ -289,13 +288,13 @@ function Install({ onBack, onUseInBrowser }: { onBack: () => void; onUseInBrowse
   return (
     <>
       <TextButton onClick={onBack}>← 소개로</TextButton>
-      <h1 style={{ ...h1, fontSize: fontSize.title2, marginTop: space.xs }}>마지막 설치 단계예요</h1>
-      <p style={{ ...muted, marginTop: space.xs }}>홈 화면에 추가하면 주소창 없이 앱처럼 열려요.</p>
+      <h1 style={{ ...h1(), fontSize: fontSize.title2, marginTop: space.xs }}>마지막 설치 단계예요</h1>
+      <p style={{ ...muted(), marginTop: space.xs }}>홈 화면에 추가하면 주소창 없이 앱처럼 열려요.</p>
 
       {inApp && (
-        <div role="alert" style={{ ...card, marginTop: space.md, background: colors.accentBg, borderColor: colors.accent }}>
+        <div role="alert" style={{ ...card(), marginTop: space.md, background: colors.accentBg, borderColor: colors.accent }}>
           <div style={{ fontFamily: FONT.bold, fontSize: fontSize.callout }}>{inApp} 안에서는 설치가 안 돼요</div>
-          <p style={{ ...muted, fontSize: fontSize.footnote, marginTop: space.xxs }}>
+          <p style={{ ...muted(), fontSize: fontSize.footnote, marginTop: space.xxs }}>
             오른쪽 위(또는 아래) ⋯ 버튼에서 &lsquo;{browserName}로 열기&rsquo;를 누르거나, 주소를 복사해 {browserName}에 붙여넣어 주세요.
           </p>
           <div style={{ marginTop: space.sm }}>
@@ -325,13 +324,31 @@ function Install({ onBack, onUseInBrowser }: { onBack: () => void; onUseInBrowse
       {os !== "android" ? (
         <>
           <Step n={1} title="Safari로 열기" body="인스타·카카오톡 안의 브라우저라면 Safari로 다시 열어 주세요." art={null} />
-          <Step n={2} title="아래 공유 버튼 누르기" body="화면 아래 가운데 네모·화살표 버튼이에요." art={<IosShareButton p={p} />} />
-          <Step n={3} title="‘홈 화면에 추가’ 누르기" body="목록을 조금 내리면 있어요. 오른쪽 위 ‘추가’까지 눌러 주세요." art={<IosAddToHome p={p} />} />
+          <Step
+            n={2}
+            title="주소창 오른쪽 ⋯ 누르기"
+            body="iOS 18 이하에서는 아래 가운데 공유 버튼(□↑)을 누르고 4번으로 가세요."
+            art={<Shot src="/install/ios-1-more.jpg" alt="Safari 아래 주소창 오른쪽의 ⋯ 버튼" marks={[{ x: 85.5, y: 76.3 }]} />}
+          />
+          <Step n={3} title="‘공유’ 누르기" art={<Shot src="/install/ios-2-share.jpg" alt="⋯ 메뉴의 공유" marks={[{ x: 21, y: 12.4 }]} />} />
           <Step
             n={4}
+            title="‘더 보기’ 누르기"
+            body="공유 화면 아래쪽 줄 오른쪽 끝(⌄)이에요."
+            art={<Shot src="/install/ios-3-more-actions.jpg" alt="공유 화면의 더 보기" marks={[{ x: 82.8, y: 36 }]} />}
+          />
+          <Step n={5} title="‘홈 화면에 추가’ 누르기" art={<Shot src="/install/ios-4-add-home.jpg" alt="홈 화면에 추가" marks={[{ x: 12, y: 83.8 }]} />} />
+          <Step
+            n={6}
+            title="‘웹 앱으로 열기’ 켜 두고 ‘추가’"
+            body="켜져 있어야 주소창 없이 앱처럼 열려요."
+            art={<Shot src="/install/ios-5-add.jpg" alt="웹 앱으로 열기를 켜고 추가" marks={[{ x: 87.5, y: 82.6 }, { x: 88.2, y: 15.6 }]} />}
+          />
+          <Step
+            n={7}
             title="홈 화면의 Trova로 열고 로그인"
             body="설치한 앱에서 한 번 더 로그인해야 해요(브라우저와 따로 저장돼요)."
-            art={<HomeIcon p={p} iconSrc="/icons/icon-192.png" />}
+            art={<Shot src="/install/ios-6-icon.jpg" alt="홈 화면에 생긴 Trova 아이콘" marks={[{ x: 30, y: 43, size: 64 }]} />}
           />
         </>
       ) : (
@@ -342,7 +359,7 @@ function Install({ onBack, onUseInBrowser }: { onBack: () => void; onUseInBrowse
         </>
       )}
 
-      <h2 style={h2}>영상 링크 넣는 방법</h2>
+      <h2 style={h2()}>영상 링크 넣는 방법</h2>
       {os === "android" ? (
         <Step
           n={1}
@@ -354,20 +371,8 @@ function Install({ onBack, onUseInBrowser }: { onBack: () => void; onUseInBrowse
         <Step
           n={1}
           title="공유 → ‘Trova에 저장’ (단축어)"
-          body={
-            <>
-              앱을 열지 않고 공유 한 번에 저장돼요. 앱의 마이페이지 → ‘아이폰 공유 단축어’에서 키를 받아 단축어를 연결해 주세요.
-              {SHORTCUT_URL ? (
-                <>
-                  {" "}
-                  <a href={SHORTCUT_URL} style={{ color: colors.accent }}>
-                    단축어 받기
-                  </a>
-                </>
-              ) : null}
-            </>
-          }
-          art={<ShareSheet p={p} label="Trova에 저장" />}
+          body="앱을 열지 않고 공유 한 번에 저장돼요. 설치하고 로그인한 뒤 마이페이지 → ‘아이폰 공유 단축어’에서 단축어를 받아 주세요(받는 방법도 거기 있어요)."
+          art={<Shot src="/install/sc-8-run.jpg" alt="공유 목록의 Trova에 저장" marks={[{ x: 50, y: 88.3, w: 93, h: 18 }]} />}
         />
       )}
       <Step
