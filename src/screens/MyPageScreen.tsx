@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
-import { Alert, Image, View } from "react-native";
+import { Alert, Image, Platform, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import { AppText } from "@/components/AppText";
@@ -86,6 +86,24 @@ export function MyPageScreen() {
       </View>
 
       <View>
+        {/* 웹(PWA) 아이폰은 공유 목록에 뜨지 않아 단축어로 저장한다(ADR 0013). 앱은 공유 확장이 있어 필요 없다. */}
+        {Platform.OS === "web" && (
+          <PressableRow
+            onPress={() => navigation.navigate("ShareShortcut")}
+            accessibilityRole="button"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingVertical: space.md,
+              borderTopWidth: 1,
+              borderTopColor: colors.borderSubtle,
+            }}
+          >
+            <AppText>아이폰 공유 단축어</AppText>
+            <Feather name="chevron-right" size={18} color={colors.inkMuted} />
+          </PressableRow>
+        )}
         {/* 앱스토어 심사·개인정보 보호법상 앱 안에서 방침을 볼 수 있어야 한다. 앱 안 브라우저로 연다. */}
         {[
           { label: "개인정보처리방침", url: PRIVACY_POLICY_URL },

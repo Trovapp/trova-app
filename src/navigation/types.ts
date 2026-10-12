@@ -28,6 +28,7 @@ export type RootStackParamList = {
   TripDetail: { id: number; weatherAlertTripPlaceId?: number };
   TripReplan: { tripId: number; jobId: number };
   Licenses: undefined;
+  ShareShortcut: undefined;
 };
 
 // 탭 화면(MainTabParamList)에서도 바깥 스택 화면(Processing/VideoGroup/TripDetail 등)으로
