@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, View } from "react-native";
+import { Image, Platform, View } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
@@ -15,7 +15,7 @@ import { colors, fontSize, radius, space } from "@/lib/theme";
 // 제공자 브랜드 색(카카오 노랑)/아웃라인(구글)을 그대로 유지 — 이건
 // OAuth 버튼의 정석 관례라 바꿀 이유가 없다.
 export function LoginScreen() {
-  const { handleAuthCallback, sessionExpired } = useAuth();
+  const { handleAuthCallback, sessionExpired, webLoginFailed } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   async function handleLogin(provider: "kakao" | "google") {
@@ -24,6 +24,11 @@ export function LoginScreen() {
     // isLoggingIn으로 진행 중에는 두 버튼 모두 눌리지 않게 막는다.
     if (isLoggingIn) return;
     setIsLoggingIn(true);
+    if (Platform.OS === "web") {
+      // 웹(PWA)은 같은 창에서 로그인 페이지로 갔다가 /auth/callback/?code=로 돌아온다(AuthContext가 처리).
+      window.location.assign(oauthUrl(provider));
+      return;
+    }
     try {
       // iOS는 ASWebAuthenticationSession이 trova:// 리다이렉트를 가로채서
       // Linking의 "url" 이벤트가 발생하지 않으므로, 반환값을 직접 처리해야 한다.
@@ -55,6 +60,24 @@ export function LoginScreen() {
       </View>
 
       {/* 세션 만료로 튕겨 나온 경우 이유 없이 로그인 화면만 보이면 앱이 초기화된 것처럼 느껴진다. */}
+      {webLoginFailed && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: space.xs,
+            padding: space.sm,
+            marginBottom: space.md,
+            borderRadius: radius.md,
+            backgroundColor: colors.bgMuted,
+          }}
+        >
+          <Feather name="info" size={15} color={colors.inkMuted} />
+          <AppText style={{ flexShrink: 1, fontSize: fontSize.footnote, color: colors.inkMuted }}>
+            로그인에 실패했어요. 다시 시도해주세요.
+          </AppText>
+        </View>
+      )}
       {sessionExpired && (
         <View
           style={{

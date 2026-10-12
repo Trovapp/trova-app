@@ -2,7 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { Alert } from "react-native";
 import * as Linking from "expo-linking";
 import { useQueryClient } from "@tanstack/react-query";
-import { getMe, type CurrentUser } from "@/lib/api/auth";
+import { exchangeWebLoginCode, getMe, type CurrentUser } from "@/lib/api/auth";
+import { takeWebLoginCallback } from "@/lib/auth/webLoginCallback";
 import { setUnauthorizedHandler } from "@/lib/api/client";
 import { clearToken, setToken } from "@/lib/tokenStorage";
 
@@ -16,6 +17,8 @@ type AuthState = {
   // 로그인해 둔 세션이 만료(401)돼서 로그인 화면으로 돌아온 경우에만 true — 로그인 화면에서 이유를 알려준다.
   // 첫 실행(토큰 없음)이나 직접 로그아웃은 해당하지 않는다.
   sessionExpired: boolean;
+  // 웹(PWA) 로그인이 실패해 돌아온 경우 — 로그인 화면에서 이유를 알려준다(앱은 Alert로 알린다).
+  webLoginFailed: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
   handleAuthCallback: (url: string) => Promise<void>;
@@ -28,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [webLoginFailed, setWebLoginFailed] = useState(false);
   const queryClient = useQueryClient();
 
   const refresh = useCallback(async () => {
@@ -77,6 +81,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
+    // 웹(PWA): 로그인하고 돌아온 1회용 코드가 있으면 먼저 토큰으로 바꾼다. 앱에서는 항상 null.
+    const callback = takeWebLoginCallback();
+    if (callback && "code" in callback) {
+      exchangeWebLoginCode(callback.code)
+        .then((token) => setToken(token))
+        .catch(() => setWebLoginFailed(true))
+        .finally(() => refresh());
+      return;
+    }
+    if (callback) setWebLoginFailed(true);
     refresh();
   }, [refresh]);
 
@@ -96,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [handleAuthCallback]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, authError, sessionExpired, refresh, logout, handleAuthCallback }}>
+    <AuthContext.Provider value={{ user, loading, authError, sessionExpired, webLoginFailed, refresh, logout, handleAuthCallback }}>
       {children}
     </AuthContext.Provider>
   );
