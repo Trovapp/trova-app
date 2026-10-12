@@ -149,11 +149,12 @@ function TextButton({ children, onClick }: { children: ReactNode; onClick: () =>
   );
 }
 
+// 실제 앱 화면(iPhone 17 Pro 시뮬레이터, 로컬 서버 + 개발 DB 테스트 계정, 2026-10-12 qaflow로 캡처).
 const SHOTS = [
-  { src: "/landing/1-analyzing.png", title: "공유 한 번이면", body: "릴스·유튜브 링크를 보내면 AI가 영상 속 장소를 찾아요." },
-  { src: "/landing/2-home-draft-card.png", title: "일정 초안이 저절로", body: "찾은 장소로 며칠짜리 일정 초안을 미리 짜 둬요." },
-  { src: "/landing/3-draft.png", title: "동선까지 정리", body: "가까운 곳끼리 묶어 날짜별로 정리해 드려요." },
-  { src: "/landing/4-trip.png", title: "내 여행으로 저장", body: "마음에 들면 승인만 하면 여행이 돼요." },
+  { src: "/landing/1-places.jpg", title: "공유 한 번이면", body: "릴스·유튜브 링크를 보내면 AI가 영상 속 장소를 찾아 지도에 표시해요." },
+  { src: "/landing/2-home-draft-card.jpg", title: "일정 초안이 저절로", body: "찾은 장소로 며칠짜리 일정 초안을 미리 짜 둬요." },
+  { src: "/landing/3-draft.jpg", title: "동선까지 정리", body: "가까운 곳끼리 묶어 날짜별로 정리해 드려요." },
+  { src: "/landing/4-trip.jpg", title: "내 여행으로 저장", body: "마음에 들면 승인만 하면 여행이 돼요." },
 ];
 
 function Intro({ onStart, onUseInBrowser }: { onStart: () => void; onUseInBrowser: () => void }) {
