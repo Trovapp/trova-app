@@ -203,3 +203,12 @@ export function buildKakaoMapHtml(appKey: string): string {
 </html>
   `;
 }
+
+// 웹(PWA)은 WebView 대신 iframe(srcdoc)에 같은 HTML을 띄운다(ADR 0013) — WebView로 보내던 메시지를 부모 창으로 잇는다.
+// 빌드 스크립트(scripts/web-headers.mjs)도 이 함수로 만든 HTML에서 CSP 해시를 계산하므로 다른 모듈을 불러오지 않는다.
+export const WEB_MAP_BRIDGE_SCRIPT = "window.ReactNativeWebView={postMessage:function(m){parent.postMessage(m,'*')}};";
+
+export function buildWebKakaoMapHtml(appKey: string): string {
+  return buildKakaoMapHtml(appKey).replace("<head>", `<head><script>${WEB_MAP_BRIDGE_SCRIPT}</script>`);
+}
+
