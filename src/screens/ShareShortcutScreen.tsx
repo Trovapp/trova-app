@@ -1,21 +1,16 @@
 import { useState } from "react";
-import { Alert, Linking, ScrollView, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
+import { ShortcutGuide } from "@/components/ShortcutGuide";
 import { getShareKeyStatus, issueShareKey, revokeShareKey } from "@/lib/api/shareKey";
 import { toUserMessage } from "@/lib/api/client";
 import { colors, fontSize, radius, space } from "@/lib/theme";
+import { downloadShortcut } from "@/lib/web/shortcut";
 
 // 아이폰 홈 화면 앱(PWA)은 공유 목록에 뜨지 않아, iOS 단축어 "Trova에 저장"으로 공유 한 번에 저장하게 한다(ADR 0013).
 // 단축어가 쓸 공유 전용 키를 여기서 받는다. 키로는 링크 저장만 되고, 다시 받으면 이전 키는 바로 무효가 된다.
-const SHORTCUT_URL = process.env.EXPO_PUBLIC_SHORTCUT_URL ?? "";
-
-const STEPS = [
-  "아래 ‘키 받기’를 누르고 키를 복사해요.",
-  "‘단축어 받기’를 눌러 단축어 앱에서 추가해요. 키를 물으면 복사한 키를 붙여넣어요.",
-  "인스타·유튜브에서 공유 → (더 보기) → ‘Trova에 저장’을 누르면 끝이에요.",
-];
 
 function formatTime(value: string | null): string {
   if (!value) return "아직 없음";
@@ -97,17 +92,6 @@ export function ShareShortcutScreen() {
         </AppText>
       </View>
 
-      <View style={{ gap: space.sm }}>
-        {STEPS.map((step, i) => (
-          <View key={step} style={{ flexDirection: "row", gap: space.sm }}>
-            <AppText weight="bold" style={{ color: colors.accent }}>
-              {i + 1}
-            </AppText>
-            <AppText style={{ flex: 1, fontSize: fontSize.subheadline }}>{step}</AppText>
-          </View>
-        ))}
-      </View>
-
       <View style={{ padding: space.md, borderRadius: radius.lg, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.borderSubtle, gap: space.sm }}>
         {key ? (
           <>
@@ -144,17 +128,13 @@ export function ShareShortcutScreen() {
             {status.data?.exists ? "키 다시 받기" : "키 받기"}
           </AppText>
         </PressableScale>
-        {SHORTCUT_URL ? (
-          <PressableScale
-            accessibilityRole="link"
-            onPress={() => Linking.openURL(SHORTCUT_URL).catch(() => {})}
-            style={{ padding: space.sm, borderRadius: radius.md, backgroundColor: colors.bgMuted, alignItems: "center" }}
-          >
-            <AppText weight="medium">단축어 받기</AppText>
-          </PressableScale>
-        ) : (
-          <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>단축어 링크를 준비하고 있어요.</AppText>
-        )}
+        <PressableScale
+          accessibilityRole="button"
+          onPress={downloadShortcut}
+          style={{ padding: space.sm, borderRadius: radius.md, backgroundColor: colors.bgMuted, alignItems: "center" }}
+        >
+          <AppText weight="medium">단축어 받기</AppText>
+        </PressableScale>
         {error && <AppText style={{ fontSize: fontSize.footnote, color: colors.accent }}>{error}</AppText>}
       </View>
 
@@ -163,6 +143,8 @@ export function ShareShortcutScreen() {
           <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>키 없애기</AppText>
         </PressableScale>
       )}
+
+      <ShortcutGuide />
     </ScrollView>
   );
 }
