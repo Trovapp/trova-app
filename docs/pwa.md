@@ -29,7 +29,17 @@ npm run test:web                  # 보안 헤더 스크립트 테스트(node --
 
 `build:web`은 항상 캐시를 지우고(`--clear`) 빌드한다 — 캐시가 남으면 번들의 API 주소와 보안 헤더(CSP)의 주소가 어긋나 화면이 API를 못 부른다(2026-10-12 로컬 확인에서 겪음).
 
-## Cloudflare Pages 배포
+## Cloudflare 배포 (Workers 정적 사이트)
+
+2026-10-12: Cloudflare Pages가 Workers로 합쳐져(wrangler 4.149가 `pages project create`를 Workers로 넘김) Workers 정적 사이트로 올린다. 주소 **https://app.trovapp.workers.dev** (계정 workers.dev 이름 `trovapp` — `trova`는 이미 쓰임). 설정은 `wrangler.jsonc`.
+
+```bash
+npm run build:web && npx wrangler@4 deploy
+```
+
+- 처음 배포 때 Cloudflare 계정 이메일 인증이 필요했다(code 10034). 인증 뒤에도 인증 전에 받은 로그인 토큰으로는 계속 실패해 `wrangler logout` → `login`으로 다시 받아야 했다.
+
+### (예전 기록) Cloudflare Pages
 
 - 빌드 명령 `npm run build:web`, 출력 폴더 `dist`
 - 환경 변수: `EXPO_PUBLIC_API_BASE_URL=https://<운영 백엔드>`(https가 아니면 빌드 실패), `EXPO_PUBLIC_KAKAO_MAP_JS_KEY`, `EXPO_PUBLIC_SHORTCUT_URL`(아래 단축어 iCloud 링크)
