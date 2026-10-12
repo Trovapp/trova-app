@@ -37,6 +37,7 @@ npm run test:web                  # 보안 헤더 스크립트 테스트(node --
 npm run build:web && npx wrangler@4 deploy
 ```
 
+- 카카오 지도: 카카오 디벨로퍼스 → 앱 → [플랫폼 키] → [JavaScript 키] → [JavaScript SDK 도메인]에 `https://app.trovapp.workers.dev` 등록(2026-10-12, 2025년 메뉴 개편 전의 '플랫폼 → Web → 사이트 도메인'). 등록 뒤 운영 도메인에서 지도 표시·장소 검색 200 확인.
 - 처음 배포 때 Cloudflare 계정 이메일 인증이 필요했다(code 10034). 인증 뒤에도 인증 전에 받은 로그인 토큰으로는 계속 실패해 `wrangler logout` → `login`으로 다시 받아야 했다.
 
 ### (예전 기록) Cloudflare Pages
