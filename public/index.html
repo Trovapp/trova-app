@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!-- viewport-fit=cover: 홈 화면 앱(standalone)에서 노치·홈 바 영역까지 앱 화면으로 쓴다(안전 영역은 앱이 맞춘다). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Trova — 여행 영상으로 일정 만들기</title>
+    <meta name="description" content="릴스·유튜브 여행 영상을 공유하면 장소와 일정을 정리해 드려요." />
+
+    <!-- PWA(ADR 0013): 홈 화면에 추가하면 주소창 없는 전체 화면으로 열린다. -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Trova" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="/icons/icon-180.png" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1B1F1E" media="(prefers-color-scheme: dark)" />
+
+    <!-- 링크를 카톡·인스타 등에 보냈을 때의 미리보기 -->
+    <meta property="og:title" content="Trova — 여행 영상으로 일정 만들기" />
+    <meta property="og:description" content="릴스·유튜브 여행 영상을 공유하면 장소와 일정을 정리해 드려요." />
+    <meta property="og:image" content="/icons/icon-512.png" />
+
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        overflow: hidden;
+        /* 길게 눌러 글자·이미지가 선택되거나 당겨서 새로고침되는 웹 느낌을 줄인다. */
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior: none;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>Trova를 쓰려면 JavaScript를 켜 주세요.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

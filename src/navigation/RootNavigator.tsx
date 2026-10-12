@@ -10,10 +10,12 @@ import { PlanTripScreen } from "@/screens/PlanTripScreen";
 import { TripDetailScreen } from "@/screens/TripDetailScreen";
 import { TripReplanScreen } from "@/screens/TripReplanScreen";
 import { LicensesScreen } from "@/screens/LicensesScreen";
+import { ShareShortcutScreen } from "@/screens/ShareShortcutScreen";
 import { AppText } from "@/components/AppText";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
+import Animated, { FadeIn, ReduceMotion, SlideInRight } from "react-native-reanimated";
 import { OnboardingScreen } from "@/screens/OnboardingScreen";
 import { hasSeenOnboarding, markOnboardingSeen } from "@/lib/onboardingStorage";
 import type { MainTabParamList, RootStackParamList } from "@/navigation/types";
@@ -69,7 +71,7 @@ export function RootNavigator() {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerTitleAlign: "center" }}>
+    <Stack.Navigator screenOptions={{ headerTitleAlign: "center" }} screenLayout={Platform.OS === "web" ? WebScreenTransition : undefined}>
       {!user ? (
         onboardingSeen ? (
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
@@ -97,8 +99,23 @@ export function RootNavigator() {
           <Stack.Screen name="TripDetail" component={TripDetailScreen} options={{ title: "여행 상세" }} />
           <Stack.Screen name="TripReplan" component={TripReplanScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Licenses" component={LicensesScreen} options={{ title: "오픈소스 라이선스" }} />
+          <Stack.Screen name="ShareShortcut" component={ShareShortcutScreen} options={{ title: "아이폰 공유 단축어" }} />
         </>
       )}
     </Stack.Navigator>
+  );
+}
+
+// 웹(PWA)은 native-stack이 화면 전환 애니메이션 없이 바로 바꾼다 — 앱처럼 느껴지게 새 화면을 오른쪽에서 짧게 밀어 넣는다(ADR 0013).
+// 탭·첫 화면은 밀기 대신 살짝 나타나게. 시스템 "동작 줄이기"가 켜져 있으면 애니메이션 없이.
+function WebScreenTransition({ children, route }: { children: React.ReactNode; route: { name: string } }) {
+  const entering =
+    route.name === "MainTabs" || route.name === "Login" || route.name === "Onboarding"
+      ? FadeIn.duration(180).reduceMotion(ReduceMotion.System)
+      : SlideInRight.duration(220).reduceMotion(ReduceMotion.System);
+  return (
+    <Animated.View entering={entering} style={{ flex: 1 }}>
+      {children}
+    </Animated.View>
   );
 }

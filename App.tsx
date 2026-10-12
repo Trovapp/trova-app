@@ -17,6 +17,8 @@ import { AuthProvider } from "@/lib/auth/AuthContext";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { navigationRef } from "@/navigation/navigationRef";
 import { ShareIntentListener } from "@/components/ShareIntentListener";
+import { WebAlertHost } from "@/components/WebAlertHost";
+import { WebEntryGate } from "@/components/WebEntryGate";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -80,6 +82,7 @@ export default function App() {
   }
 
   return (
+    <WebEntryGate>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
@@ -102,11 +105,13 @@ export default function App() {
                   <RootNavigator />
                 </NavigationContainer>
                 <ShareIntentListener />
+                <WebAlertHost />
               </BottomSheetModalProvider>
             </AppErrorBoundary>
           </SafeAreaProvider>
         </AuthProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
+    </WebEntryGate>
   );
 }
