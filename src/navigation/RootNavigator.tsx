@@ -14,10 +14,12 @@ import { ShareShortcutScreen } from "@/screens/ShareShortcutScreen";
 import { AppText } from "@/components/AppText";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { useEffect, useState } from "react";
-import { Platform, View } from "react-native";
+import { Image, Platform, View } from "react-native";
 import Animated, { FadeIn, ReduceMotion, SlideInRight } from "react-native-reanimated";
 import { OnboardingScreen } from "@/screens/OnboardingScreen";
 import { hasSeenOnboarding, markOnboardingSeen } from "@/lib/onboardingStorage";
+import { hideBootSplash } from "@/lib/bootSplash";
+import { colors, fontSize, space } from "@/lib/theme";
 import type { MainTabParamList, RootStackParamList } from "@/navigation/types";
 
 export type { RootStackParamList };
@@ -40,6 +42,17 @@ export function RootNavigator() {
       .catch(() => setOnboardingSeen(true));
   }, []);
 
+  // 웹 시작 화면(public/index.html)은 로그인 확인이 끝나면 지운다. 확인이 오래 걸려도 8초 뒤엔 지워 아래 화면(재시도 등)이 보이게 한다.
+  const booting = loading || (!user && onboardingSeen === null);
+  useEffect(() => {
+    if (!booting) {
+      hideBootSplash();
+      return;
+    }
+    const id = setTimeout(hideBootSplash, 8000);
+    return () => clearTimeout(id);
+  }, [booting]);
+
   function finishOnboarding() {
     setOnboardingSeen(true);
     markOnboardingSeen().catch(() => {});
@@ -49,10 +62,17 @@ export function RootNavigator() {
     return <OnboardingScreen onDone={() => setPreviewOnboarding(false)} />;
   }
 
-  if (loading || (!user && onboardingSeen === null)) {
+  if (booting) {
+    // "불러오는 중..." 글자만 보였다 — 웹 시작 화면·로그인 화면과 같은 로고·문구로(2026-10-13 사용자: "케이뱅크처럼").
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <AppText>불러오는 중...</AppText>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: space.xl }}>
+        <Image source={require("../../assets/splash-icon.png")} resizeMode="contain" style={{ width: 96, height: 96, marginBottom: space.lg }} />
+        <AppText weight="bold" style={{ fontSize: fontSize.largeTitle }}>
+          Trova
+        </AppText>
+        <AppText style={{ marginTop: space.xs, fontSize: fontSize.subheadline, color: colors.inkMuted, textAlign: "center" }}>
+          여행 영상을 공유만 하면 장소와 일정까지 정리해드려요
+        </AppText>
       </View>
     );
   }

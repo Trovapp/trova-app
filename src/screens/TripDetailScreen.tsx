@@ -9,6 +9,8 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import { SheetTextInput } from "@/components/SheetTextInput";
 import { TripDatesSheet } from "@/components/TripDatesSheet";
+import { DialogOption, PlaceEditDialog } from "@/components/PlaceEditDialog";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -68,6 +70,18 @@ const TRANSPORT_LABEL: Record<"WALK" | "TRANSIT" | "CAR", string> = {
   WALK: "도보",
   TRANSIT: "대중교통",
   CAR: "차량",
+};
+
+const TRANSPORT_ICON: Record<"WALK" | "TRANSIT" | "CAR", "user" | "navigation" | "truck"> = {
+  WALK: "user",
+  TRANSIT: "navigation",
+  CAR: "truck",
+};
+
+const EDIT_FIELD_LABEL: Record<"time" | "stay" | "transport", string> = {
+  time: "도착 시간",
+  stay: "머무는 시간",
+  transport: "이동수단",
 };
 
 const UNSORTED_ID = -1; // "미분류" 가상 폴더 id — 저장 장소 화면(SavedPlacesScreen)과 동일한 규칙.
@@ -241,6 +255,10 @@ export function TripDetailScreen({ route, navigation }: Props) {
     setAlternativeTargetId(weatherAlertTripPlaceId);
   }, [weatherAlertTripPlaceId, tripQuery.data]);
   const [assistantTargetId, setAssistantTargetId] = useState<number | null>(null);
+  // ⋮ 안에만 있던 비서를 몰랐다(2026-10-13 사용자) — 아래에 항상 보이는 버튼에서 장소를 골라 연다.
+  // 비서 대화는 장소(또는 빈 시간) 하나를 기준으로만 열린다(백엔드 ConversationController) — 그래서 장소를 먼저 고른다.
+  const [assistantPickerOpen, setAssistantPickerOpen] = useState(false);
+  const insets = useSafeAreaInsets();
   const [gapCardFor, setGapCardFor] = useState<Gap | null>(null);
   const [replanStarting, setReplanStarting] = useState(false);
   // 장소 카드 "⋮" 더보기 메뉴(대안 찾기/비서/삭제) — 자주 안 쓰는 동작들을
@@ -313,6 +331,16 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const currentActiveDay = activeDay ?? trip.days[0]?.day ?? 1;
   const activeDayData = trip.days.find((d) => d.day === currentActiveDay);
   const places = activeDayData?.places ?? [];
+  const editPlace = editingField ? places.find((p) => p.id === editingField.placeId) ?? null : null;
+  const otherLayerOpen =
+    (editingField !== null && editingField.field !== "memo") ||
+    assistantPickerOpen ||
+    assistantTargetId !== null ||
+    alternativeTargetId !== null ||
+    reviewTarget !== null ||
+    menuPlaceId !== null ||
+    gapCardFor !== null ||
+    datesSheetOpen;
   // 추가해도 새 장소는 화면 위쪽 목록에 들어가서, 아래에서 검색하던 사용자는 추가됐는지 알기 어렵고
   // 한 번 더 눌러 같은 장소가 중복으로 들어가곤 했다 — 이 날짜에 이미 있는 장소는 "추가됨"으로 보여준다.
   // (다른 날짜에 같은 장소를 다시 넣는 건 재방문일 수 있어 막지 않는다.)
@@ -647,57 +675,6 @@ export function TripDetailScreen({ route, navigation }: Props) {
             </View>
           )}
 
-          {editingField?.placeId === place.id && editingField.field === "stay" && place.visitStartTime && (
-            <View style={{ marginTop: space.xs, gap: space.xxs }}>
-              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
-                머무는 시간 · {place.visitStartTime.slice(0, 5)} 도착
-              </AppText>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
-                {STAY_OPTIONS.map((minutes) => {
-                  const selected = stayMinutes(place) === minutes;
-                  return (
-                    <PressableScale
-                      key={minutes}
-                      onPress={() => handleUpdateDetails(place.id, { visitEndTime: addMinutes(place.visitStartTime!.slice(0, 5), minutes) })}
-                      disabled={busy}
-                      style={{
-                        paddingVertical: space.xxs,
-                        paddingHorizontal: space.sm,
-                        borderRadius: radius.md,
-                        backgroundColor: selected ? colors.accent : colors.bgMuted,
-                      }}
-                    >
-                      <AppText style={{ fontSize: fontSize.caption2, color: selected ? colors.onAccent : colors.inkMuted }}>
-                        {formatStay(minutes)}
-                      </AppText>
-                    </PressableScale>
-                  );
-                })}
-              </View>
-            </View>
-          )}
-
-          {editingField?.placeId === place.id && editingField.field === "transport" && (
-            <View style={{ flexDirection: "row", gap: space.xs, marginTop: space.xs }}>
-              {(["WALK", "TRANSIT", "CAR"] as const).map((mode) => (
-                <PressableScale
-                  key={mode}
-                  onPress={() => handleUpdateDetails(place.id, { arrivalTransportMode: mode })}
-                  style={{
-                    paddingVertical: space.xxs,
-                    paddingHorizontal: space.sm,
-                    borderRadius: radius.md,
-                    backgroundColor: place.arrivalTransportMode === mode ? colors.accent : colors.bgMuted,
-                  }}
-                >
-                  <AppText style={{ fontSize: fontSize.caption2, color: place.arrivalTransportMode === mode ? colors.onAccent : colors.inkMuted }}>
-                    {TRANSPORT_LABEL[mode]}
-                  </AppText>
-                </PressableScale>
-              ))}
-            </View>
-          )}
-
           {editingField?.placeId === place.id && editingField.field === "memo" && (
             // 언제 저장되는지 안 보이고(리턴 키가 "↵"), 바깥을 눌러도 키보드가 안 닫혔다(디자인 QA K2·K3).
             // 안내 문구·"완료" 리턴 키·완료 버튼을 둔다. 저장은 지금처럼 입력이 끝날 때(blur) 한 번 한다.
@@ -743,43 +720,6 @@ export function TripDetailScreen({ route, navigation }: Props) {
             </View>
           )}
 
-          {editingField?.placeId === place.id && editingField.field === "time" && showTimePicker && (
-            <View style={{ marginTop: space.xs, gap: space.xxs }}>
-              <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>도착 시간</AppText>
-              <DateTimePicker
-                value={timeDraft ?? parseTimeToDate(place.visitStartTime)}
-                mode="time"
-                locale="ko-KR"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onValueChange={(_, selected) => {
-                  if (Platform.OS === "ios") {
-                    // 드래그 중간값 — 저장하지 않고 담아만 둔다.
-                    setTimeDraft(selected);
-                    return;
-                  }
-                  // Android는 모달이라 "확인"을 눌렀을 때만 온다(취소는 onDismiss).
-                  commitTime(place, selected);
-                }}
-                onDismiss={closeTimePicker}
-              />
-              {Platform.OS === "ios" && (
-                <View style={{ flexDirection: "row", gap: space.md, justifyContent: "flex-end" }}>
-                  <PressableScale onPress={closeTimePicker} disabled={busy}>
-                    <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>취소</AppText>
-                  </PressableScale>
-                  <PressableScale
-                    onPress={() => commitTime(place, timeDraft ?? parseTimeToDate(place.visitStartTime))}
-                    disabled={busy}
-                    style={{ opacity: busy ? 0.4 : 1 }}
-                  >
-                    <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
-                      확인
-                    </AppText>
-                  </PressableScale>
-                </View>
-              )}
-            </View>
-          )}
         </PlaceRow>
         {gap && gap.recommendations.length > 0 && (
           <PressableScale
@@ -854,7 +794,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
       onDragEnd={handleDragEnd}
       renderItem={renderPlaceItem}
       activationDistance={0}
-      contentContainerStyle={{ padding: space.md, paddingBottom: space.xxxl + keyboardHeight }}
+      // 아래 "비서에게 물어보기" 버튼에 마지막 장소가 가리지 않게 그만큼 더 띄운다.
+      contentContainerStyle={{ padding: space.md, paddingBottom: space.xxxl * 2 + keyboardHeight }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       ListHeaderComponent={
         <View style={{ gap: space.sm, marginBottom: space.sm }}>
@@ -1432,6 +1373,149 @@ export function TripDetailScreen({ route, navigation }: Props) {
         </PressableScale>
       </BottomSheetView>
     </BottomSheetModal>
+    {/* 다른 팝업·시트·메뉴가 열려 있으면 숨긴다 — 팝업 어두운 배경 위로 이 버튼만 밝게 떠 보였다(화면 확인). */}
+    {places.length > 0 && keyboardHeight === 0 && !otherLayerOpen && (
+      <View pointerEvents="box-none" style={{ position: "absolute", left: 0, right: 0, bottom: insets.bottom + space.md, alignItems: "center" }}>
+        <PressableScale
+          onPress={() => {
+            if (places.length === 1) setAssistantTargetId(places[0].id);
+            else setAssistantPickerOpen(true);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="비서에게 물어보기"
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: space.xs,
+            paddingVertical: space.sm,
+            paddingHorizontal: space.lg,
+            borderRadius: radius.full,
+            backgroundColor: colors.ink,
+            shadowColor: "#000",
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 2 },
+          }}
+        >
+          <Feather name="message-circle" size={16} color={colors.onInk} />
+          <AppText weight="medium" style={{ color: colors.onInk }}>
+            비서에게 물어보기
+          </AppText>
+        </PressableScale>
+      </View>
+    )}
+    <PlaceEditDialog
+      visible={assistantPickerOpen}
+      title="어느 장소에 대해 물어볼까요?"
+      subtitle="고른 장소 대신 갈 만한 곳을 비서가 찾아 줘요. 장소마다 ⋮ 메뉴에서도 물어볼 수 있어요."
+      onClose={() => setAssistantPickerOpen(false)}
+    >
+      <View style={{ gap: space.xs }}>
+        {places.map((p, i) => (
+          <DialogOption
+            key={p.id}
+            label={`${i + 1}. ${p.placeName}`}
+            selected={false}
+            onPress={() => {
+              setAssistantPickerOpen(false);
+              setAssistantTargetId(p.id);
+            }}
+          />
+        ))}
+      </View>
+    </PlaceEditDialog>
+    {/* 도착 시간·머무는 시간·이동수단은 장소 줄 아래 대신 가운데 팝업으로(2026-10-13 사용자: "어디서 바꾸라는 거지?") */}
+    {editPlace && editingField && editingField.field !== "memo" && (
+      <PlaceEditDialog
+        visible
+        title={`${editPlace.placeName} · ${EDIT_FIELD_LABEL[editingField.field]}`}
+        subtitle={
+          editingField.field === "stay" && editPlace.visitStartTime
+            ? `${editPlace.visitStartTime.slice(0, 5)} 도착 — 고르면 바로 저장돼요`
+            : editingField.field === "time"
+              ? "시간을 고르고 확인을 누르세요"
+              : "고르면 바로 저장돼요"
+        }
+        onClose={() => {
+          closeTimePicker();
+          setEditingField(null);
+        }}
+      >
+        {editingField.field === "stay" && editPlace.visitStartTime && (
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
+            {STAY_OPTIONS.map((minutes) => (
+              <DialogOption
+                key={minutes}
+                grid
+                label={formatStay(minutes)}
+                selected={stayMinutes(editPlace) === minutes}
+                disabled={busy}
+                onPress={() => handleUpdateDetails(editPlace.id, { visitEndTime: addMinutes(editPlace.visitStartTime!.slice(0, 5), minutes) })}
+              />
+            ))}
+          </View>
+        )}
+        {editingField.field === "transport" && (
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
+            {(["WALK", "TRANSIT", "CAR"] as const).map((mode) => (
+              <DialogOption
+                key={mode}
+                grid
+                label={TRANSPORT_LABEL[mode]}
+                icon={TRANSPORT_ICON[mode]}
+                selected={editPlace.arrivalTransportMode === mode}
+                disabled={busy}
+                onPress={() => handleUpdateDetails(editPlace.id, { arrivalTransportMode: mode })}
+              />
+            ))}
+          </View>
+        )}
+        {editingField.field === "time" && showTimePicker && (
+          <View style={{ gap: space.md }}>
+            <View style={{ alignItems: "center" }}>
+              <DateTimePicker
+                value={timeDraft ?? parseTimeToDate(editPlace.visitStartTime)}
+                mode="time"
+                locale="ko-KR"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onValueChange={(_, selected) => {
+                  if (Platform.OS !== "android") {
+                    // iOS 스피너·웹은 고르는 중간값 — 저장하지 않고 담아만 두고 "확인"에서 저장한다.
+                    setTimeDraft(selected);
+                    return;
+                  }
+                  // Android는 모달이라 "확인"을 눌렀을 때만 온다(취소는 onDismiss).
+                  commitTime(editPlace, selected);
+                }}
+                onDismiss={() => {
+                  closeTimePicker();
+                  setEditingField(null);
+                }}
+              />
+            </View>
+            {Platform.OS !== "android" && (
+              <PressableScale
+                onPress={() => commitTime(editPlace, timeDraft ?? parseTimeToDate(editPlace.visitStartTime))}
+                disabled={busy}
+                accessibilityRole="button"
+                style={{
+                  minHeight: 48,
+                  borderRadius: radius.md,
+                  backgroundColor: colors.accent,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  opacity: busy ? 0.5 : 1,
+                }}
+              >
+                <AppText weight="medium" style={{ color: colors.onAccent }}>
+                  확인
+                </AppText>
+              </PressableScale>
+            )}
+          </View>
+        )}
+      </PlaceEditDialog>
+    )}
     <TripDatesSheet
       visible={datesSheetOpen}
       tripId={tripId}

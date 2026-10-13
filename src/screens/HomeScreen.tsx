@@ -87,6 +87,7 @@ export function HomeScreen({ navigation }: Props) {
   // 아이콘이 들어가지 않아 빈 하늘색 사각형으로 보였다(디자인 QA 2026-10-07, 시뮬레이터에서 단계별 확인).
   const { fontScale } = useWindowDimensions();
   const pasteButtonSize = Math.max(PASTE_BUTTON_SIZE, Math.min(PASTE_BUTTON_MAX, Math.round(fontScale * 26)));
+  const pasteInside = Platform.OS === "web";
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: listTrips });
@@ -272,7 +273,23 @@ export function HomeScreen({ navigation }: Props) {
           </AppText>
 
           <View style={{ gap: space.sm }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+            {/* 웹(PWA)은 붙여넣기 아이콘을 입력칸 안쪽 오른쪽에 둔다 — 칸 밖 오른쪽 끝에 따로 붙어 어색했다(2026-10-13 사용자).
+                앱(iOS)은 시스템 붙여넣기 버튼이 큰 글자에서 커져야 해서(디자인 QA 2026-10-07) 칸 밖에 둔다. */}
+            <View
+              style={
+                pasteInside
+                  ? {
+                      flexDirection: "row",
+                      alignItems: "center",
+                      height: 52,
+                      borderWidth: 1,
+                      borderColor: urlFocused ? colors.accent : colors.border,
+                      borderRadius: radius.md,
+                      paddingRight: space.xs,
+                    }
+                  : { flexDirection: "row", alignItems: "center", gap: space.sm }
+              }
+            >
               <TextInput
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
                 // 눌러도 테두리가 그대로라 입력 중인지 알기 어려웠다(2026-10 QA) — 입력 중엔 강조색 테두리.
@@ -292,8 +309,8 @@ export function HomeScreen({ navigation }: Props) {
                 returnKeyType="go"
                 onSubmitEditing={() => handleSubmit()}
                 style={{
-                  height: 52,
-                  borderWidth: 1,
+                  height: pasteInside ? "100%" : 52,
+                  borderWidth: pasteInside ? 0 : 1,
                   borderColor: urlFocused ? colors.accent : colors.border,
                   borderRadius: radius.md,
                   paddingHorizontal: space.lg,
@@ -310,7 +327,7 @@ export function HomeScreen({ navigation }: Props) {
                   cornerStyle="medium"
                   backgroundColor={colors.accentBg}
                   foregroundColor={colors.accent}
-                  style={{ width: pasteButtonSize, height: pasteButtonSize }}
+                  style={pasteInside ? { width: 40, height: 40 } : { width: pasteButtonSize, height: pasteButtonSize }}
                   onPress={(data) => {
                     if (data.type !== "text") return;
                     const pasted = extractFirstUrl(data.text);

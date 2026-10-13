@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentProps } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -565,17 +565,7 @@ function Review({
           </View>
         )}
 
-        {plan.assumptions.length > 0 && (
-          // 예전엔 작은 글자 네 줄이 제목·간격 없이 붙어 읽기 어려웠다(2026-10-13 PWA 실사용: "글이 많은 곳은 가독성 좋게").
-          <View style={{ gap: space.xs }}>
-            <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
-              참고
-            </AppText>
-            {plan.assumptions.map((a) => (
-              <BulletLine key={a} text={a} />
-            ))}
-          </View>
-        )}
+        {plan.assumptions.length > 0 && <AssumptionChips assumptions={plan.assumptions} />}
 
         <TextInput
           maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -611,6 +601,73 @@ function BulletLine({ text }: { text: string }) {
     <View style={{ flexDirection: "row", gap: space.xs }}>
       <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, lineHeight: fontSize.footnote * 1.5 }}>·</AppText>
       <AppText style={{ flex: 1, fontSize: fontSize.footnote, color: colors.inkMuted, lineHeight: fontSize.footnote * 1.5 }}>{text}</AppText>
+    </View>
+  );
+}
+
+type FeatherName = ComponentProps<typeof Feather>["name"];
+
+// 서버가 보내는 "참고" 문장을 짧은 칩으로 — 긴 문장 네 줄이라 한눈에 안 들어왔다(2026-10-13 사용자: "한눈에 보이게").
+// 모르는 문장은 "기타 안내"로 두고, "자세히"를 누르면 원래 문장 전체를 보여 준다.
+function assumptionChip(text: string): { icon: FeatherName; label: string } {
+  if (/요일별 휴무/.test(text)) return { icon: "calendar", label: "휴무일 미확인" };
+  if (/영업시간/.test(text)) return { icon: "clock", label: "영업시간 미확인" };
+  const unknown = /위치를 확인하지 못한 장소가 (\d+)곳/.exec(text);
+  if (unknown) return { icon: "map-pin", label: `위치 미확인 ${unknown[1]}곳` };
+  if (/직선거리/.test(text)) return { icon: "navigation", label: "이동 시간 어림" };
+  return { icon: "info", label: "기타 안내" };
+}
+
+function AssumptionChips({ assumptions }: { assumptions: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={{ gap: space.sm }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
+          참고
+        </AppText>
+        <PressableRow
+          onPress={() => setOpen((v) => !v)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: open }}
+          style={{ flexDirection: "row", alignItems: "center", gap: space.xxs, paddingVertical: space.xxs }}
+        >
+          <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>{open ? "접기" : "자세히"}</AppText>
+          <Feather name={open ? "chevron-up" : "chevron-down"} size={14} color={colors.inkMuted} />
+        </PressableRow>
+      </View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
+        {assumptions.map((a) => {
+          const chip = assumptionChip(a);
+          return (
+            <View
+              key={a}
+              accessibilityLabel={a}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: space.xxs,
+                paddingVertical: space.xxs,
+                paddingHorizontal: space.sm,
+                borderRadius: radius.full,
+                backgroundColor: colors.bg,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <Feather name={chip.icon} size={12} color={colors.inkMuted} />
+              <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>{chip.label}</AppText>
+            </View>
+          );
+        })}
+      </View>
+      {open && (
+        <View style={{ gap: space.xs }}>
+          {assumptions.map((a) => (
+            <BulletLine key={a} text={a} />
+          ))}
+        </View>
+      )}
     </View>
   );
 }
