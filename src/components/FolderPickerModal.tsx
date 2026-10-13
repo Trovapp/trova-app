@@ -4,10 +4,10 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
-  BottomSheetTextInput,
   BottomSheetView,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
+import { SheetTextInput } from "@/components/SheetTextInput";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
@@ -21,16 +21,20 @@ export function FolderPickerModal({
   visible,
   onClose,
   onPick,
+  createOnly = false,
 }: {
   visible: boolean;
   onClose: () => void;
   // 폴더를 고르거나(기존 폴더 id) 미분류로 저장(null)하면 호출된다.
   // 실제 addBookmark/moveBookmarkToFolder 호출은 이 컴포넌트를 쓰는 화면의 책임.
   onPick: (folderId: number | null) => void;
+  // 찜한 장소 화면의 "+ 새 폴더"처럼 저장할 장소 없이 폴더만 만들 때. 예전엔 같은 창이라
+  // "어느 폴더에 저장할까요? / 미분류로 저장"이 떠 무엇을 하는 창인지 헷갈렸다(2026-10-13 PWA QA).
+  createOnly?: boolean;
 }) {
   const queryClient = useQueryClient();
   const foldersQuery = useQuery({ queryKey: ["bookmarkFolders"], queryFn: listFolders, enabled: visible });
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState(createOnly);
   const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState<string>(DISTINCT_COLORS[0]);
   const [busy, setBusy] = useState(false);
@@ -50,8 +54,13 @@ export function FolderPickerModal({
     }
   }, [visible]);
 
+  // 폴더만 만드는 창은 열릴 때부터 이름 입력을 보여 준다.
+  useEffect(() => {
+    if (visible) setCreating(createOnly);
+  }, [visible, createOnly]);
+
   function reset() {
-    setCreating(false);
+    setCreating(createOnly);
     setNewName("");
     setNewColor(DISTINCT_COLORS[0]);
     setError(null);
@@ -91,25 +100,28 @@ export function FolderPickerModal({
     >
       <BottomSheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.lg, gap: space.sm, paddingBottom: space.xxl }}>
         <AppText weight="medium" style={{ fontSize: fontSize.callout }}>
-          어느 폴더에 저장할까요?
+          {createOnly ? "새 폴더 만들기" : "어느 폴더에 저장할까요?"}
         </AppText>
 
-        <PressableScale
-          onPress={() => onPick(null)}
-          style={{ padding: space.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border }}
-        >
-          <AppText>미분류로 저장</AppText>
-        </PressableScale>
+        {!createOnly && (
+          <PressableScale
+            onPress={() => onPick(null)}
+            style={{ padding: space.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border }}
+          >
+            <AppText>미분류로 저장</AppText>
+          </PressableScale>
+        )}
 
-        {foldersQuery.isLoading && (
+        {!createOnly && foldersQuery.isLoading && (
           <AppText style={{ color: colors.inkMuted, textAlign: "center" }}>불러오는 중...</AppText>
         )}
 
-        {foldersQuery.isError && (
+        {!createOnly && foldersQuery.isError && (
           <QueryErrorView message="폴더 목록을 불러오지 못했어요." onRetry={() => foldersQuery.refetch()} />
         )}
 
-        {!foldersQuery.isLoading &&
+        {!createOnly &&
+          !foldersQuery.isLoading &&
           !foldersQuery.isError &&
           (foldersQuery.data ?? []).map((folder) => (
             <PressableScale
@@ -135,11 +147,12 @@ export function FolderPickerModal({
 
         {creating ? (
           <View style={{ gap: space.sm, padding: space.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border }}>
-            <BottomSheetTextInput
+            <SheetTextInput
               maxFontSizeMultiplier={MAX_FONT_SCALE}
               autoFocus
               value={newName}
               onChangeText={setNewName}
+              placeholderTextColor={colors.inkMuted}
               placeholder="새 폴더 이름"
               maxLength={FOLDER_NAME_MAX_LENGTH}
               style={{
@@ -180,7 +193,7 @@ export function FolderPickerModal({
               }}
             >
               <AppText weight="medium" style={{ color: colors.onAccent }}>
-                만들고 저장
+                {createOnly ? "만들기" : "만들고 저장"}
               </AppText>
             </PressableScale>
           </View>

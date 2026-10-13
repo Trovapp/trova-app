@@ -284,6 +284,7 @@ export function HomeScreen({ navigation }: Props) {
                   setUrl(text);
                   if (error) setError(null);
                 }}
+                placeholderTextColor={colors.inkMuted}
                 placeholder="인스타그램 또는 유튜브 링크"
                 autoCapitalize="none"
                 autoCorrect={false}
