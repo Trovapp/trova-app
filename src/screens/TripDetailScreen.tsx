@@ -501,6 +501,11 @@ export function TripDetailScreen({ route, navigation }: Props) {
 
   async function handleCheckWeather() {
     if (busy) return;
+    // 예전엔 날짜가 없으면 버튼이 흐리게 꺼져 있기만 해 왜 안 되는지 알 수 없었다(2026-10-13 PWA QA 2회차).
+    if (!activeDayData?.date) {
+      setWeatherMessage("날짜가 정해진 일정만 날씨를 확인할 수 있어요.");
+      return;
+    }
     setBusy(true);
     setWeatherMessage(null);
     try {
@@ -942,7 +947,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
             </PressableScale>
             <PressableScale
               onPress={handleCheckWeather}
-              disabled={busy || !activeDayData?.date}
+              disabled={busy}
+              accessibilityHint={activeDayData?.date ? undefined : "날짜가 없는 일정이라 날씨를 확인할 수 없어요"}
               style={{ ...actionChip, opacity: busy || !activeDayData?.date ? 0.4 : 1 }}
             >
               <Feather name="cloud" size={12} color={colors.ink} />
