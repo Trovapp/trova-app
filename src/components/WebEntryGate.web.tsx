@@ -9,6 +9,7 @@ import {
 } from "@/components/web/InstallIllustrations";
 import { Shot } from "@/components/web/Shot";
 import { colors, fontSize, radius, space } from "@/lib/theme";
+import { hideBootSplash } from "@/lib/bootSplash";
 
 // 웹(PWA) 첫 화면(ADR 0013, 유니플 방식): 브라우저로 열면 소개 → 설치 안내(그림)로 유도하고,
 // 홈 화면 아이콘으로 열면(standalone) 바로 앱을 보여준다. 로그인은 설치한 앱 안에서 한다 —
@@ -60,6 +61,11 @@ function shouldShowApp(): boolean {
 export function WebEntryGate({ children }: { children: ReactNode }) {
   const [showApp, setShowApp] = useState(shouldShowApp);
   const [step, setStep] = useState<"intro" | "install">("intro");
+
+  useEffect(() => {
+    // 설치 안내 화면을 보여 줄 때는 앱 로그인 확인을 기다리지 않으므로 여기서 시작 화면을 지운다.
+    if (!showApp) hideBootSplash();
+  }, [showApp]);
 
   useEffect(() => {
     // 서비스 워커는 설치 조건만 맞추고 캐시하지 않는다(public/sw.js).
