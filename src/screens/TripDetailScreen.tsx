@@ -8,6 +8,7 @@ import BottomSheet, {
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
 import { SheetTextInput } from "@/components/SheetTextInput";
+import { TripDatesSheet } from "@/components/TripDatesSheet";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -202,6 +203,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [weatherMessage, setWeatherMessage] = useState<string | null>(null);
+  // 여행 날짜 정하기 시트(백엔드 #181) — 자동 초안으로 만든 여행은 날짜가 없다.
+  const [datesSheetOpen, setDatesSheetOpen] = useState(false);
   const [editingField, setEditingField] = useState<EditingField>(null);
   const [showTimePicker, setShowTimePicker] = useState(false);
   // iOS 스피너는 드래그하는 내내 onChange가 계속 발생한다 — 저장하지 않고 여기에만 담아두고
@@ -504,6 +507,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
     // 예전엔 날짜가 없으면 버튼이 흐리게 꺼져 있기만 해 왜 안 되는지 알 수 없었다(2026-10-13 PWA QA 2회차).
     if (!activeDayData?.date) {
       setWeatherMessage("날짜가 정해진 일정만 날씨를 확인할 수 있어요.");
+      setDatesSheetOpen(true);
       return;
     }
     setBusy(true);
@@ -923,6 +927,27 @@ export function TripDetailScreen({ route, navigation }: Props) {
                 </PressableScale>
               );
             })}
+            {!trip.startDate && (
+              <PressableScale
+                onPress={() => setDatesSheetOpen(true)}
+                accessibilityRole="button"
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: space.xxs,
+                  paddingVertical: space.xs,
+                  paddingHorizontal: space.md,
+                  borderRadius: radius.full,
+                  borderWidth: 1,
+                  borderColor: colors.accent,
+                }}
+              >
+                <Feather name="calendar" size={12} color={colors.accent} />
+                <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
+                  날짜 정하기
+                </AppText>
+              </PressableScale>
+            )}
           </ScrollView>
 
           {/* 예전엔 날씨 확인(글자), 전체 일정 재구성(큰 테두리 버튼), 동선 최적화(글자)가 세 줄로 쌓였다. 한 줄 칩으로 모은다. */}
@@ -1388,6 +1413,16 @@ export function TripDetailScreen({ route, navigation }: Props) {
         <PressableScale
           onPress={() => {
             tripMenuSheetRef.current?.dismiss();
+            setDatesSheetOpen(true);
+          }}
+          style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
+        >
+          <Feather name="calendar" size={16} color={colors.inkMuted} />
+          <AppText>{tripQuery.data?.startDate ? "날짜 바꾸기" : "날짜 정하기"}</AppText>
+        </PressableScale>
+        <PressableScale
+          onPress={() => {
+            tripMenuSheetRef.current?.dismiss();
             confirmDeleteTripRef.current();
           }}
           style={{ flexDirection: "row", alignItems: "center", gap: space.sm, padding: space.md }}
@@ -1397,6 +1432,19 @@ export function TripDetailScreen({ route, navigation }: Props) {
         </PressableScale>
       </BottomSheetView>
     </BottomSheetModal>
+    <TripDatesSheet
+      visible={datesSheetOpen}
+      tripId={tripId}
+      startDate={trip.startDate}
+      dayCount={trip.days.length}
+      onClose={() => setDatesSheetOpen(false)}
+      onSaved={(updated) => {
+        queryClient.setQueryData(["trip", id], updated);
+        queryClient.invalidateQueries({ queryKey: ["trips"] });
+        setWeatherMessage(null);
+        setDatesSheetOpen(false);
+      }}
+    />
     </View>
   );
 }
