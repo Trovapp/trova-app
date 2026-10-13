@@ -141,6 +141,19 @@ export async function getTrip(id: number): Promise<TripDetail> {
   return res.json();
 }
 
+// 이미 만든 여행에 날짜를 정하거나 바꾼다(백엔드 #181). 시작일만 보내면 종료일·일차 날짜는 서버가 일차 수로 계산한다.
+export async function setTripDates(id: number, startDate: string): Promise<TripDetail> {
+  const res = await apiFetch(`/api/trips/${id}/dates`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ startDate }),
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, `PATCH /api/trips/${id}/dates failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function deleteTrip(id: number): Promise<void> {
   const res = await apiFetch(`/api/trips/${id}`, { method: "DELETE" });
   if (!res.ok) {
