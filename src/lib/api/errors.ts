@@ -26,7 +26,9 @@ export class RequestTimeoutError extends Error {
 export function toUserMessage(err: unknown, fallback: string): string {
   if (err instanceof ApiError) return err.userMessage ?? fallback;
   if (err instanceof RequestTimeoutError) return "응답이 늦어지고 있어요. 잠시 후 다시 시도해주세요.";
-  if (err instanceof TypeError && /network request failed/i.test(err.message)) {
+  // 앱은 "Network request failed", 웹은 브라우저마다 다르다 — Chrome "Failed to fetch", Safari "Load failed",
+  // Firefox "NetworkError…". 웹에서 영어 문구가 그대로 보였다(2026-10-13 PWA QA 2회차).
+  if (err instanceof TypeError && /network request failed|failed to fetch|load failed|networkerror/i.test(err.message)) {
     return "인터넷 연결을 확인하고 다시 시도해주세요.";
   }
   if (err instanceof Error && err.message) return err.message;

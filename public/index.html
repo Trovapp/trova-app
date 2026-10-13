@@ -56,6 +56,12 @@
       select {
         font-size: max(16px, 1em) !important;
       }
+      /* 입력창을 누르면 브라우저 기본 파란 네모 테두리가 둥근 입력창 안에 어긋나게 그려졌다(2026-10-13 PWA QA 2회차).
+         입력창마다 자체 테두리·강조색이 있어 기본 테두리는 끈다. */
+      input:focus,
+      textarea:focus {
+        outline: none;
+      }
       #root {
         display: flex;
         height: 100%;
