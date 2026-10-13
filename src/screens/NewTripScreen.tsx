@@ -12,6 +12,7 @@ import { formatDateLabel, toDateString } from "@/lib/date";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
+import { openCreatedTrip } from "@/navigation/openCreatedTrip";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewTrip">;
 
@@ -50,10 +51,10 @@ export function NewTripScreen({ navigation }: Props) {
     try {
       const trip = await createTrip(title.trim(), toDateString(startDate), toDateString(endDate));
       haptics.success();
-      // replace는 아래에 깔린 여행 목록 화면을 unmount하지 않는다 — 무효화해두지 않으면
+      // 여행 목록은 받아 둔 목록(캐시)을 먼저 보여 주므로 — 무효화해두지 않으면
       // 뒤로 가기로 돌아왔을 때 방금 만든 여행이 목록에 없다.
       await queryClient.invalidateQueries({ queryKey: ["trips"] });
-      navigation.replace("TripDetail", { id: trip.id });
+      openCreatedTrip(navigation, trip.id);
     } catch {
       setError("여행을 만들지 못했어요. 날짜를 확인하고 다시 시도해주세요.");
       setSubmitting(false);
@@ -75,6 +76,7 @@ export function NewTripScreen({ navigation }: Props) {
         maxFontSizeMultiplier={MAX_FONT_SCALE}
         value={title}
         onChangeText={setTitle}
+        placeholderTextColor={colors.inkMuted}
         placeholder="예: 김해 당일치기"
         maxLength={TRIP_TITLE_MAX_LENGTH}
         autoFocus

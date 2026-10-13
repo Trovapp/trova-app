@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useRef, useState, type ElementRef } from "react";
 import { ScrollView, View } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { SheetTextInput } from "@/components/SheetTextInput";
 import { useSharedValue, type SharedValue } from "react-native-reanimated";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText, MAX_FONT_SCALE } from "@/components/AppText";
@@ -472,7 +473,7 @@ export function ConversationSheet({
               </View>
             ) : (
               <View style={{ flexDirection: "row", alignItems: "flex-end", gap: space.xs }}>
-                <BottomSheetTextInput
+                <SheetTextInput
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
                   value={input}
                   onChangeText={setInput}

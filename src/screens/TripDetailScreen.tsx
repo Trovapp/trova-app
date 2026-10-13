@@ -4,10 +4,10 @@ import { PressableScale } from "@/components/PressableScale";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetModal,
-  BottomSheetTextInput,
   BottomSheetView,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
+import { SheetTextInput } from "@/components/SheetTextInput";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DraggableFlatList, { type RenderItemParams } from "react-native-draggable-flatlist";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -102,7 +102,7 @@ function stayMinutes(place: { visitStartTime: string | null; visitEndTime: strin
 }
 
 export function TripDetailScreen({ route, navigation }: Props) {
-  const { id, weatherAlertTripPlaceId } = route.params;
+  const { id, weatherAlertTripPlaceId, justCreated } = route.params;
   const queryClient = useQueryClient();
   const tripQuery = useQuery({ queryKey: ["trip", id], queryFn: () => getTrip(id) });
   const { refreshing, onRefresh } = usePullToRefresh(tripQuery.refetch);
@@ -208,6 +208,9 @@ export function TripDetailScreen({ route, navigation }: Props) {
   // "확인"을 눌렀을 때 한 번만 저장한다.
   const [timeDraft, setTimeDraft] = useState<Date | null>(null);
   const [memoDraft, setMemoDraft] = useState("");
+  // 메모는 "완료"를 누르거나 입력창에서 나올 때(blur) 저장한다. 앱에서는 "완료" → 키보드 닫힘 → blur가 이어져
+  // 두 번 저장될 수 있어, 이번 편집을 이미 저장했는지 표시해 둔다(웹은 글자 버튼을 눌러도 blur가 안 생겨 "완료"가 직접 저장해야 했다).
+  const memoSavedRef = useRef(false);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<RecommendedPlace[]>([]);
   // 마지막으로 성공한 검색어 — 결과 0건일 때 "검색 결과 없음"을 보여주는 데 쓴다.
@@ -565,9 +568,16 @@ export function TripDetailScreen({ route, navigation }: Props) {
       setEditingField(editingField?.placeId === place.id && editingField.field === "transport" ? null : { placeId: place.id, field: "transport" });
     } else {
       setMemoDraft(place.memo ?? "");
+      memoSavedRef.current = false;
       setEditingField({ placeId: place.id, field: "memo" });
       memoEditIndexRef.current = places.findIndex((p) => p.id === place.id);
     }
+  }
+
+  function saveMemo(placeId: number) {
+    if (memoSavedRef.current) return;
+    memoSavedRef.current = true;
+    void handleUpdateDetails(placeId, { memo: memoDraft });
   }
 
   function renderPlaceItem({ item: place, getIndex, drag, isActive }: RenderItemParams<TripPlace>) {
@@ -613,11 +623,16 @@ export function TripDetailScreen({ route, navigation }: Props) {
               )}
               {place.memo && (
                 // 영상에서 말한 내용이 "· 내용" 여러 줄로 들어온다(백엔드 #134) — 한 줄만 보이면 첫 줄만 남아서 3줄까지 보인다.
-                <PressableScale onPress={() => startEditing(place, "memo")} style={{ flexDirection: "row", alignItems: "flex-start", gap: space.xxs, flexBasis: "100%", flexShrink: 1 }}>
-                  <Feather name="edit-3" size={12} color={colors.inkMuted} style={{ marginTop: space.xxxs }} />
-                  <AppText style={{ flexShrink: 1, fontSize: fontSize.caption1, color: colors.inkMuted }} numberOfLines={3}>
-                    {place.memo}
-                  </AppText>
+                // 예전엔 한 덩어리 작은 글자로 3줄까지 잘라 보여 읽기 어려웠다(2026-10-13 PWA 실사용) — 줄마다 나눠 글머리표 뒤로 맞추고
+                // 한 단계 큰 글자·넓은 줄 간격으로, 세 줄이 넘으면 "외 n줄"로 알린다. 누르면 전체를 고칠 수 있다.
+                <PressableScale
+                  onPress={() => startEditing(place, "memo")}
+                  accessibilityRole="button"
+                  accessibilityLabel={`메모 고치기: ${place.memo}`}
+                  style={{ flexDirection: "row", alignItems: "flex-start", gap: space.xs, flexBasis: "100%", flexShrink: 1 }}
+                >
+                  <Feather name="edit-3" size={12} color={colors.inkMuted} style={{ marginTop: space.xxs }} />
+                  <MemoLines memo={place.memo} />
                 </PressableScale>
               )}
             </View>
@@ -678,7 +693,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             // 언제 저장되는지 안 보이고(리턴 키가 "↵"), 바깥을 눌러도 키보드가 안 닫혔다(디자인 QA K2·K3).
             // 안내 문구·"완료" 리턴 키·완료 버튼을 둔다. 저장은 지금처럼 입력이 끝날 때(blur) 한 번 한다.
             <View style={{ marginTop: space.xs, flexDirection: "row", alignItems: "flex-end", gap: space.xs }}>
-              <BottomSheetTextInput
+              <SheetTextInput
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
                 autoFocus
                 defaultValue={memoDraft}
@@ -689,7 +704,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                 multiline
                 submitBehavior="blurAndSubmit"
                 returnKeyType="done"
-                onBlur={() => handleUpdateDetails(place.id, { memo: memoDraft })}
+                onBlur={() => saveMemo(place.id)}
                 onSubmitEditing={() => Keyboard.dismiss()}
                 style={{
                   flex: 1,
@@ -703,7 +718,15 @@ export function TripDetailScreen({ route, navigation }: Props) {
                   color: colors.ink,
                 }}
               />
-              <PressableScale onPress={() => Keyboard.dismiss()} hitSlop={hitSlopFor(36, 24)} accessibilityRole="button">
+              <PressableScale
+                onPress={() => {
+                  saveMemo(place.id);
+                  Keyboard.dismiss();
+                }}
+                hitSlop={hitSlopFor(36, 24)}
+                accessibilityRole="button"
+                accessibilityLabel="메모 저장"
+              >
                 <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
                   완료
                 </AppText>
@@ -826,6 +849,38 @@ export function TripDetailScreen({ route, navigation }: Props) {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       ListHeaderComponent={
         <View style={{ gap: space.sm, marginBottom: space.sm }}>
+          {justCreated && (
+            // 막 만든 여행 — 저장됐는지, 어디서 다시 보는지, 어떻게 끝내는지 알려 준다(2026-10-13 PWA 실사용: "일정이 정해졌다는 버튼이 없어서").
+            <View
+              accessibilityRole="summary"
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: space.sm,
+                padding: space.md,
+                borderRadius: radius.md,
+                backgroundColor: colors.accentBg,
+              }}
+            >
+              <Feather name="check-circle" size={20} color={colors.accent} />
+              <View style={{ flex: 1, gap: space.xxxs }}>
+                <AppText weight="medium">여행에 저장됐어요</AppText>
+                <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
+                  내 여행에서 언제든 다시 보고 고칠 수 있어요.
+                </AppText>
+              </View>
+              <PressableScale
+                onPress={() => navigation.navigate("MainTabs", { screen: "TripsList" })}
+                accessibilityRole="button"
+                accessibilityLabel="완료하고 내 여행으로"
+                style={{ paddingVertical: space.xs, paddingHorizontal: space.md, borderRadius: radius.full, backgroundColor: colors.accent }}
+              >
+                <AppText weight="medium" style={{ color: colors.onAccent, fontSize: fontSize.footnote }}>
+                  완료
+                </AppText>
+              </PressableScale>
+            </View>
+          )}
           {/* 일차 칩: 날짜와 그날 장소 수를 함께 보여주고 가로로 넘긴다(참고: Plotline 일정의 날짜 칩). */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
             {trip.days.map((d) => {
@@ -947,10 +1002,11 @@ export function TripDetailScreen({ route, navigation }: Props) {
                 }}
               >
                 <Feather name="search" size={16} color={colors.inkMuted} />
-                <BottomSheetTextInput
+                <SheetTextInput
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
                   value={query}
                   onChangeText={setQuery}
+                  placeholderTextColor={colors.inkMuted}
                   placeholder="장소 이름으로 검색 (예: 경복궁)"
                   returnKeyType="search"
                   enablesReturnKeyAutomatically
@@ -1353,5 +1409,35 @@ function AddToDayButton({ added, disabled, onPress }: { added: boolean; disabled
     <PressableScale onPress={onPress} disabled={disabled} style={[box, { borderColor: colors.accent, backgroundColor: colors.accent }]}>
       <AppText style={{ fontSize: fontSize.caption1, color: colors.onAccent }}>추가</AppText>
     </PressableScale>
+  );
+}
+
+const MEMO_VISIBLE_LINES = 3;
+
+// 메모를 줄마다 보여 준다. 영상 메모는 "· 내용" 여러 줄로 들어온다(백엔드 #134).
+function MemoLines({ memo }: { memo: string }) {
+  const lines = memo
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  const shown = lines.slice(0, MEMO_VISIBLE_LINES);
+  const textStyle = { fontSize: fontSize.footnote, lineHeight: fontSize.footnote * 1.5, color: colors.inkMuted };
+  return (
+    <View style={{ flex: 1, gap: space.xxxs }}>
+      {shown.map((line, i) => {
+        const bullet = /^[·•\-]\s*/.exec(line);
+        return (
+          <View key={i} style={{ flexDirection: "row", gap: space.xxs }}>
+            {bullet && <AppText style={textStyle}>·</AppText>}
+            <AppText style={[textStyle, { flex: 1 }]} numberOfLines={2}>
+              {bullet ? line.slice(bullet[0].length) : line}
+            </AppText>
+          </View>
+        );
+      })}
+      {lines.length > MEMO_VISIBLE_LINES && (
+        <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>외 {lines.length - MEMO_VISIBLE_LINES}줄 · 눌러서 모두 보기</AppText>
+      )}
+    </View>
   );
 }

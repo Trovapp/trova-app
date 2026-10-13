@@ -275,6 +275,7 @@ export function SavedPlacesScreen() {
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             value={query}
             onChangeText={setQuery}
+            placeholderTextColor={colors.inkMuted}
             placeholder="장소 이름으로 검색 (예: 경복궁)"
             returnKeyType="search"
             enablesReturnKeyAutomatically
@@ -526,6 +527,7 @@ export function SavedPlacesScreen() {
         visible={folderPickerTarget !== null}
         onClose={() => setFolderPickerTarget(null)}
         onPick={handlePickFolder}
+        createOnly={folderPickerTarget?.mode === "create"}
       />
 
       <BottomSheetModal

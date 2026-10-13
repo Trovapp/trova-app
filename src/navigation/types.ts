@@ -25,7 +25,8 @@ export type RootStackParamList = {
   // draftId: 자동으로 만들어진 초안(홈 카드·영상 결과 버튼)에서 들어올 때 — 고르기 화면 없이 그 초안으로 바로 연다.
   PlanTrip: { draftId?: number } | undefined;
   // weatherAlertTripPlaceId: 홈의 날씨 알림에서 들어올 때 — 해당 장소의 날짜로 이동해 실내 대안 찾기를 바로 연다.
-  TripDetail: { id: number; weatherAlertTripPlaceId?: number };
+  // justCreated: 여행을 막 만들고 들어왔을 때 — 저장됐다는 안내와 "완료"(내 여행으로)를 보인다.
+  TripDetail: { id: number; weatherAlertTripPlaceId?: number; justCreated?: boolean };
   TripReplan: { tripId: number; jobId: number };
   Licenses: undefined;
   ShareShortcut: undefined;

@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PressableScale } from "@/components/PressableScale";
@@ -37,7 +38,8 @@ export function BackButton({ onPress }: { onPress: () => void }) {
         alignItems: "center",
       }}
     >
-      <Feather name="chevron-left" size={20} color={colors.ink} />
+      {/* 앱 헤더(iOS)는 "<", 웹 헤더는 "←"라 PWA에서 이 버튼만 모양이 달랐다(2026-10-13 PWA QA) — 플랫폼 헤더에 맞춘다. */}
+      <Feather name={Platform.OS === "web" ? "arrow-left" : "chevron-left"} size={20} color={colors.ink} />
     </PressableScale>
   );
 }

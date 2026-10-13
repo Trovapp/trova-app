@@ -41,10 +41,20 @@
         }
       }
       body {
+        /* 웹은 한국어를 글자 단위로 줄바꿈해 "있어/요."처럼 끊겼다(2026-10-13 PWA QA) — 앱처럼 어절 단위로. 긴 링크는 아무 데서나 끊는다. */
+        word-break: keep-all;
+        overflow-wrap: anywhere;
         overflow: hidden;
         /* 길게 눌러 글자·이미지가 선택되거나 당겨서 새로고침되는 웹 느낌을 줄인다. */
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior: none;
+      }
+      /* 아이폰 Safari는 16px보다 작은 입력창에 들어가면 화면을 확대하고, 나와도 되돌리지 않는다(2026-10-13 PWA QA — 링크 입력이 14px).
+         maximum-scale=1로 막으면 손가락 확대까지 막히므로(안드로이드) 입력창 글자를 16px 이상으로 둔다. */
+      input,
+      textarea,
+      select {
+        font-size: max(16px, 1em) !important;
       }
       #root {
         display: flex;

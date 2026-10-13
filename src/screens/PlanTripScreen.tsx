@@ -32,6 +32,7 @@ import { cleanVideoTitle } from "@/lib/videoTitle";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
+import { openCreatedTrip } from "@/navigation/openCreatedTrip";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PlanTrip">;
 
@@ -143,7 +144,7 @@ export function PlanTripScreen({ navigation, route }: Props) {
       haptics.success();
       await queryClient.invalidateQueries({ queryKey: ["trips"] });
       await queryClient.invalidateQueries({ queryKey: ["autoDrafts"] });
-      navigation.replace("TripDetail", { id: tripId });
+      openCreatedTrip(navigation, tripId);
     } catch (e) {
       setError(toUserMessage(e, "여행으로 저장하지 못했어요. 다시 시도해주세요."));
       setBusy(false);
@@ -482,14 +483,18 @@ function Review({
         </AppText>
 
         {problems.length > 0 && (
-          <View style={{ gap: space.xxs, padding: space.sm, borderRadius: radius.md, backgroundColor: colors.bgMuted }}>
-            <AppText weight="medium" style={{ fontSize: fontSize.footnote }}>
-              확인해 주세요
-            </AppText>
-            {problems.map((p) => (
-              <AppText key={p} style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
-                · {p}
+          // 배경이 화면 배경(bgMuted)과 같아 상자가 안 보이고 안쪽 여백만 남아 줄이 어긋나 보였다(2026-10-13 PWA QA) — 테두리 있는 흰 상자로.
+          <View
+            style={{ gap: space.xs, padding: space.md, borderRadius: radius.md, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+              <Feather name="alert-circle" size={16} color={colors.accent} />
+              <AppText weight="medium" style={{ fontSize: fontSize.subheadline }}>
+                확인해 주세요
               </AppText>
+            </View>
+            {problems.map((p) => (
+              <BulletLine key={p} text={p} />
             ))}
           </View>
         )}
@@ -561,11 +566,13 @@ function Review({
         )}
 
         {plan.assumptions.length > 0 && (
-          <View style={{ gap: space.xxxs }}>
+          // 예전엔 작은 글자 네 줄이 제목·간격 없이 붙어 읽기 어려웠다(2026-10-13 PWA 실사용: "글이 많은 곳은 가독성 좋게").
+          <View style={{ gap: space.xs }}>
+            <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
+              참고
+            </AppText>
             {plan.assumptions.map((a) => (
-              <AppText key={a} style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
-                {a}
-              </AppText>
+              <BulletLine key={a} text={a} />
             ))}
           </View>
         )}
@@ -595,5 +602,15 @@ function Review({
         <SecondaryButton label="조건 바꿔 다시 짜기" disabled={busy} onPress={onRestart} />
       </View>
     </KeyboardAvoidingView>
+  );
+}
+
+// 글머리표 줄 — 두 줄로 넘어가도 둘째 줄이 글머리표가 아니라 글자 시작에 맞춰진다.
+function BulletLine({ text }: { text: string }) {
+  return (
+    <View style={{ flexDirection: "row", gap: space.xs }}>
+      <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, lineHeight: fontSize.footnote * 1.5 }}>·</AppText>
+      <AppText style={{ flex: 1, fontSize: fontSize.footnote, color: colors.inkMuted, lineHeight: fontSize.footnote * 1.5 }}>{text}</AppText>
+    </View>
   );
 }
