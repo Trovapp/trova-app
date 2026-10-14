@@ -44,3 +44,17 @@ test("마이페이지에서 알림을 끈 사람에게는 카드를 다시 보�
   assert.equal(shouldShowPushPrompt({ ...base, optedOut: true }), false);
   assert.equal(shouldShowPushPrompt({ ...base, optedOut: false }), true);
 });
+
+test("서버 공개 키가 바뀌었는지 바이트로 비교한다", async () => {
+  const { sameKey } = await import("../src/lib/pushLogic.ts");
+  const a = new Uint8Array([4, 1, 2, 3]);
+  assert.equal(sameKey(a.buffer, new Uint8Array([4, 1, 2, 3])), true);
+  assert.equal(sameKey(a.buffer, new Uint8Array([4, 1, 2, 9])), false);
+  assert.equal(sameKey(null, a), false);
+});
+
+test("주소에서 open만 지우고 다른 값은 남긴다", async () => {
+  const { withoutOpenParam } = await import("../src/lib/pushLogic.ts");
+  assert.equal(withoutOpenParam("?open=draft:1&utm=x"), "/?utm=x");
+  assert.equal(withoutOpenParam("?open=draft:1"), "/");
+});

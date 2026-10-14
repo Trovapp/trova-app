@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { setPendingOpen, takePendingOpen } from "@/lib/pendingOpen";
-import { parseOpenTarget, type OpenTarget } from "@/lib/pushLogic";
+import { parseOpenTarget, withoutOpenParam, type OpenTarget } from "@/lib/pushLogic";
 import { navigationRef } from "@/navigation/navigationRef";
 
 // 웹 푸시를 눌러 연 화면(백엔드 #185). 앱이 꺼져 있었으면 /?open=, 열려 있었으면 서비스 워커 메시지로 온다.
@@ -23,7 +23,7 @@ function go(target: OpenTarget) {
 const initialParams = new URLSearchParams(window.location.search);
 if (initialParams.has("open")) {
   const target = parseOpenTarget(initialParams.get("open"));
-  window.history.replaceState(null, "", "/");
+  window.history.replaceState(null, "", withoutOpenParam(window.location.search));
   if (target) setPendingOpen(target);
 }
 

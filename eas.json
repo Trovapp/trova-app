@@ -16,7 +16,8 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://193-123-161-217.sslip.io"
+        "EXPO_PUBLIC_API_BASE_URL": "https://193-123-161-217.sslip.io",
+        "TROVA_ALLOW_HTTP": "0"
       }
     }
   }

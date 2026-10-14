@@ -1,6 +1,6 @@
 import { deletePushSubscription, getPushPublicKey, savePushSubscription } from "@/lib/api/push";
 import { getToken } from "@/lib/tokenStorage";
-import { SNOOZE_MS, base64UrlToBytes, shouldShowPushPrompt } from "@/lib/pushLogic";
+import { SNOOZE_MS, base64UrlToBytes, sameKey, shouldShowPushPrompt } from "@/lib/pushLogic";
 
 // PWA 웹 푸시(백엔드 #185, ADR 0016). 아이폰은 홈 화면에 설치한 앱(iOS 16.4+)에서만 되고, 권한은 사용자가 버튼을 눌렀을 때만 묻는다.
 export type PushStatus = "unsupported" | "blocked" | "off" | "on";
@@ -50,20 +50,27 @@ function toBody(subscription: PushSubscription) {
 // 앱을 열 때의 재등록과 [알림 받기]가 동시에 불리면 구독이 두 개 생겨 같은 알림이 두 번 갔다(2026-10-14 로컬 확인) —
 // 진행 중인 구독 만들기를 함께 기다린다.
 let subscribing: Promise<PushSubscription | null> | null = null;
+// 서버 공개 키는 바뀔 일이 드물다 — 화면마다 다시 묻지 않게 이 페이지 안에서 기억한다(#25).
+let cachedPublicKey: string | null = null;
+
+async function publicKey(): Promise<string | null> {
+  if (cachedPublicKey) return cachedPublicKey;
+  cachedPublicKey = await getPushPublicKey();
+  return cachedPublicKey;
+}
 
 /** 지금 구독이 있으면 그대로, 없으면 서버 공개 키로 새로 만든다. 서버에 키가 없으면 null. */
 function ensureSubscription(): Promise<PushSubscription | null> {
   subscribing ??= (async () => {
-    const publicKey = await getPushPublicKey();
-    if (!publicKey) return null;
+    const key = await publicKey();
+    if (!key) return null;
+    const serverKey = base64UrlToBytes(key);
     const registration = await navigator.serviceWorker.ready;
-    return (
-      (await registration.pushManager.getSubscription()) ??
-      (await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: base64UrlToBytes(publicKey) as BufferSource,
-      }))
-    );
+    const existing = await registration.pushManager.getSubscription();
+    // 서버 키가 바뀌면 예전 구독은 푸시 서버가 계속 거절한다(403) — 끊고 새 키로 다시 만든다(#25).
+    if (existing && sameKey(existing.options.applicationServerKey, serverKey)) return existing;
+    if (existing) await existing.unsubscribe().catch(() => false);
+    return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: serverKey as BufferSource });
   })().finally(() => {
     subscribing = null;
   });
@@ -133,7 +140,7 @@ export async function isPushPromptVisible(): Promise<boolean> {
   if (!supported || !standalone) return false;
   const loggedIn = Boolean(await getToken());
   const permission = Notification.permission as "default" | "granted" | "denied";
-  const hasPublicKey = loggedIn ? Boolean(await getPushPublicKey().catch(() => null)) : false;
+  const hasPublicKey = loggedIn ? Boolean(await publicKey().catch(() => null)) : false;
   const subscribed = permission === "granted" ? Boolean(await currentSubscription().catch(() => null)) : false;
   return shouldShowPushPrompt({
     standalone,

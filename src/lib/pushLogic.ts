@@ -53,3 +53,20 @@ export function base64UrlToBytes(value: string): Uint8Array {
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
 }
+
+/** 구독이 만들어질 때의 서버 공개 키와 지금 서버 키가 같은지 — 다르면(키 교체) 그 구독은 계속 403이라 다시 구독한다. */
+export function sameKey(subscriptionKey: ArrayBuffer | null | undefined, serverKey: Uint8Array): boolean {
+  if (!subscriptionKey) return false;
+  const a = new Uint8Array(subscriptionKey);
+  if (a.length !== serverKey.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== serverKey[i]) return false;
+  return true;
+}
+
+/** 알림으로 연 주소에서 open만 지운다 — 다른 값(유입 경로 등)은 남긴다. */
+export function withoutOpenParam(search: string): string {
+  const params = new URLSearchParams(search);
+  params.delete("open");
+  const rest = params.toString();
+  return rest ? `/?${rest}` : "/";
+}

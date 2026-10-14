@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import type * as NotificationsModule from "expo-notifications";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -32,6 +32,8 @@ function targetOf(response: NotificationsModule.NotificationResponse | null): Op
 
 export function PushOpenListener() {
   const { user } = useAuth();
+  // 담아 둔 이동이 생길 때마다 아래 확인을 다시 돌린다 — 확인 시간(5초)이 지난 뒤 담긴 것도 열리게(#25).
+  const [wake, setWake] = useState(0);
 
   useEffect(() => {
     if (!Notifications) return;
@@ -41,7 +43,10 @@ export function PushOpenListener() {
       .getLastNotificationResponseAsync()
       .then((response) => {
         const target = targetOf(response);
-        if (target) setPendingOpen(target);
+        if (target) {
+          setPendingOpen(target);
+          setWake((n) => n + 1);
+        }
         return notifications.clearLastNotificationResponseAsync();
       })
       .catch(() => {});
@@ -51,9 +56,14 @@ export function PushOpenListener() {
     if (!Notifications) return;
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const target = targetOf(response);
+      // 처리한 응답은 지운다 — 같은 프로세스에서 앱 코드를 다시 불러올 때 예전 화면이 또 열리지 않게(#25).
+      Notifications?.clearLastNotificationResponseAsync().catch(() => {});
       if (!target) return;
       if (navigationRef.isReady() && user) go(target);
-      else setPendingOpen(target);
+      else {
+        setPendingOpen(target);
+        setWake((n) => n + 1);
+      }
     });
     return () => subscription.remove();
   }, [user]);
@@ -73,7 +83,7 @@ export function PushOpenListener() {
       }
     }, 100);
     return () => clearInterval(timer);
-  }, [user]);
+  }, [user, wake]);
 
   return null;
 }
