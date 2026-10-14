@@ -331,7 +331,7 @@ export function PlacesListScreen({ navigation }: Props) {
             {allGroups.length >= SEARCH_MIN_VIDEOS && (
               <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs, minHeight: 40, paddingHorizontal: space.sm, borderRadius: radius.md, backgroundColor: colors.bgMuted }}>
                 <Feather name="search" size={16} color={colors.inkMuted} />
-                <TextInput
+                <TextInput underlineColorAndroid="transparent"
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
                   value={query}
                   onChangeText={setQuery}

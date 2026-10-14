@@ -271,7 +271,7 @@ export function SavedPlacesScreen() {
           }}
         >
           <Feather name="search" size={16} color={colors.inkMuted} />
-          <TextInput
+          <TextInput underlineColorAndroid="transparent"
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             value={query}
             onChangeText={setQuery}

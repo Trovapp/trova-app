@@ -147,7 +147,7 @@ export function FolderPickerModal({
 
         {creating ? (
           <View style={{ gap: space.sm, padding: space.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border }}>
-            <SheetTextInput
+            <SheetTextInput underlineColorAndroid="transparent"
               maxFontSizeMultiplier={MAX_FONT_SCALE}
               autoFocus
               value={newName}

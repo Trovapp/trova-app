@@ -604,7 +604,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                         <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>취소</AppText>
                       </PressableScale>
                     </View>
-                    <TextInput
+                    <TextInput underlineColorAndroid="transparent"
                       maxFontSizeMultiplier={MAX_FONT_SCALE}
                       value={tripTitle}
                       onChangeText={setTripTitle}

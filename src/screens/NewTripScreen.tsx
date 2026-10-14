@@ -72,7 +72,7 @@ export function NewTripScreen({ navigation }: Props) {
       {/* 날짜 칸처럼 이름 칸에도 이름표를 단다(디자인 QA N1). */}
       <View style={{ gap: space.xxs }}>
       <AppText style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>여행 이름</AppText>
-      <TextInput
+      <TextInput underlineColorAndroid="transparent"
         maxFontSizeMultiplier={MAX_FONT_SCALE}
         value={title}
         onChangeText={setTitle}

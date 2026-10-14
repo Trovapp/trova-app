@@ -224,7 +224,7 @@ export function PlanTripScreen({ navigation, route }: Props) {
         {placesQuery.isError && <StaleNotice onRetry={() => placesQuery.refetch()} />}
         <View style={{ gap: space.xs }}>
           <AppText weight="medium">어떻게 다녀올까요?</AppText>
-          <TextInput
+          <TextInput underlineColorAndroid="transparent"
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             value={message}
             onChangeText={setMessage}
@@ -567,7 +567,7 @@ function Review({
 
         {plan.assumptions.length > 0 && <AssumptionChips assumptions={plan.assumptions} />}
 
-        <TextInput
+        <TextInput underlineColorAndroid="transparent"
           maxFontSizeMultiplier={MAX_FONT_SCALE}
           value={title}
           onChangeText={setTitle}
