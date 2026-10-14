@@ -30,3 +30,22 @@ export async function deletePushSubscription(endpoint: string): Promise<void> {
   });
   if (!res.ok) throw new ApiError(res.status, `DELETE /api/push/subscriptions failed: ${res.status}`);
 }
+
+// 안드로이드 앱(Expo) 알림 토큰(백엔드 #190, ADR 0017).
+export async function saveExpoPushToken(token: string): Promise<void> {
+  const res = await apiFetch("/api/push/expo-tokens", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (!res.ok) throw new ApiError(res.status, `POST /api/push/expo-tokens failed: ${res.status}`);
+}
+
+export async function deleteExpoPushToken(token: string): Promise<void> {
+  const res = await apiFetch("/api/push/expo-tokens", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (!res.ok) throw new ApiError(res.status, `DELETE /api/push/expo-tokens failed: ${res.status}`);
+}

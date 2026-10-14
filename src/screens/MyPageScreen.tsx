@@ -5,6 +5,7 @@ import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import { AppText } from "@/components/AppText";
 import { PressableRow } from "@/components/PressableRow";
+import { BLOCKED_GUIDE } from "@/components/PushPromptCard";
 import { haptics } from "@/lib/haptics";
 import { PRIVACY_POLICY_URL, TERMS_URL } from "@/lib/legal";
 import { withdraw } from "@/lib/api/auth";
@@ -101,8 +102,8 @@ export function MyPageScreen() {
       </View>
 
       <View>
-        {/* 웹 푸시(백엔드 #185). 설치하지 않은 브라우저·미지원이면 줄을 숨긴다. */}
-        {Platform.OS === "web" && pushStatus !== "unsupported" && (
+        {/* 알림 — 웹 푸시(백엔드 #185)·안드로이드 앱(#190). 미지원(설치 안 한 브라우저·아이폰 앱)이면 줄을 숨긴다. */}
+        {pushStatus !== "unsupported" && (
           <PressableRow
             onPress={togglePush}
             accessibilityRole="button"
@@ -119,7 +120,7 @@ export function MyPageScreen() {
               <AppText>알림</AppText>
               {pushStatus === "blocked" && (
                 <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
-                  iPhone 설정 → 알림 → Trova에서 켤 수 있어요
+                  {BLOCKED_GUIDE}
                 </AppText>
               )}
             </View>
