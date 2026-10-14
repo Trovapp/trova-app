@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { Alert, Image, Platform, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -9,6 +9,7 @@ import { haptics } from "@/lib/haptics";
 import { PRIVACY_POLICY_URL, TERMS_URL } from "@/lib/legal";
 import { withdraw } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { disablePush, enablePush, getPushStatus, type PushStatus } from "@/lib/push";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 import type { RootStackParamList } from "@/navigation/types";
 import appConfig from "../../app.json";
@@ -23,6 +24,20 @@ export function MyPageScreen() {
   // 카카오/구글 프로필 이미지 URL이 있어도 로드에 실패할 수 있다(만료된 URL,
   // 네트워크 차단 등) — 실패하면 빈 자리로 남기지 않고 기본 아이콘으로 대체한다.
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const [pushStatus, setPushStatus] = useState<PushStatus>("unsupported");
+
+  useEffect(() => {
+    getPushStatus().then(setPushStatus).catch(() => {});
+  }, []);
+
+  async function togglePush() {
+    if (pushStatus === "on") {
+      await disablePush();
+      setPushStatus("off");
+    } else if (pushStatus === "off") {
+      setPushStatus(await enablePush().catch((): PushStatus => "off"));
+    }
+  }
 
   function confirmLogout() {
     Alert.alert("로그아웃", "로그아웃할까요?", [
@@ -86,6 +101,33 @@ export function MyPageScreen() {
       </View>
 
       <View>
+        {/* 웹 푸시(백엔드 #185). 설치하지 않은 브라우저·미지원이면 줄을 숨긴다. */}
+        {Platform.OS === "web" && pushStatus !== "unsupported" && (
+          <PressableRow
+            onPress={togglePush}
+            accessibilityRole="button"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingVertical: space.md,
+              borderTopWidth: 1,
+              borderTopColor: colors.borderSubtle,
+            }}
+          >
+            <View style={{ flex: 1, gap: space.xxxs }}>
+              <AppText>알림</AppText>
+              {pushStatus === "blocked" && (
+                <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
+                  iPhone 설정 → 알림 → Trova에서 켤 수 있어요
+                </AppText>
+              )}
+            </View>
+            <AppText style={{ color: pushStatus === "on" ? colors.accent : colors.inkMuted }}>
+              {pushStatus === "on" ? "켜짐" : pushStatus === "blocked" ? "막힘" : "꺼짐"}
+            </AppText>
+          </PressableRow>
+        )}
         {/* 웹(PWA) 아이폰은 공유 목록에 뜨지 않아 단축어로 저장한다(ADR 0013). 앱은 공유 확장이 있어 필요 없다. */}
         {Platform.OS === "web" && (
           <PressableRow
