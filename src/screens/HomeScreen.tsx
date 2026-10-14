@@ -28,6 +28,7 @@ import { colors, fontSize, radius, space, motion } from "@/lib/theme";
 import { extractFirstUrl, isSupportedShareUrl, sourceVideoKey, UNSUPPORTED_SHARE_URL_MESSAGE } from "@/lib/shareUrl";
 import { PasteButton } from "@/lib/clipboard";
 import { takePendingShare, usePendingShare } from "@/lib/pendingShare";
+import { PushPromptCard } from "@/components/PushPromptCard";
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"Home">;
@@ -356,6 +357,9 @@ export function HomeScreen({ navigation }: Props) {
             {error && <ErrorText>{error}</ErrorText>}
           </View>
         </View>
+
+        {/* 단축어로 보낸 사람은 앱을 거치지 않아 여기서 알림을 묻는다(백엔드 #185) — 보낸 영상이 있을 때만. */}
+        {recentVideos.length > 0 && <PushPromptCard />}
 
         {/* 자동 초안 카드와 날씨 배너는 둘 다 "알려줄 게 있어요" 성격의 배너라 한 묶음으로 본다 — 섹션
             자체의 gap(sm)과 ScrollView의 블록 사이 gap(xxl)이 겹쳐 둘 사이만 유독 넓어 보였다(QA 발견).

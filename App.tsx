@@ -17,6 +17,7 @@ import { AuthProvider } from "@/lib/auth/AuthContext";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { navigationRef } from "@/navigation/navigationRef";
 import { PushOpenListener } from "@/components/PushOpenListener";
+import { PushSubscriptionRefresher } from "@/components/PushSubscriptionRefresher";
 import { ShareIntentListener } from "@/components/ShareIntentListener";
 import { WebAlertHost } from "@/components/WebAlertHost";
 import { WebEntryGate } from "@/components/WebEntryGate";
@@ -107,6 +108,7 @@ export default function App() {
                 </NavigationContainer>
                 <ShareIntentListener />
                 <PushOpenListener />
+                <PushSubscriptionRefresher />
                 <WebAlertHost />
               </BottomSheetModalProvider>
             </AppErrorBoundary>

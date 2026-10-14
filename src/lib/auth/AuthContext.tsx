@@ -6,6 +6,7 @@ import { exchangeWebLoginCode, getMe, type CurrentUser } from "@/lib/api/auth";
 import { takeWebLoginCallback } from "@/lib/auth/webLoginCallback";
 import { setUnauthorizedHandler } from "@/lib/api/client";
 import { clearToken, setToken } from "@/lib/tokenStorage";
+import { disablePush } from "@/lib/push";
 
 type AuthState = {
   user: CurrentUser | null;
@@ -50,6 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    // 이 기기 웹 푸시 구독을 서버에서 먼저 지운다(토큰이 필요) — 다른 사람이 이 기기로 로그인해도 앞사람 알림이 오지 않게(#185).
+    await disablePush().catch(() => {});
     await clearToken();
     setSessionExpired(false);
     setUser(null);

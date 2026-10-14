@@ -11,6 +11,7 @@ import { PressableScale } from "@/components/PressableScale";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Orb, type OrbState } from "@/components/Orb";
 import { ProgressHero } from "@/components/ProgressHero";
+import { PushPromptCard } from "@/components/PushPromptCard";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
 import { describeSourceUrl, sourceKindLabel } from "@/lib/shareUrl";
@@ -299,6 +300,8 @@ export function ProcessingScreen({ route, navigation }: Props) {
         sourceUrl={job.sourceUrl}
         foundPlaceNames={foundNames}
       />
+      {/* 영상을 보낸 직후 — 분석이 끝나면 알림으로 알려 줄지 묻는다(백엔드 #185). */}
+      <PushPromptCard />
     </View>
   );
 }
