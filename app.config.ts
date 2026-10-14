@@ -17,6 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ...(base.plugins ?? []),
       ["expo-notifications", { color: "#E14A2B", defaultChannel: "trova-default" }],
       ["expo-build-properties", { android: { usesCleartextTraffic: allowHttp } }],
+      "./plugins/withNoEditTextUnderline",
     ],
   };
 };

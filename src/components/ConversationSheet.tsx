@@ -473,7 +473,7 @@ export function ConversationSheet({
               </View>
             ) : (
               <View style={{ flexDirection: "row", alignItems: "flex-end", gap: space.xs }}>
-                <SheetTextInput underlineColorAndroid="transparent"
+                <SheetTextInput
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
                   value={input}
                   onChangeText={setInput}

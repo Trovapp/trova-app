@@ -679,7 +679,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             // 언제 저장되는지 안 보이고(리턴 키가 "↵"), 바깥을 눌러도 키보드가 안 닫혔다(디자인 QA K2·K3).
             // 안내 문구·"완료" 리턴 키·완료 버튼을 둔다. 저장은 지금처럼 입력이 끝날 때(blur) 한 번 한다.
             <View style={{ marginTop: space.xs, flexDirection: "row", alignItems: "flex-end", gap: space.xs }}>
-              <SheetTextInput underlineColorAndroid="transparent"
+              <SheetTextInput
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
                 autoFocus
                 defaultValue={memoDraft}
@@ -974,7 +974,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
                 }}
               >
                 <Feather name="search" size={16} color={colors.inkMuted} />
-                <SheetTextInput underlineColorAndroid="transparent"
+                <SheetTextInput
                   maxFontSizeMultiplier={MAX_FONT_SCALE}
                   value={query}
                   onChangeText={setQuery}

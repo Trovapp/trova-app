@@ -291,7 +291,7 @@ export function HomeScreen({ navigation }: Props) {
                   : { flexDirection: "row", alignItems: "center", gap: space.sm }
               }
             >
-              <TextInput underlineColorAndroid="transparent"
+              <TextInput
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
                 // 눌러도 테두리가 그대로라 입력 중인지 알기 어려웠다(2026-10 QA) — 입력 중엔 강조색 테두리.
                 onFocus={() => setUrlFocused(true)}
