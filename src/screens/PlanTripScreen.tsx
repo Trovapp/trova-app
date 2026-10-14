@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentProps } from "react";
+import { isNotFound } from "@/lib/api/errors";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -32,6 +33,7 @@ import { cleanVideoTitle } from "@/lib/videoTitle";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
+import { openCreatedTrip } from "@/navigation/openCreatedTrip";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PlanTrip">;
 
@@ -143,7 +145,7 @@ export function PlanTripScreen({ navigation, route }: Props) {
       haptics.success();
       await queryClient.invalidateQueries({ queryKey: ["trips"] });
       await queryClient.invalidateQueries({ queryKey: ["autoDrafts"] });
-      navigation.replace("TripDetail", { id: tripId });
+      openCreatedTrip(navigation, tripId);
     } catch (e) {
       setError(toUserMessage(e, "여행으로 저장하지 못했어요. 다시 시도해주세요."));
       setBusy(false);
@@ -158,6 +160,16 @@ export function PlanTripScreen({ navigation, route }: Props) {
 
   if (draftId != null) {
     const draft = draftQuery.data;
+    if (draftQuery.isError && !draft && isNotFound(draftQuery.error)) {
+      return (
+        <QueryErrorView
+          fullScreen
+          message="이 일정 초안을 찾을 수 없어요. 지워졌거나 지금 로그인한 계정의 초안이 아니에요."
+          actionLabel="홈으로"
+          onRetry={() => navigation.reset({ index: 0, routes: [{ name: "MainTabs", params: { screen: "Home" } }] })}
+        />
+      );
+    }
     if (draftQuery.isError && !draft) {
       return <QueryErrorView fullScreen message="일정 상태를 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요." onRetry={() => draftQuery.refetch()} />;
     }
@@ -482,14 +494,18 @@ function Review({
         </AppText>
 
         {problems.length > 0 && (
-          <View style={{ gap: space.xxs, padding: space.sm, borderRadius: radius.md, backgroundColor: colors.bgMuted }}>
-            <AppText weight="medium" style={{ fontSize: fontSize.footnote }}>
-              확인해 주세요
-            </AppText>
-            {problems.map((p) => (
-              <AppText key={p} style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
-                · {p}
+          // 배경이 화면 배경(bgMuted)과 같아 상자가 안 보이고 안쪽 여백만 남아 줄이 어긋나 보였다(2026-10-13 PWA QA) — 테두리 있는 흰 상자로.
+          <View
+            style={{ gap: space.xs, padding: space.md, borderRadius: radius.md, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+              <Feather name="alert-circle" size={16} color={colors.accent} />
+              <AppText weight="medium" style={{ fontSize: fontSize.subheadline }}>
+                확인해 주세요
               </AppText>
+            </View>
+            {problems.map((p) => (
+              <BulletLine key={p} text={p} />
             ))}
           </View>
         )}
@@ -560,15 +576,7 @@ function Review({
           </View>
         )}
 
-        {plan.assumptions.length > 0 && (
-          <View style={{ gap: space.xxxs }}>
-            {plan.assumptions.map((a) => (
-              <AppText key={a} style={{ fontSize: fontSize.caption1, color: colors.inkMuted }}>
-                {a}
-              </AppText>
-            ))}
-          </View>
-        )}
+        {plan.assumptions.length > 0 && <AssumptionChips assumptions={plan.assumptions} />}
 
         <TextInput
           maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -595,5 +603,82 @@ function Review({
         <SecondaryButton label="조건 바꿔 다시 짜기" disabled={busy} onPress={onRestart} />
       </View>
     </KeyboardAvoidingView>
+  );
+}
+
+// 글머리표 줄 — 두 줄로 넘어가도 둘째 줄이 글머리표가 아니라 글자 시작에 맞춰진다.
+function BulletLine({ text }: { text: string }) {
+  return (
+    <View style={{ flexDirection: "row", gap: space.xs }}>
+      <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted, lineHeight: fontSize.footnote * 1.5 }}>·</AppText>
+      <AppText style={{ flex: 1, fontSize: fontSize.footnote, color: colors.inkMuted, lineHeight: fontSize.footnote * 1.5 }}>{text}</AppText>
+    </View>
+  );
+}
+
+type FeatherName = ComponentProps<typeof Feather>["name"];
+
+// 서버가 보내는 "참고" 문장을 짧은 칩으로 — 긴 문장 네 줄이라 한눈에 안 들어왔다(2026-10-13 사용자: "한눈에 보이게").
+// 모르는 문장은 "기타 안내"로 두고, "자세히"를 누르면 원래 문장 전체를 보여 준다.
+function assumptionChip(text: string): { icon: FeatherName; label: string } {
+  if (/요일별 휴무/.test(text)) return { icon: "calendar", label: "휴무일 미확인" };
+  if (/영업시간/.test(text)) return { icon: "clock", label: "영업시간 미확인" };
+  const unknown = /위치를 확인하지 못한 장소가 (\d+)곳/.exec(text);
+  if (unknown) return { icon: "map-pin", label: `위치 미확인 ${unknown[1]}곳` };
+  if (/직선거리/.test(text)) return { icon: "navigation", label: "이동 시간 어림" };
+  return { icon: "info", label: "기타 안내" };
+}
+
+function AssumptionChips({ assumptions }: { assumptions: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={{ gap: space.sm }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
+          참고
+        </AppText>
+        <PressableRow
+          onPress={() => setOpen((v) => !v)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: open }}
+          style={{ flexDirection: "row", alignItems: "center", gap: space.xxs, paddingVertical: space.xxs }}
+        >
+          <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>{open ? "접기" : "자세히"}</AppText>
+          <Feather name={open ? "chevron-up" : "chevron-down"} size={14} color={colors.inkMuted} />
+        </PressableRow>
+      </View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
+        {assumptions.map((a) => {
+          const chip = assumptionChip(a);
+          return (
+            <View
+              key={a}
+              accessibilityLabel={a}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: space.xxs,
+                paddingVertical: space.xxs,
+                paddingHorizontal: space.sm,
+                borderRadius: radius.full,
+                backgroundColor: colors.bg,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <Feather name={chip.icon} size={12} color={colors.inkMuted} />
+              <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>{chip.label}</AppText>
+            </View>
+          );
+        })}
+      </View>
+      {open && (
+        <View style={{ gap: space.xs }}>
+          {assumptions.map((a) => (
+            <BulletLine key={a} text={a} />
+          ))}
+        </View>
+      )}
+    </View>
   );
 }

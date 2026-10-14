@@ -28,6 +28,7 @@ import { colors, fontSize, radius, space, motion } from "@/lib/theme";
 import { extractFirstUrl, isSupportedShareUrl, sourceVideoKey, UNSUPPORTED_SHARE_URL_MESSAGE } from "@/lib/shareUrl";
 import { PasteButton } from "@/lib/clipboard";
 import { takePendingShare, usePendingShare } from "@/lib/pendingShare";
+import { PushPromptCard } from "@/components/PushPromptCard";
 import type { MainTabScreenProps } from "@/navigation/types";
 
 type Props = MainTabScreenProps<"Home">;
@@ -87,6 +88,7 @@ export function HomeScreen({ navigation }: Props) {
   // 아이콘이 들어가지 않아 빈 하늘색 사각형으로 보였다(디자인 QA 2026-10-07, 시뮬레이터에서 단계별 확인).
   const { fontScale } = useWindowDimensions();
   const pasteButtonSize = Math.max(PASTE_BUTTON_SIZE, Math.min(PASTE_BUTTON_MAX, Math.round(fontScale * 26)));
+  const pasteInside = Platform.OS === "web";
 
   const bookmarksQuery = useQuery({ queryKey: ["bookmarks"], queryFn: listBookmarks });
   const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: listTrips });
@@ -272,7 +274,23 @@ export function HomeScreen({ navigation }: Props) {
           </AppText>
 
           <View style={{ gap: space.sm }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+            {/* 웹(PWA)은 붙여넣기 아이콘을 입력칸 안쪽 오른쪽에 둔다 — 칸 밖 오른쪽 끝에 따로 붙어 어색했다(2026-10-13 사용자).
+                앱(iOS)은 시스템 붙여넣기 버튼이 큰 글자에서 커져야 해서(디자인 QA 2026-10-07) 칸 밖에 둔다. */}
+            <View
+              style={
+                pasteInside
+                  ? {
+                      flexDirection: "row",
+                      alignItems: "center",
+                      height: 52,
+                      borderWidth: 1,
+                      borderColor: urlFocused ? colors.accent : colors.border,
+                      borderRadius: radius.md,
+                      paddingRight: space.xs,
+                    }
+                  : { flexDirection: "row", alignItems: "center", gap: space.sm }
+              }
+            >
               <TextInput
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
                 // 눌러도 테두리가 그대로라 입력 중인지 알기 어려웠다(2026-10 QA) — 입력 중엔 강조색 테두리.
@@ -284,6 +302,7 @@ export function HomeScreen({ navigation }: Props) {
                   setUrl(text);
                   if (error) setError(null);
                 }}
+                placeholderTextColor={colors.inkMuted}
                 placeholder="인스타그램 또는 유튜브 링크"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -291,8 +310,8 @@ export function HomeScreen({ navigation }: Props) {
                 returnKeyType="go"
                 onSubmitEditing={() => handleSubmit()}
                 style={{
-                  height: 52,
-                  borderWidth: 1,
+                  height: pasteInside ? "100%" : 52,
+                  borderWidth: pasteInside ? 0 : 1,
                   borderColor: urlFocused ? colors.accent : colors.border,
                   borderRadius: radius.md,
                   paddingHorizontal: space.lg,
@@ -309,7 +328,7 @@ export function HomeScreen({ navigation }: Props) {
                   cornerStyle="medium"
                   backgroundColor={colors.accentBg}
                   foregroundColor={colors.accent}
-                  style={{ width: pasteButtonSize, height: pasteButtonSize }}
+                  style={pasteInside ? { width: 40, height: 40 } : { width: pasteButtonSize, height: pasteButtonSize }}
                   onPress={(data) => {
                     if (data.type !== "text") return;
                     const pasted = extractFirstUrl(data.text);
@@ -338,6 +357,9 @@ export function HomeScreen({ navigation }: Props) {
             {error && <ErrorText>{error}</ErrorText>}
           </View>
         </View>
+
+        {/* 단축어로 보낸 사람은 앱을 거치지 않아 여기서 알림을 묻는다(백엔드 #185) — 보낸 영상이 있을 때만. */}
+        {recentVideos.length > 0 && <PushPromptCard />}
 
         {/* 자동 초안 카드와 날씨 배너는 둘 다 "알려줄 게 있어요" 성격의 배너라 한 묶음으로 본다 — 섹션
             자체의 gap(sm)과 ScrollView의 블록 사이 gap(xxl)이 겹쳐 둘 사이만 유독 넓어 보였다(QA 발견).

@@ -10,12 +10,16 @@ import { PlanTripScreen } from "@/screens/PlanTripScreen";
 import { TripDetailScreen } from "@/screens/TripDetailScreen";
 import { TripReplanScreen } from "@/screens/TripReplanScreen";
 import { LicensesScreen } from "@/screens/LicensesScreen";
+import { ShareShortcutScreen } from "@/screens/ShareShortcutScreen";
 import { AppText } from "@/components/AppText";
 import { QueryErrorView } from "@/components/QueryErrorView";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Image, Platform, View } from "react-native";
+import Animated, { FadeIn, ReduceMotion, SlideInRight } from "react-native-reanimated";
 import { OnboardingScreen } from "@/screens/OnboardingScreen";
 import { hasSeenOnboarding, markOnboardingSeen } from "@/lib/onboardingStorage";
+import { hideBootSplash } from "@/lib/bootSplash";
+import { colors, fontSize, space } from "@/lib/theme";
 import type { MainTabParamList, RootStackParamList } from "@/navigation/types";
 
 export type { RootStackParamList };
@@ -38,6 +42,17 @@ export function RootNavigator() {
       .catch(() => setOnboardingSeen(true));
   }, []);
 
+  // 웹 시작 화면(public/index.html)은 로그인 확인이 끝나면 지운다. 확인이 오래 걸려도 8초 뒤엔 지워 아래 화면(재시도 등)이 보이게 한다.
+  const booting = loading || (!user && onboardingSeen === null);
+  useEffect(() => {
+    if (!booting) {
+      hideBootSplash();
+      return;
+    }
+    const id = setTimeout(hideBootSplash, 8000);
+    return () => clearTimeout(id);
+  }, [booting]);
+
   function finishOnboarding() {
     setOnboardingSeen(true);
     markOnboardingSeen().catch(() => {});
@@ -47,10 +62,17 @@ export function RootNavigator() {
     return <OnboardingScreen onDone={() => setPreviewOnboarding(false)} />;
   }
 
-  if (loading || (!user && onboardingSeen === null)) {
+  if (booting) {
+    // "불러오는 중..." 글자만 보였다 — 웹 시작 화면·로그인 화면과 같은 로고·문구로(2026-10-13 사용자: "케이뱅크처럼").
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <AppText>불러오는 중...</AppText>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: space.xl }}>
+        <Image source={require("../../assets/splash-icon.png")} resizeMode="contain" style={{ width: 96, height: 96, marginBottom: space.lg }} />
+        <AppText weight="bold" style={{ fontSize: fontSize.largeTitle }}>
+          Trova
+        </AppText>
+        <AppText style={{ marginTop: space.xs, fontSize: fontSize.subheadline, color: colors.inkMuted, textAlign: "center" }}>
+          여행 영상을 공유만 하면 장소와 일정까지 정리해드려요
+        </AppText>
       </View>
     );
   }
@@ -69,7 +91,7 @@ export function RootNavigator() {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerTitleAlign: "center" }}>
+    <Stack.Navigator screenOptions={{ headerTitleAlign: "center" }} screenLayout={Platform.OS === "web" ? WebScreenTransition : undefined}>
       {!user ? (
         onboardingSeen ? (
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
@@ -97,8 +119,23 @@ export function RootNavigator() {
           <Stack.Screen name="TripDetail" component={TripDetailScreen} options={{ title: "여행 상세" }} />
           <Stack.Screen name="TripReplan" component={TripReplanScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Licenses" component={LicensesScreen} options={{ title: "오픈소스 라이선스" }} />
+          <Stack.Screen name="ShareShortcut" component={ShareShortcutScreen} options={{ title: "아이폰 공유 단축어" }} />
         </>
       )}
     </Stack.Navigator>
+  );
+}
+
+// 웹(PWA)은 native-stack이 화면 전환 애니메이션 없이 바로 바꾼다 — 앱처럼 느껴지게 새 화면을 오른쪽에서 짧게 밀어 넣는다(ADR 0013).
+// 탭·첫 화면은 밀기 대신 살짝 나타나게. 시스템 "동작 줄이기"가 켜져 있으면 애니메이션 없이.
+function WebScreenTransition({ children, route }: { children: React.ReactNode; route: { name: string } }) {
+  const entering =
+    route.name === "MainTabs" || route.name === "Login" || route.name === "Onboarding"
+      ? FadeIn.duration(180).reduceMotion(ReduceMotion.System)
+      : SlideInRight.duration(220).reduceMotion(ReduceMotion.System);
+  return (
+    <Animated.View entering={entering} style={{ flex: 1 }}>
+      {children}
+    </Animated.View>
   );
 }

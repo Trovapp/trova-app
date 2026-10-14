@@ -1,0 +1,13 @@
+// 웹(PWA) 배포 설정 — Cloudflare Workers 정적 사이트(ADR 0013). 주소: https://app.trovapp.workers.dev
+// Cloudflare Pages가 Workers로 합쳐져(2026-10 wrangler 4.149) Pages 대신 이 방식으로 올린다. 정적 파일 요청은 무료.
+// 배포: npm run build:web && npx wrangler@4 deploy
+{
+  "name": "app",
+  "compatibility_date": "2026-10-12",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./dist",
+    // 단일 페이지 앱: /auth/callback/, /share/ 같은 경로도 index.html을 준다(Pages는 자동, Workers는 직접 지정).
+    "not_found_handling": "single-page-application"
+  }
+}

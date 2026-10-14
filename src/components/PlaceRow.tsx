@@ -161,6 +161,9 @@ export function PlaceRow({
             onPress={onOpenMenu}
             disabled={disabled}
             hitSlop={hitSlopFor(26, 18, 10)}
+            // 아이콘만 있는 버튼이라 화면 읽기(VoiceOver)가 이름을 읽지 못했다(2026-10-13 PWA QA).
+            accessibilityRole="button"
+            accessibilityLabel={`${place.placeName} 메뉴`}
             style={{ justifyContent: "center", alignItems: "center", paddingHorizontal: space.xxs }}
           >
             <Feather name="more-vertical" size={18} color={colors.inkMuted} />
@@ -171,6 +174,8 @@ export function PlaceRow({
             onPressIn={dragHandle.onPressIn}
             disabled={disabled}
             hitSlop={hitSlopFor(26, 18, 12)}
+            accessibilityRole="button"
+            accessibilityLabel={`${place.placeName} 순서 바꾸기`}
             // 점자 글자(⠿)를 손잡이로 쓰던 것을 iOS 목록 순서 바꾸기와 같은 가로줄 3개 아이콘으로 바꿨다(2026-10 QA).
             // 바로 옆 ⋮ 메뉴와 구분되게 왼쪽에 간격을 조금 더 둔다.
             style={{ justifyContent: "center", paddingHorizontal: space.xxs, marginLeft: space.xxs, opacity: disabled ? 0.3 : 1 }}

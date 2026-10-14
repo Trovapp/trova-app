@@ -226,84 +226,30 @@ export function PlaceReviewContent({
         </AppText>
         <HighlightedText text={detail.highlights} />
 
-        {(detail.pros.length > 0 || detail.cons.length > 0) && (
-          <View style={{ flexDirection: "row", gap: space.md }}>
-            {detail.pros.length > 0 && (
-              <View style={{ flex: 1, gap: space.xxxs }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
-                  <Emoji symbol="👍" size={12} />
-                  <AppText weight="medium" style={{ fontSize: fontSize.caption2, color: colors.inkMuted }}>
-                    좋은 점
-                  </AppText>
-                </View>
-                {detail.pros.map((p, i) => (
-                  <AppText key={i} style={{ fontSize: fontSize.caption1 }}>
-                    {p}
-                  </AppText>
-                ))}
-              </View>
-            )}
-            {detail.cons.length > 0 && (
-              <View style={{ flex: 1, gap: space.xxxs }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
-                  <Emoji symbol="👎" size={12} />
-                  <AppText weight="medium" style={{ fontSize: fontSize.caption2, color: colors.inkMuted }}>
-                    아쉬운 점
-                  </AppText>
-                </View>
-                {detail.cons.map((c, i) => (
-                  <AppText key={i} style={{ fontSize: fontSize.caption1 }}>
-                    {c}
-                  </AppText>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
+        {/* 좋은 점·아쉬운 점을 좁은 두 칸에 가장 작은 글자로 나란히 둬 줄이 계속 꺾여 읽기 어려웠다(2026-10-13 사용자) —
+            위아래 카드로, 항목마다 글머리표와 넓은 줄 간격. 꿀팁·확인할 것도 같은 목록 모양으로 맞춘다. */}
+        {detail.pros.length > 0 && <ReviewCard emoji="👍" title="좋은 점" items={detail.pros} />}
+        {detail.cons.length > 0 && <ReviewCard emoji="👎" title="아쉬운 점" items={detail.cons} />}
 
         {(detail.hours || detail.fee) && (
-          <View style={{ gap: space.xxs }}>
+          <View style={{ gap: space.xs }}>
             {detail.hours && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
-                <Feather name="clock" size={12} color={colors.ink} />
-                <AppText style={{ fontSize: fontSize.caption1 }}>{detail.hours}</AppText>
+              <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.xs }}>
+                <Feather name="clock" size={14} color={colors.inkMuted} style={{ marginTop: space.xxxs }} />
+                <AppText style={[REVIEW_TEXT, { flex: 1 }]}>{detail.hours}</AppText>
               </View>
             )}
             {detail.fee && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
-                <Feather name="dollar-sign" size={12} color={colors.ink} />
-                <AppText style={{ fontSize: fontSize.caption1 }}>{detail.fee}</AppText>
+              <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.xs }}>
+                <Feather name="dollar-sign" size={14} color={colors.inkMuted} style={{ marginTop: space.xxxs }} />
+                <AppText style={[REVIEW_TEXT, { flex: 1 }]}>{detail.fee}</AppText>
               </View>
             )}
           </View>
         )}
 
-        {detail.tips.length > 0 && (
-          <View style={{ padding: space.sm, borderRadius: radius.sm, backgroundColor: colors.accentBg, gap: space.xxxs }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
-              <Emoji symbol="💡" size={12} />
-              <AppText weight="medium" style={{ fontSize: fontSize.caption2, color: colors.accent }}>
-                꿀팁
-              </AppText>
-            </View>
-            {detail.tips.map((tip, i) => (
-              <AppText key={i} style={{ fontSize: fontSize.caption1 }}>
-                {tip}
-              </AppText>
-            ))}
-          </View>
-        )}
-
-        {detail.checklist.length > 0 && (
-          <View style={{ gap: space.xxs }}>
-            {detail.checklist.map((item, i) => (
-              <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: space.xxs }}>
-                <Feather name="square" size={12} color={colors.inkMuted} />
-                <AppText style={{ fontSize: fontSize.caption1 }}>{item}</AppText>
-              </View>
-            ))}
-          </View>
-        )}
+        {detail.tips.length > 0 && <ReviewCard emoji="💡" title="꿀팁" items={detail.tips} tone="accent" />}
+        {detail.checklist.length > 0 && <ReviewCard emoji="✅" title="가기 전에 확인" items={detail.checklist} />}
 
         {detail.reviewSnippets.length > 0 && (
           <View style={{ gap: space.xxs }}>
@@ -378,5 +324,33 @@ export function PlaceReviewSheet({
         <PlaceReviewContent placeId={placeId} tripPlaceId={tripPlaceId} onAskAssistant={onAskAssistant} />
       </BottomSheetScrollView>
     </BottomSheet>
+  );
+}
+
+const REVIEW_TEXT = { fontSize: fontSize.footnote, lineHeight: fontSize.footnote * 1.55 };
+
+function ReviewCard({ emoji, title, items, tone = "plain" }: { emoji: string; title: string; items: string[]; tone?: "plain" | "accent" }) {
+  return (
+    <View
+      style={{
+        gap: space.xs,
+        padding: space.md,
+        borderRadius: radius.md,
+        backgroundColor: tone === "accent" ? colors.accentBg : colors.bgMuted,
+      }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+        <Emoji symbol={emoji} size={14} />
+        <AppText weight="medium" style={{ fontSize: fontSize.subheadline, color: tone === "accent" ? colors.accent : colors.ink }}>
+          {title}
+        </AppText>
+      </View>
+      {items.map((item, i) => (
+        <View key={i} style={{ flexDirection: "row", gap: space.xs }}>
+          <AppText style={[REVIEW_TEXT, { color: colors.inkMuted }]}>·</AppText>
+          <AppText style={[REVIEW_TEXT, { flex: 1 }]}>{item}</AppText>
+        </View>
+      ))}
+    </View>
   );
 }

@@ -44,6 +44,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/types";
 import { hitSlopFor } from "@/lib/touch";
 import { cleanVideoTitle } from "@/lib/videoTitle";
+import { openCreatedTrip } from "@/navigation/openCreatedTrip";
 
 type Props = NativeStackScreenProps<RootStackParamList, "VideoGroup">;
 
@@ -264,11 +265,11 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     try {
       const trip = await confirmTrip(group[0].jobId, tripTitle.trim() || title.slice(0, TRIP_TITLE_MAX_LENGTH), toDateString(tripStartDate));
       haptics.success();
-      // replace는 아래에 깔린 여행 목록 화면을 unmount하지 않는다 — 무효화해두지 않으면
+      // 여행 목록은 받아 둔 목록(캐시)을 먼저 보여 주므로 — 무효화해두지 않으면
       // 뒤로 가기로 돌아왔을 때 방금 확정한 여행이 목록에 없다.
       await queryClient.invalidateQueries({ queryKey: ["trips"] });
       await queryClient.invalidateQueries({ queryKey: ["videoTrip"] });
-      navigation.replace("TripDetail", { id: trip.id });
+      openCreatedTrip(navigation, trip.id);
     } catch {
       setTripError("여행 확정에 실패했어요. 다시 시도해주세요.");
       setConfirmingTrip(false);
@@ -306,7 +307,10 @@ export function VideoGroupScreen({ route, navigation }: Props) {
     }
   }
 
-  if (placesQuery.isLoading) {
+  // 분석이 막 끝나 넘어오면 캐시의 예전 장소 목록에는 이 영상이 아직 없다 — 새로 받는 동안(1~2초) "영상을 찾을 수 없어요"가
+  // 번쩍 보였다(2026-10-13 PWA QA). 받는 중이면 없다고 판단하지 않고 불러오는 화면을 보여 준다.
+  const refreshingEmpty = group.length === 0 && placesQuery.isFetching;
+  if (placesQuery.isLoading || refreshingEmpty) {
     return (
       <View style={{ flex: 1, padding: space.md, gap: space.sm }}>
         <Skeleton style={{ width: "70%", height: 20 }} />
@@ -604,6 +608,7 @@ export function VideoGroupScreen({ route, navigation }: Props) {
                       maxFontSizeMultiplier={MAX_FONT_SCALE}
                       value={tripTitle}
                       onChangeText={setTripTitle}
+                      placeholderTextColor={colors.inkMuted}
                       placeholder="여행 이름"
                       maxLength={TRIP_TITLE_MAX_LENGTH}
                       style={{

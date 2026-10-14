@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
-import { Alert, Image, View } from "react-native";
+import { Alert, Image, Platform, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import { AppText } from "@/components/AppText";
 import { PressableRow } from "@/components/PressableRow";
+import { BLOCKED_GUIDE } from "@/components/PushPromptCard";
 import { haptics } from "@/lib/haptics";
 import { PRIVACY_POLICY_URL, TERMS_URL } from "@/lib/legal";
 import { withdraw } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { disablePush, enablePush, getPushStatus, type PushStatus } from "@/lib/push";
 import { colors, fontSize, radius, space } from "@/lib/theme";
 import type { RootStackParamList } from "@/navigation/types";
 import appConfig from "../../app.json";
@@ -23,6 +25,20 @@ export function MyPageScreen() {
   // 카카오/구글 프로필 이미지 URL이 있어도 로드에 실패할 수 있다(만료된 URL,
   // 네트워크 차단 등) — 실패하면 빈 자리로 남기지 않고 기본 아이콘으로 대체한다.
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const [pushStatus, setPushStatus] = useState<PushStatus>("unsupported");
+
+  useEffect(() => {
+    getPushStatus().then(setPushStatus).catch(() => {});
+  }, []);
+
+  async function togglePush() {
+    if (pushStatus === "on") {
+      await disablePush({ optOut: true });
+      setPushStatus("off");
+    } else if (pushStatus === "off") {
+      setPushStatus(await enablePush().catch((): PushStatus => "off"));
+    }
+  }
 
   function confirmLogout() {
     Alert.alert("로그아웃", "로그아웃할까요?", [
@@ -86,6 +102,51 @@ export function MyPageScreen() {
       </View>
 
       <View>
+        {/* 알림 — 웹 푸시(백엔드 #185)·안드로이드 앱(#190). 미지원(설치 안 한 브라우저·아이폰 앱)이면 줄을 숨긴다. */}
+        {pushStatus !== "unsupported" && (
+          <PressableRow
+            onPress={togglePush}
+            accessibilityRole="button"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingVertical: space.md,
+              borderTopWidth: 1,
+              borderTopColor: colors.borderSubtle,
+            }}
+          >
+            <View style={{ flex: 1, gap: space.xxxs }}>
+              <AppText>알림</AppText>
+              {pushStatus === "blocked" && (
+                <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
+                  {BLOCKED_GUIDE}
+                </AppText>
+              )}
+            </View>
+            <AppText style={{ color: pushStatus === "on" ? colors.accent : colors.inkMuted }}>
+              {pushStatus === "on" ? "켜짐" : pushStatus === "blocked" ? "막힘" : "꺼짐"}
+            </AppText>
+          </PressableRow>
+        )}
+        {/* 웹(PWA) 아이폰은 공유 목록에 뜨지 않아 단축어로 저장한다(ADR 0013). 앱은 공유 확장이 있어 필요 없다. */}
+        {Platform.OS === "web" && (
+          <PressableRow
+            onPress={() => navigation.navigate("ShareShortcut")}
+            accessibilityRole="button"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingVertical: space.md,
+              borderTopWidth: 1,
+              borderTopColor: colors.borderSubtle,
+            }}
+          >
+            <AppText>아이폰 공유 단축어</AppText>
+            <Feather name="chevron-right" size={18} color={colors.inkMuted} />
+          </PressableRow>
+        )}
         {/* 앱스토어 심사·개인정보 보호법상 앱 안에서 방침을 볼 수 있어야 한다. 앱 안 브라우저로 연다. */}
         {[
           { label: "개인정보처리방침", url: PRIVACY_POLICY_URL },
