@@ -8,10 +8,13 @@ export function QueryErrorView({
   message,
   onRetry,
   fullScreen = false,
+  actionLabel = "다시 시도",
 }: {
   message: string;
   onRetry: () => void;
   fullScreen?: boolean;
+  // 다시 해도 같은 오류(없는 여행 등)는 "홈으로"처럼 다른 행동을 준다.
+  actionLabel?: string;
 }) {
   return (
     <View
@@ -33,7 +36,7 @@ export function QueryErrorView({
         }}
       >
         <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>
-          다시 시도
+          {actionLabel}
         </AppText>
       </PressableScale>
     </View>

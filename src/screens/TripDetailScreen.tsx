@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { isNotFound } from "@/lib/api/errors";
 import { ActivityIndicator, Alert, Keyboard, Platform, RefreshControl, ScrollView, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import BottomSheet, {
@@ -319,6 +320,16 @@ export function TripDetailScreen({ route, navigation }: Props) {
   // 조회 실패와 "아직 데이터 없음"을 같은 화면으로 보여주지 않는다.
   // 받아 둔 여행이 있으면 오류 화면 대신 지도 위에 한 줄만 알린다(디자인 QA E1).
   if (!trip) {
+    if (isNotFound(tripQuery.error)) {
+      return (
+        <QueryErrorView
+          fullScreen
+          message="이 여행을 찾을 수 없어요. 지워졌거나 지금 로그인한 계정의 여행이 아니에요."
+          actionLabel="홈으로"
+          onRetry={() => navigation.reset({ index: 0, routes: [{ name: "MainTabs", params: { screen: "Home" } }] })}
+        />
+      );
+    }
     return (
       <QueryErrorView
         fullScreen
