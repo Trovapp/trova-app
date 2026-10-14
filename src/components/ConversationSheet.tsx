@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ElementRef } from "react";
 import { ScrollView, View } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, type BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { SheetTextInput } from "@/components/SheetTextInput";
 import { useSharedValue, type SharedValue } from "react-native-reanimated";
 import { useQueryClient } from "@tanstack/react-query";
@@ -373,6 +373,11 @@ export function ConversationSheet({
       snapPoints={SNAP_POINTS}
       enableDynamicSizing={false}
       enablePanDownToClose
+      // 뒤 여행 시트 위에 겹쳐 열린다 — 배경이 없으면 뒤 시트의 손잡이·내용이 위로 비쳐 보이고 눌렸다(2026-10-13 QA).
+      // 다른 팝업처럼 뒤를 어둡게 덮고, 누르면 닫는다.
+      backdropComponent={(props: BottomSheetBackdropProps) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+      )}
       onClose={handleSheetClose}
       backgroundStyle={{ backgroundColor: colors.bg }}
       handleIndicatorStyle={{ backgroundColor: colors.border }}

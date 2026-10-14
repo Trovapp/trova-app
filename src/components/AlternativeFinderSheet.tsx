@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ElementRef, type ReactNode } from "react";
 import { View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, type BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppText } from "@/components/AppText";
 import { ErrorText } from "@/components/ErrorText";
@@ -236,6 +236,11 @@ export function AlternativeFinderSheet({
       snapPoints={SNAP_POINTS}
       enableDynamicSizing={false}
       enablePanDownToClose
+      // 뒤 여행 시트 위에 겹쳐 열린다 — 배경이 없으면 뒤 시트의 손잡이·내용이 위로 비쳐 보이고 눌렸다(2026-10-13 QA).
+      // 다른 팝업처럼 뒤를 어둡게 덮고, 누르면 닫는다.
+      backdropComponent={(props: BottomSheetBackdropProps) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+      )}
       onClose={() => {
         onClose();
       }}
