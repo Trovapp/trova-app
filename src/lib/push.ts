@@ -34,7 +34,7 @@ if (Notifications) {
 async function ensureChannel(): Promise<void> {
   await Notifications!.setNotificationChannelAsync(PUSH_CHANNEL, {
     name: "일정·날씨 알림",
-    importance: Notifications!.AndroidImportance.DEFAULT,
+    importance: Notifications!.AndroidImportance.HIGH, // 화면 위 배너로 보이게 — 채널은 만든 뒤 바꿀 수 없어 출시 전에 정함
   });
 }
 
