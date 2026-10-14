@@ -48,6 +48,29 @@
           "iosShareExtensionName": "Trova"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "Trova",
+                  "bundleIdentifier": "com.trovapp.trova.share-extension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.trovapp.trova"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "a272b4bb-6de1-4367-b5f6-47397f00f88a"
+      }
+    },
+    "owner": "taeng527"
   }
 }
