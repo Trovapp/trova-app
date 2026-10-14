@@ -28,18 +28,27 @@ function toBody(subscription: PushSubscription) {
   return { endpoint: json.endpoint ?? "", keys: { p256dh: json.keys?.p256dh ?? "", auth: json.keys?.auth ?? "" } };
 }
 
+// 앱을 열 때의 재등록과 [알림 받기]가 동시에 불리면 구독이 두 개 생겨 같은 알림이 두 번 갔다(2026-10-14 로컬 확인) —
+// 진행 중인 구독 만들기를 함께 기다린다.
+let subscribing: Promise<PushSubscription | null> | null = null;
+
 /** 지금 구독이 있으면 그대로, 없으면 서버 공개 키로 새로 만든다. 서버에 키가 없으면 null. */
-async function ensureSubscription(): Promise<PushSubscription | null> {
-  const publicKey = await getPushPublicKey();
-  if (!publicKey) return null;
-  const registration = await navigator.serviceWorker.ready;
-  return (
-    (await registration.pushManager.getSubscription()) ??
-    (await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: base64UrlToBytes(publicKey) as BufferSource,
-    }))
-  );
+function ensureSubscription(): Promise<PushSubscription | null> {
+  subscribing ??= (async () => {
+    const publicKey = await getPushPublicKey();
+    if (!publicKey) return null;
+    const registration = await navigator.serviceWorker.ready;
+    return (
+      (await registration.pushManager.getSubscription()) ??
+      (await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: base64UrlToBytes(publicKey) as BufferSource,
+      }))
+    );
+  })().finally(() => {
+    subscribing = null;
+  });
+  return subscribing;
 }
 
 export async function getPushStatus(): Promise<PushStatus> {
