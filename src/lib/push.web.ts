@@ -6,6 +6,25 @@ import { SNOOZE_MS, base64UrlToBytes, shouldShowPushPrompt } from "@/lib/pushLog
 export type PushStatus = "unsupported" | "blocked" | "off" | "on";
 
 const SNOOZE_KEY = "trova.pushPromptSnoozedUntil";
+// 마이페이지에서 직접 끈 표시 — 권한은 그대로라 앱을 열 때 다시 등록되던 문제(2026-10-14 최종 리뷰).
+const OPT_OUT_KEY = "trova.pushOptedOut";
+
+function readOptOut(): boolean {
+  try {
+    return localStorage.getItem(OPT_OUT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeOptOut(on: boolean): void {
+  try {
+    if (on) localStorage.setItem(OPT_OUT_KEY, "1");
+    else localStorage.removeItem(OPT_OUT_KEY);
+  } catch {
+    // 저장소가 막혀 있으면 이번 페이지에서만.
+  }
+}
 
 function isStandalone(): boolean {
   return (
@@ -54,7 +73,7 @@ function ensureSubscription(): Promise<PushSubscription | null> {
 export async function getPushStatus(): Promise<PushStatus> {
   if (!isSupported() || !isStandalone()) return "unsupported";
   if (Notification.permission === "denied") return "blocked";
-  if (Notification.permission !== "granted") return "off";
+  if (Notification.permission !== "granted" || readOptOut()) return "off";
   return (await currentSubscription()) ? "on" : "off";
 }
 
@@ -67,11 +86,16 @@ export async function enablePush(): Promise<PushStatus> {
   const subscription = await ensureSubscription();
   if (!subscription) return "off";
   await savePushSubscription(toBody(subscription));
+  writeOptOut(false);
   return "on";
 }
 
-/** 로그아웃·끄기. 서버에서 먼저 지우고(토큰 필요) 브라우저 구독을 끊는다. */
-export async function disablePush(): Promise<void> {
+/**
+ * 로그아웃·끄기. 서버에서 먼저 지우고(토큰 필요) 브라우저 구독을 끊는다.
+ * optOut: 마이페이지에서 직접 끈 경우 — 앱을 열 때 다시 등록하지 않는다. 로그아웃은 다음 사람을 위해 표시를 지운다.
+ */
+export async function disablePush(options: { optOut?: boolean } = {}): Promise<void> {
+  writeOptOut(options.optOut === true);
   if (!isSupported()) return;
   const subscription = await currentSubscription().catch(() => null);
   if (!subscription) return;
@@ -81,7 +105,7 @@ export async function disablePush(): Promise<void> {
 
 /** 앱을 열 때마다 — 구독이 바뀌거나 서버에서 지워졌어도 되살린다. 권한이 없으면 아무것도 묻지 않는다. */
 export async function refreshPushSubscription(): Promise<void> {
-  if (!isSupported() || !isStandalone() || Notification.permission !== "granted") return;
+  if (!isSupported() || !isStandalone() || Notification.permission !== "granted" || readOptOut()) return;
   const subscription = await ensureSubscription();
   if (subscription) await savePushSubscription(toBody(subscription));
 }
@@ -118,6 +142,7 @@ export async function isPushPromptVisible(): Promise<boolean> {
     hasPublicKey,
     loggedIn,
     subscribed,
+    optedOut: readOptOut(),
     snoozedUntil: readSnooze(),
     now: Date.now(),
   });

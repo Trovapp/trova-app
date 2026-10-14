@@ -30,14 +30,16 @@ export type PromptInput = {
   hasPublicKey: boolean;
   loggedIn: boolean;
   subscribed: boolean;
+  // 마이페이지에서 직접 끈 사람 — 앱을 열 때 다시 등록하지 않고 카드도 다시 묻지 않는다(설정에서만 다시 켬).
+  optedOut: boolean;
   snoozedUntil: number | null;
   now: number;
 };
 
-/** 권한 묻는 카드: 설치한 앱 + 지원 + 로그인 + 서버 키 있음 + (아직 안 물음 또는 허용했는데 구독 없음) + [나중에] 7일 지남. */
+/** 권한 묻는 카드: 설치한 앱 + 지원 + 로그인 + 서버 키 있음 + 직접 끄지 않음 + (아직 안 물음 또는 허용했는데 구독 없음) + [나중에] 7일 지남. */
 export function shouldShowPushPrompt(input: PromptInput): boolean {
   if (!input.standalone || !input.supported || !input.loggedIn || !input.hasPublicKey) return false;
-  if (input.permission === "denied") return false;
+  if (input.permission === "denied" || input.optedOut) return false;
   if (input.permission === "granted" && input.subscribed) return false;
   if (input.snoozedUntil !== null && input.snoozedUntil > input.now) return false;
   return true;

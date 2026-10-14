@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { PressableScale } from "@/components/PressableScale";
@@ -8,6 +8,10 @@ import { colors, fontSize, radius, space } from "@/lib/theme";
 
 // 웹 푸시 권한 카드(백엔드 #185). 브라우저 권한 창은 [알림 받기]를 눌렀을 때만 — 아이폰은 사용자 동작 안에서만 물을 수 있고,
 // 처음부터 띄우면 거절이 많고 한 번 거절하면 다시 물을 수 없다. 앱(네이티브)에서는 늘 숨는다(push.ts).
+// 알림을 막아 둔 사람에게 켜는 곳 안내 — 아이폰은 PWA, 안드로이드는 앱 설정.
+export const BLOCKED_GUIDE =
+  Platform.OS === "android" ? "휴대폰 설정 → 애플리케이션 → Trova → 알림에서 켤 수 있어요." : "iPhone 설정 → 알림 → Trova에서 켤 수 있어요.";
+
 export function PushPromptCard() {
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -48,7 +52,7 @@ export function PushPromptCard() {
       </View>
       {blocked ? (
         <AppText style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
-          iPhone 설정 → 알림 → Trova에서 켤 수 있어요.
+          {BLOCKED_GUIDE}
         </AppText>
       ) : (
         <View style={{ flexDirection: "row", gap: space.sm }}>

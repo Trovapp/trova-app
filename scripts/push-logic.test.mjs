@@ -13,7 +13,7 @@ test("알림 이동 값을 화면 대상으로 바꾼다", () => {
 
 const base = {
   standalone: true, supported: true, permission: "default", hasPublicKey: true,
-  loggedIn: true, subscribed: false, snoozedUntil: null, now: 1_000,
+  loggedIn: true, subscribed: false, optedOut: false, snoozedUntil: null, now: 1_000,
 };
 
 test("설치한 앱에서 아직 묻지 않았을 때만 카드를 보인다", () => {
@@ -37,4 +37,10 @@ test("나중에를 누르면 7일 동안 숨긴다", () => {
 
 test("서버 공개 키(base64url)를 바이트로 바꾼다", () => {
   assert.deepEqual([...base64UrlToBytes("AQID_-8")], [1, 2, 3, 255, 239]);
+});
+
+test("마이페이지에서 알림을 끈 사람에게는 카드를 다시 보이지 않는다", () => {
+  assert.equal(shouldShowPushPrompt({ ...base, permission: "granted", subscribed: false, optedOut: true }), false);
+  assert.equal(shouldShowPushPrompt({ ...base, optedOut: true }), false);
+  assert.equal(shouldShowPushPrompt({ ...base, optedOut: false }), true);
 });
