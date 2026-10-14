@@ -33,7 +33,7 @@ export function MyPageScreen() {
 
   async function togglePush() {
     if (pushStatus === "on") {
-      await disablePush();
+      await disablePush({ optOut: true });
       setPushStatus("off");
     } else if (pushStatus === "off") {
       setPushStatus(await enablePush().catch((): PushStatus => "off"));

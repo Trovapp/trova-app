@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
-import * as Notifications from "expo-notifications";
+import type * as NotificationsModule from "expo-notifications";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { setPendingOpen, takePendingOpen } from "@/lib/pendingOpen";
 import { parseOpenTarget, type OpenTarget } from "@/lib/pushLogic";
@@ -21,7 +21,11 @@ function go(target: OpenTarget) {
   });
 }
 
-function targetOf(response: Notifications.NotificationResponse | null): OpenTarget | null {
+// 아이폰 개발 빌드에는 알림 네이티브 모듈이 없어 안드로이드에서만 불러온다(push.ts와 같은 이유).
+const Notifications: typeof NotificationsModule | null =
+  Platform.OS === "android" ? require("expo-notifications") : null;
+
+function targetOf(response: NotificationsModule.NotificationResponse | null): OpenTarget | null {
   const open = response?.notification.request.content.data?.open;
   return typeof open === "string" ? parseOpenTarget(open) : null;
 }
@@ -30,19 +34,21 @@ export function PushOpenListener() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (Platform.OS !== "android") return;
+    if (!Notifications) return;
+    const notifications = Notifications;
     // 꺼진 상태에서 알림으로 열린 경우 — 한 번만 처리되도록 응답을 지운다.
-    Notifications.getLastNotificationResponseAsync()
+    notifications
+      .getLastNotificationResponseAsync()
       .then((response) => {
         const target = targetOf(response);
         if (target) setPendingOpen(target);
-        return Notifications.clearLastNotificationResponseAsync();
+        return notifications.clearLastNotificationResponseAsync();
       })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    if (Platform.OS !== "android") return;
+    if (!Notifications) return;
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const target = targetOf(response);
       if (!target) return;
