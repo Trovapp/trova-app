@@ -22,8 +22,12 @@ export async function savePushSubscription(subscription: {
   if (!res.ok) throw new ApiError(res.status, `POST /api/push/subscriptions failed: ${res.status}`);
 }
 
+// 로그아웃 때 부른다 — 서버가 느리거나 응답이 없어도 로그아웃이 오래 걸리지 않게 짧게 기다린다(#25).
+const UNSUBSCRIBE_TIMEOUT_MS = 5_000;
+
 export async function deletePushSubscription(endpoint: string): Promise<void> {
   const res = await apiFetch("/api/push/subscriptions", {
+    timeoutMs: UNSUBSCRIBE_TIMEOUT_MS,
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ endpoint }),
@@ -43,6 +47,7 @@ export async function saveExpoPushToken(token: string): Promise<void> {
 
 export async function deleteExpoPushToken(token: string): Promise<void> {
   const res = await apiFetch("/api/push/expo-tokens", {
+    timeoutMs: UNSUBSCRIBE_TIMEOUT_MS,
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token }),
