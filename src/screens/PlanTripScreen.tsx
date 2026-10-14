@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ComponentProps } from "react";
+import { isNotFound } from "@/lib/api/errors";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -159,6 +160,16 @@ export function PlanTripScreen({ navigation, route }: Props) {
 
   if (draftId != null) {
     const draft = draftQuery.data;
+    if (draftQuery.isError && !draft && isNotFound(draftQuery.error)) {
+      return (
+        <QueryErrorView
+          fullScreen
+          message="이 일정 초안을 찾을 수 없어요. 지워졌거나 지금 로그인한 계정의 초안이 아니에요."
+          actionLabel="홈으로"
+          onRetry={() => navigation.reset({ index: 0, routes: [{ name: "MainTabs", params: { screen: "Home" } }] })}
+        />
+      );
+    }
     if (draftQuery.isError && !draft) {
       return <QueryErrorView fullScreen message="일정 상태를 불러오지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요." onRetry={() => draftQuery.refetch()} />;
     }

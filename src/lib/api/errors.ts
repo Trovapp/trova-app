@@ -1,15 +1,22 @@
 // 응답 상태 코드를 들고 다니는 API 오류 — 재시도 여부(4xx는 다시 해도 같음)를 상태로 판단하려면
 // 메시지 문자열이 아니라 값으로 있어야 한다. 메시지는 개발자용이라 화면엔 toUserMessage로 바꿔 보여준다.
+// (필드를 생성자 매개변수로 선언하지 않는다 — node --test가 이 파일을 직접 읽을 때 그 문법을 지원하지 않는다.)
 export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    message: string,
-    // 서버가 사용자에게 보여주라고 보낸 안내(하루 한도 초과 429, 처리 대기열 포화 503 등). 있으면 그대로 보여준다.
-    readonly userMessage?: string,
-  ) {
+  readonly status: number;
+  // 서버가 사용자에게 보여주라고 보낸 안내(하루 한도 초과 429, 처리 대기열 포화 503 등). 있으면 그대로 보여준다.
+  readonly userMessage?: string;
+
+  constructor(status: number, message: string, userMessage?: string) {
     super(message);
+    this.status = status;
+    this.userMessage = userMessage;
     this.name = "ApiError";
   }
+}
+
+// 없는(지워졌거나 남의) 여행·초안 — 다시 시도해도 같아서 "네트워크 확인" 대신 찾을 수 없다고 알린다(알림으로 연 화면, 2026-10-14).
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
 }
 
 // 요청이 시간 제한 안에 끝나지 않았을 때(서버 과부하·연결이 사라진 경우). 예전엔 시간 제한이 없어
