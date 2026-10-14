@@ -105,6 +105,8 @@ function PendingJobCard({
       ? "AI 분석 한도 초과, 오후 4~5시 이후 다시 시도"
       : sourceBlocked
         ? "인스타그램이 잠시 막음, 조금 뒤 다시 시도"
+        : isFailed && job.failureReason === "NO_MEDIA"
+        ? "게시물에서 영상·사진을 받지 못했어요"
         : isFailed
         ? "처리에 실패했어요"
         : job.stageMessage ?? "처리 대기 중이에요";
