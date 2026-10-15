@@ -7,10 +7,9 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 //   경로는 항상 ./google-services.json — 빌드 서버 경로가 설정에 들어가면 fingerprint가 로컬과 달라져
 //   업데이트가 내려가지 않는다(#33). 빌드 서버에서는 eas-build-pre-install이 파일을 이 자리로 복사한다.
 export default ({ config }: ConfigContext): ExpoConfig => {
-  // production 프로필은 TROVA_ALLOW_HTTP=0을 박아 두어, EAS 변수가 잘못 들어가도 운영 빌드에 http가 열리지 않게 한다.
-  const allowHttp =
-    process.env.EAS_BUILD_PROFILE !== "production" &&
-    (process.env.EAS_BUILD_PROFILE === "preview" || process.env.TROVA_ALLOW_HTTP === "1");
+  // http 허용은 eas.json 프로필의 TROVA_ALLOW_HTTP(preview=1, production=0)로만 정한다. EAS_BUILD_PROFILE은 빌드 서버에만 있어
+  // 맥에서 eas-cli가 미리 계산한 fingerprint와 달라져 빌드가 멈췄다(#33). 빌드 서버의 production이면 값이 잘못 와도 막는다.
+  const allowHttp = process.env.TROVA_ALLOW_HTTP === "1" && process.env.EAS_BUILD_PROFILE !== "production";
   const base = config as ExpoConfig;
   return {
     ...base,

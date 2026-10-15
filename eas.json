@@ -8,6 +8,9 @@
       "distribution": "internal",
       "channel": "preview",
       "environment": "preview",
+      "env": {
+        "TROVA_ALLOW_HTTP": "1"
+      },
       "android": {
         "buildType": "apk"
       }
