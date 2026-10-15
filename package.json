@@ -24,6 +24,7 @@
     "expo-share-intent": "^8.0.1",
     "expo-splash-screen": "~57.0.8",
     "expo-status-bar": "~57.0.1",
+    "expo-updates": "~57.0.26",
     "expo-web-browser": "~57.0.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -49,7 +50,8 @@
     "web": "expo start --web",
     "check:tokens": "node scripts/check-design-tokens.mjs",
     "build:web": "expo export --platform web --clear && node scripts/web-headers.mjs",
-    "test:web": "node --test scripts/web-csp.test.mjs scripts/push-logic.test.mjs scripts/errors.test.mjs scripts/place-links.test.mjs"
+    "test:web": "node --test scripts/web-csp.test.mjs scripts/push-logic.test.mjs scripts/errors.test.mjs scripts/place-links.test.mjs scripts/update-bundle-check.test.mjs",
+    "eas-build-pre-install": "node scripts/eas-google-services.mjs"
   },
   "private": true
 }
