@@ -20,6 +20,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     android: {
       ...base.android,
       googleServicesFile: "./google-services.json",
+      // 라이브러리가 기본으로 넣지만 앱이 쓰지 않는 권한(다른 앱 위에 그리기·저장소·생체 인증)은 뺀다 —
+      // 플레이 심사가 권한마다 쓰는 이유를 묻는다(#37, 출시용 AAB manifest에서 확인).
+      blockedPermissions: [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+      ],
     },
     plugins: [
       ...(base.plugins ?? []),
