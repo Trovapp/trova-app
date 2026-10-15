@@ -107,6 +107,8 @@ function PendingJobCard({
         ? "인스타그램이 잠시 막음, 조금 뒤 다시 시도"
         : isFailed && job.failureReason === "NO_MEDIA"
         ? "게시물에서 영상·사진을 받지 못했어요"
+        : isFailed && job.failureReason === "NOT_PLACE_CONTENT"
+        ? "장소를 소개하는 영상이 아니에요"
         : isFailed
         ? "처리에 실패했어요"
         : job.stageMessage ?? "처리 대기 중이에요";
