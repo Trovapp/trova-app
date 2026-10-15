@@ -158,16 +158,14 @@ export function TripDetailScreen({ route, navigation }: Props) {
       // 화면 어디에도 여행 이름이 없어 어떤 여행을 보고 있는지 알 수 없었다(2026-10 QA) — 헤더 제목으로 보여준다.
       // 긴 이름은 iOS 헤더가 말줄임표로 줄인다. 불러오기 전에는 원래 제목을 둔다.
       title: tripTitle ?? "여행 상세",
-      headerRight: () => (
-        <PressableScale
-          onPress={() => tripMenuSheetRef.current?.present()}
-          hitSlop={hitSlopFor(20)}
-          disabled={!tripTitle}
-          accessibilityLabel="여행 메뉴"
-        >
-          <Feather name="more-horizontal" size={20} color={colors.inkMuted} />
-        </PressableScale>
-      ),
+      // 여행을 불러오기 전이나 없는 여행(404)에서는 메뉴를 숨긴다 — 고를 수 있는 게 없는데 ⋯가 보였다(#35).
+      headerRight: tripTitle
+        ? () => (
+            <PressableScale onPress={() => tripMenuSheetRef.current?.present()} hitSlop={hitSlopFor(20)} accessibilityLabel="여행 메뉴">
+              <Feather name="more-horizontal" size={20} color={colors.inkMuted} />
+            </PressableScale>
+          )
+        : undefined,
     });
   }, [navigation, id, tripTitle, queryClient]);
 

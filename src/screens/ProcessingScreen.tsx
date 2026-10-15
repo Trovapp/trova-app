@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
+import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
@@ -16,6 +17,7 @@ import { QueryErrorView } from "@/components/QueryErrorView";
 import { Skeleton } from "@/components/Skeleton";
 import { describeSourceUrl, sourceKindLabel } from "@/lib/shareUrl";
 import { cleanVideoTitle } from "@/lib/videoTitle";
+import { shouldOpenResult } from "@/lib/processingRules";
 import { toUserMessage } from "@/lib/api/client";
 import { colors, fontSize, radius, space, motion } from "@/lib/theme";
 import { getPendingJobs, getPlaces, resubmitFailedJob, type PendingJob } from "@/lib/api/places";
@@ -145,6 +147,7 @@ export function ProcessingScreen({ route, navigation }: Props) {
     }
   }
 
+  const focused = useIsFocused();
   useEffect(() => {
     // FAILED 작업도 /api/places/pending 목록에 남아있으므로, 목록에서 사라졌다는
     // 것은 처리가 끝나 저장까지 완료됐다는 뜻이다. 완료 후에는 항상 이 영상의
@@ -153,15 +156,19 @@ export function ProcessingScreen({ route, navigation }: Props) {
     // 단, 캐시에 남아있던 예전 목록(이 작업이 만들어지기 전 데이터)으로 판단하면 방금 만든
     // 작업도 "없음 = 완료"로 오인해 바로 넘어가 버린다 — 이 화면에서 새로 받아온 목록으로만 판단한다.
     // 다시 시도 중엔 이전 실패 기록을 지우므로 그 사이의 "없음"도 무시한다.
-    if (pendingQuery.isSuccess && pendingQuery.isFetchedAfterMount && !job && !retrying) {
+    // 알림·공유로 다른 화면이 위에 올라왔으면 넘어가지 않는다 — 그 화면을 덮었다(#35). 다시 이 화면으로 돌아오면 그때 넘어간다.
+    const ready = { isSuccess: pendingQuery.isSuccess, isFetchedAfterMount: pendingQuery.isFetchedAfterMount, hasJob: !!job, retrying, focused };
+    if (shouldOpenResult(ready)) {
       // 찾은 장소 이름은 분석이 거의 끝날 때 도착해서(실측: 끝나기 1~3초 전), 바로 넘어가면 번쩍하고 사라진다.
       // 이름이 보인 지 최소 시간이 안 됐으면 남은 만큼 기다렸다 넘어간다.
       const shownAt = namesShownAtRef.current;
       const wait = shownAt === null ? 0 : Math.max(0, MIN_FOUND_NAMES_MS - (Date.now() - shownAt));
-      const id = setTimeout(() => navigation.replace("VideoGroup", { jobId, justAnalyzed: true }), wait);
+      const id = setTimeout(() => {
+        if (navigation.isFocused()) navigation.replace("VideoGroup", { jobId, justAnalyzed: true });
+      }, wait);
       return () => clearTimeout(id);
     }
-  }, [pendingQuery.isSuccess, pendingQuery.isFetchedAfterMount, job, jobId, navigation, retrying]);
+  }, [pendingQuery.isSuccess, pendingQuery.isFetchedAfterMount, job, jobId, navigation, retrying, focused]);
 
   // 폴링이 계속 실패하면 로딩 스켈레톤에 영원히 멈춰 보인다 — 재시도 수단을 준다.
   if (pendingQuery.isError) {

@@ -31,8 +31,8 @@ export function QueryErrorView({
           paddingVertical: space.xs,
           paddingHorizontal: space.md,
           borderRadius: radius.md,
-          borderWidth: 1,
-          borderColor: colors.accent,
+          // 테두리만 있는 버튼은 디자인 QA(C2)에서 옅은 채움 버튼으로 바꿨는데 여기만 남아 있었다(#35).
+          backgroundColor: colors.accentBg,
         }}
       >
         <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.accent }}>

@@ -18,6 +18,8 @@ import { listBookmarks } from "@/lib/api/bookmarks";
 import { listTrips } from "@/lib/api/trips";
 import { dismissTripDraft, listAutoDrafts } from "@/lib/api/tripDrafts";
 import { ReadyDraftCard } from "@/components/ReadyDraftCard";
+import { visibleDrafts } from "@/lib/draftCards";
+import { hitSlopFor } from "@/lib/touch";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { formatSavedAgo, formatTripDates, toDateString } from "@/lib/date";
@@ -110,6 +112,8 @@ export function HomeScreen({ navigation }: Props) {
   );
   const { refreshing, onRefresh } = usePullToRefresh(refetchAll);
   const [draftDismissError, setDraftDismissError] = useState<string | null>(null);
+  const [draftsExpanded, setDraftsExpanded] = useState(false);
+  const drafts = visibleDrafts(autoDraftsQuery.data ?? [], draftsExpanded);
 
   async function dismissDraft(draftId: number) {
     setDraftDismissError(null);
@@ -366,7 +370,7 @@ export function HomeScreen({ navigation }: Props) {
             자동 초안이 있을 때만 날씨 배너를 이 묶음 안으로 넣어 같은 sm 간격을 쓰게 한다. */}
         {(autoDraftsQuery.data ?? []).length > 0 ? (
           <View style={{ gap: space.sm }}>
-            {(autoDraftsQuery.data ?? []).map((draft) => (
+            {drafts.shown.map((draft) => (
               <ReadyDraftCard
                 key={draft.draftId}
                 draft={draft}
@@ -374,6 +378,19 @@ export function HomeScreen({ navigation }: Props) {
                 onDismiss={() => dismissDraft(draft.draftId)}
               />
             ))}
+            {drafts.hiddenCount > 0 && (
+              <PressableScale
+                onPress={() => setDraftsExpanded(true)}
+                accessibilityRole="button"
+                hitSlop={hitSlopFor(20)}
+                style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: space.xxxs }}
+              >
+                <AppText weight="medium" style={{ fontSize: fontSize.footnote, color: colors.inkMuted }}>
+                  일정 초안 {drafts.hiddenCount}개 더 보기
+                </AppText>
+                <Feather name="chevron-down" size={14} color={colors.inkMuted} />
+              </PressableScale>
+            )}
             {draftDismissError && <ErrorText>{draftDismissError}</ErrorText>}
             {weatherBanner}
           </View>
