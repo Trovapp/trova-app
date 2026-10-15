@@ -43,3 +43,6 @@ yarn-error.*
 
 # Firebase 안드로이드 설정(공개 레포라 올리지 않음 — EAS 파일 변수 GOOGLE_SERVICES_JSON)
 google-services.json
+
+# 무선 업데이트 번들(scripts/publish-update.sh)
+/dist-update

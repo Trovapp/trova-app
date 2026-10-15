@@ -6,17 +6,20 @@
   "build": {
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
+      "environment": "preview",
+      "env": {
+        "TROVA_ALLOW_HTTP": "1"
+      },
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:8080"
       }
     },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
+      "environment": "production",
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://193-123-161-217.sslip.io",
         "TROVA_ALLOW_HTTP": "0"
       }
     }
