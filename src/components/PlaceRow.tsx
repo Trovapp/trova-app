@@ -11,6 +11,7 @@ import { hitSlopFor } from "@/lib/touch";
 type PlaceRowItem = {
   id: number;
   placeName: string;
+  region?: string | null;
   address: string | null;
   // 없으면(undefined) 위치 확인 뱃지를 판단할 근거가 없다고 보고 표시하지 않는다 —
   // 이 필드를 안 넘기는 호출부(예: 찜한 장소)까지 전부 "위치 확인 안됨"으로 잘못
