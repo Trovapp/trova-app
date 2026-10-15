@@ -39,7 +39,8 @@ export type PendingJob = {
   // AI 하루 한도를 다 썼으면 "AI_QUOTA"(백엔드 #63) — 한도가 초기화(한국 오후 4~5시)되기 전엔 다시 해도 실패한다.
   // 인스타그램이 서버 요청을 막았으면 "SOURCE_RATE_LIMITED"(백엔드 #65) — 언제 풀릴지는 알 수 없다.
   // 인스타 게시물에서 영상도 사진도 받지 못했으면 "NO_MEDIA"(백엔드 #196) — 다시 해도 같다.
-  failureReason?: "NO_PLACES" | "AI_QUOTA" | "SOURCE_RATE_LIMITED" | "NO_MEDIA" | null;
+  // 제품 광고·요리·일상처럼 장소를 소개하지 않는 콘텐츠면 "NOT_PLACE_CONTENT"(백엔드 #206) — 다시 해도 같다.
+  failureReason?: "NO_PLACES" | "AI_QUOTA" | "SOURCE_RATE_LIMITED" | "NO_MEDIA" | "NOT_PLACE_CONTENT" | null;
 };
 
 // alreadyAnalyzed: 서버가 새로 분석하지 않고 이미 있는 결과(jobId)를 알려준 경우 true(백엔드 #87).
