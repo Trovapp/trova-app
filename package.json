@@ -50,7 +50,7 @@
     "web": "expo start --web",
     "check:tokens": "node scripts/check-design-tokens.mjs",
     "build:web": "expo export --platform web --clear && node scripts/web-headers.mjs",
-    "test:web": "node --test scripts/web-csp.test.mjs scripts/push-logic.test.mjs scripts/errors.test.mjs scripts/place-links.test.mjs scripts/update-bundle-check.test.mjs scripts/screen-rules.test.mjs",
+    "test:web": "node --test scripts/web-csp.test.mjs scripts/push-logic.test.mjs scripts/errors.test.mjs scripts/place-links.test.mjs scripts/update-bundle-check.test.mjs scripts/screen-rules.test.mjs scripts/android-config.test.mjs",
     "eas-build-pre-install": "node scripts/eas-google-services.mjs"
   },
   "private": true
