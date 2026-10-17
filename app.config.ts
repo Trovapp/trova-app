@@ -35,6 +35,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ["expo-notifications", { icon: "./assets/android-icon-monochrome.png", color: "#E14A2B", defaultChannel: "trova-default" }],
       ["expo-build-properties", { android: { usesCleartextTraffic: allowHttp } }],
       "./plugins/withNoEditTextUnderline",
+      "./plugins/withDensityConfigChange",
     ],
   };
 };
